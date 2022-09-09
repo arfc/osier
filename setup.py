@@ -50,8 +50,8 @@ MINOR = _version_minor
 MICRO = _version_micro
 VERSION = __version__
 PACKAGE_DATA = {'osier': [pjoin('data', '*')]}
-REQUIRES = ['numpy', 'pandas', 'matplotlib', 'pytest', 'dill', 'openpyxl']
-EXTRAS_REQUIRE = {'doc':['sphinx', 'myst-parser']}
+REQUIRES = ['numpy', 'pandas', 'matplotlib', 'pytest', 'dill', 'openpyxl', 'nrelpy']
+EXTRAS_REQUIRE = {'doc':['sphinx', 'myst-parser', 'numpydoc']}
 PYTHON_REQUIRES = ">= 3.6"
 
 PACKAGES = find_packages()

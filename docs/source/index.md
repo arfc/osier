@@ -3,18 +3,19 @@
 % You can adapt this file completely to your liking, but it should at least
 % contain the root `toctree` directive
 
-```{include} ../../README.md
-:relative-images:
-```
-
 ```{warning}
 This package is in active development.
 ```
 
+```{include} ../../README.md
+:relative-images:
+```
 
+## Contents
 ```{toctree}
-:caption: 'Contents:'
 :maxdepth: 2
+
+contrib
 ```
 
 ## Indices and tables
