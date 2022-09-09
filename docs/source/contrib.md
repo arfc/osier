@@ -30,9 +30,13 @@ commands. "your-fork" is a placeholder for the location of your fork of `osier`.
 git clone git@github.com:your-fork/osier.git  # requires ssh-keys
 # or 
 git clone https://github.com/your-fork/osier.git
+# 2. Open the osier directory
 cd osier
+# 3. Add a remote to the official repository
 git remote add arfc https://github.com/arfc/osier.git  # the official repository
+# 4. Update osier
 git pull arfc main  # pull down the up-to-date version of osier
+# 5. Install editable configuration
 pip install -e .[doc]
 ```
 The `-e` flag creates an editable installation so you don't have to reinstall everytime a
