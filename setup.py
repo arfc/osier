@@ -51,6 +51,7 @@ MICRO = _version_micro
 VERSION = __version__
 PACKAGE_DATA = {'osier': [pjoin('data', '*')]}
 REQUIRES = ['numpy', 'pandas', 'matplotlib', 'pytest', 'dill', 'openpyxl']
+EXTRAS_REQUIRE = {'doc':['sphinx']}
 PYTHON_REQUIRES = ">= 3.6"
 
 PACKAGES = find_packages()
@@ -81,6 +82,7 @@ opts = dict(name=NAME,
             packages=PACKAGES,
             package_data=PACKAGE_DATA,
             install_requires=REQUIRES,
+            extras_require=EXTRAS_REQUIRE,
             python_requires=PYTHON_REQUIRES,
             setup_requires=SETUP_REQUIRES,
             requires=REQUIRES,
