@@ -1,4 +1,5 @@
 # osier
+/ˈōZHər/ <br>
 Open source multi-objective energy system framework
 
 [![Build Status](https://github.com/arfc/osier/actions/workflows/CI.yml/badge.svg)](https://github.com/arfc/osier/actions/workflows/CI.yml)
