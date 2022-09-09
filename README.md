@@ -1,2 +1,2 @@
-# treetop
-Justice oriented energy system optimization framework
+# osier
+Open source multi-objective energy system framework
