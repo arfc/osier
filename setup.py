@@ -58,7 +58,12 @@ REQUIRES = [
     'dill',
     'openpyxl',
     'nrelpy']
-EXTRAS_REQUIRE = {'doc': ['sphinx', 'myst-parser', 'numpydoc', 'pydata_sphinx_theme']}
+EXTRAS_REQUIRE = {
+    'doc': [
+        'sphinx',
+        'myst-parser',
+        'numpydoc',
+        'pydata_sphinx_theme']}
 PYTHON_REQUIRES = ">= 3.6"
 
 PACKAGES = find_packages()
