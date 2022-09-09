@@ -51,16 +51,13 @@ MICRO = _version_micro
 VERSION = __version__
 PACKAGE_DATA = {'osier': [pjoin('data', '*')]}
 REQUIRES = ['numpy', 'pandas', 'matplotlib', 'pytest', 'dill', 'openpyxl']
-EXTRAS_REQUIRE = {'doc':['sphinx']}
+EXTRAS_REQUIRE = {'doc':['sphinx', 'myst-parser']}
 PYTHON_REQUIRES = ">= 3.6"
 
 PACKAGES = find_packages()
 
 ENTRY_POINTS = {}
 
-# Give setuptools a hint to complain if it's too old a version
-# 24.2.0 added the python_requires option
-# Should match pyproject.toml
 SETUP_REQUIRES = ['setuptools >= 24.2.0']
 # This enables setuptools to install wheel on-the-fly
 SETUP_REQUIRES += ['wheel'] if 'bdist_wheel' in sys.argv else []
