@@ -1,5 +1,5 @@
 """
-This is a placeholder test suite so that pytest has something to run! 
+This is a placeholder test suite so that pytest has something to run!
 Otherwise the CI check will fail.
 Once other functionality has been added to `treetop`, delete this file.
 """
