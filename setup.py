@@ -29,17 +29,17 @@ CLASSIFIERS = ["Development Status :: 3 - Alpha",
                "Topic :: Scientific/Engineering"]
 
 # Description should be a one-liner:
-description = "treetop: A justice oriented energy system optimization tool"
+description = "osier: A justice oriented energy system optimization tool"
 # Long description will go up on the pypi page
 
-NAME = "treetop"
+NAME = "osier"
 MAINTAINER = "Samuel Dotson"
 MAINTAINER_EMAIL = "samgdotson@gmail.com"
 DESCRIPTION = description
 with open("README.md", encoding="utf-8") as f:
     LONG_DESCRIPTION = f.read()
 LONG_DESCRIPTION_CONTENT_TYPE = 'text/markdown'
-URL = "http://github.com/arfc/treetop"
+URL = "http://github.com/arfc/osier"
 DOWNLOAD_URL = ""
 LICENSE = "BSD-3"
 AUTHOR = "Samuel Dotson"
@@ -49,7 +49,7 @@ MAJOR = _version_major
 MINOR = _version_minor
 MICRO = _version_micro
 VERSION = __version__
-PACKAGE_DATA = {'treetop': [pjoin('data', '*')]}
+PACKAGE_DATA = {'osier': [pjoin('data', '*')]}
 REQUIRES = ['numpy', 'pandas', 'matplotlib', 'pytest', 'dill', 'openpyxl']
 PYTHON_REQUIRES = ">= 3.6"
 
