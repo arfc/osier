@@ -32,7 +32,15 @@ release = '0.1.0'
 # ones.
 extensions = [
     "myst_parser",
-    "numpydoc"
+    "numpydoc",
+    "sphinxcontrib.napoleon",
+    "sphinx.ext.autodoc",
+    "sphinx.ext.autosummary",
+    "sphinx.ext.intersphinx",
+    "sphinx.ext.napoleon",
+    "sphinx.ext.viewcode",
+    "sphinx_autodoc_typehints",
+    "sphinx_design"
 ]
 
 # Add any paths that contain templates here, relative to this directory.
