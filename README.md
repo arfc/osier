@@ -28,6 +28,7 @@ now the documentation may be built with
 ```bash
 cd osier/docs
 make html
+cd build/html
 # to serve the documentation
 python -m http.server
 ```
