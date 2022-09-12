@@ -8,7 +8,7 @@ are labeled "Difficulty:1-Beginner" and are good first issues to tackle for new 
 `osier`. You can even sort by "label" to find precisely those issues!
 
 ## Bug reports
-Bug reports from users are an important for identifying unforeseen issues. If you find a bug please
+Bug reports from users are important for identifying unintentional behavior. If you find a bug, please
 open a new issue with the following:
 1. An explanation of the problem with enough details for others to reproduce the problem. Some 
 common information needed is

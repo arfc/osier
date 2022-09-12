@@ -18,7 +18,7 @@ git clone https://github.com/arfc/osier.git
 cd osier
 # for a basic installation
 pip install .
-# to also build the documentation
+# to also install the documentation dependencies
 pip install .[doc]
 ```
 
