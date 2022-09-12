@@ -3,9 +3,9 @@
 Thank you for contributing to `osier`! All contributions, bug reports, bug fixes, documentation 
 improvements, enhancements and ideas are welcome.
 
-The [GitHub "Issues" tab](https://github.com/arfc/osier/issues) contains open issues. Some issues
-are labeled "Difficulty:1-Beginner" and are good first issues to tackle for new contributers to 
-`osier`. You can even sort by "label" to find precisely those issues!
+We use [GitHub "Issues" tab](https://github.com/arfc/osier/issues) to track bugs and feature requests. Issues
+labeled "Difficulty:1-Beginner" are good first issues for new contributors to tackle.
+You can sort by "label" to find these issues.
 
 ## Bug reports
 Bug reports from users are important for identifying unintentional behavior. If you find a bug, please

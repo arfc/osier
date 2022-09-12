@@ -62,7 +62,6 @@ EXTRAS_REQUIRE = {
     'doc': [
         'sphinx',
         'myst-parser',
-        'sphinxcontrib-napoleon',
         "sphinx_design",
         "sphinx-autodoc-typehints",
         'numpydoc',

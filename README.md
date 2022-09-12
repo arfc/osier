@@ -40,5 +40,4 @@ of `osier`.
 
 ## Contributing
 
-Contributions to `osier` are welcome. For details on how to make bug reports, issues to
-work on, and other information, check the [contributing page](docs/source/contrib.md)
+Contributions to `osier` are welcome. For details on how to make bug reports, pull requests, and other information, check the [contributing page](docs/source/contrib.md)
