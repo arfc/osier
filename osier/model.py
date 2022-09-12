@@ -7,7 +7,7 @@ class Model(object):
     parameters to solve a genetic algorithm with pymoo.
     """
 
-    def __init__(self, technologies, algorithm='NSGA2', pymoo_problem='Problem' **kwargs) -> None:
+    def __init__(self, technologies, algorithm='NSGA2', pymoo_problem='Problem', **kwargs) -> None:
         """
         Initializes the Model class.
 
