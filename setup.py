@@ -60,7 +60,7 @@ REQUIRES = [
     'nrelpy']
 EXTRAS_REQUIRE = {
     'doc': [
-        'sphinx',
+        'sphinx>=5.1',
         'myst-parser',
         "sphinx_design",
         "sphinx-autodoc-typehints",
