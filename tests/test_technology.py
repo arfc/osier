@@ -1,7 +1,7 @@
 from pickletools import pystring
 import pytest
 import unyt
-from unyt import MW, hr, BTU, Horsepower
+from unyt import MW, hr, BTU, Horsepower, day
 from osier import Technology
 from unyt.exceptions import UnitParseError
 
@@ -197,3 +197,54 @@ def test_fuel_cost():
     assert PLANET_EXPRESS.fuel_cost.value == pytest.approx(
         3412141.47989694, 0.5)
     assert PLANET_EXPRESS.fuel_cost.units == (MW * hr)**-1
+
+
+def test_unit_power():
+    with pytest.raises(UnitParseError) as e:
+        PLANET_EXPRESS.unit_power = "darkmatter"
+    with pytest.raises(AssertionError) as e:
+        PLANET_EXPRESS.unit_power = BTU
+    with pytest.raises(AssertionError) as e:
+        PLANET_EXPRESS.unit_power = "BTU"
+    with pytest.raises(ValueError) as e:
+        PLANET_EXPRESS.unit_power = 10
+    PLANET_EXPRESS.unit_power = Horsepower
+    assert PLANET_EXPRESS.unit_power == Horsepower
+
+    PLANET_EXPRESS.unit_power = "Horsepower"
+    assert PLANET_EXPRESS.unit_power == Horsepower
+
+
+def test_unit_time():
+    with pytest.raises(UnitParseError) as e:
+        PLANET_EXPRESS.unit_time = "darkmatter"
+    with pytest.raises(AssertionError) as e:
+        PLANET_EXPRESS.unit_time = MW
+    with pytest.raises(AssertionError) as e:
+        PLANET_EXPRESS.unit_time = "MW"
+    with pytest.raises(ValueError) as e:
+        PLANET_EXPRESS.unit_time = 10
+    PLANET_EXPRESS.unit_time = day
+    assert PLANET_EXPRESS.unit_time == day
+    
+    PLANET_EXPRESS.unit_time = "day"
+    assert PLANET_EXPRESS.unit_time == day
+
+
+def test_unit_energy():
+    with pytest.raises(UnitParseError) as e:
+        PLANET_EXPRESS.unit_energy = "darkmatter"
+    with pytest.raises(AssertionError) as e:
+        PLANET_EXPRESS.unit_energy = MW
+    with pytest.raises(AssertionError) as e:
+        PLANET_EXPRESS.unit_energy = "MW"
+    with pytest.raises(ValueError) as e:
+        PLANET_EXPRESS.unit_energy = 10
+    PLANET_EXPRESS.unit_energy = Horsepower*day
+    assert PLANET_EXPRESS.unit_energy == Horsepower*day
+
+    PLANET_EXPRESS.unit_energy = "Horsepower*day"
+    assert PLANET_EXPRESS.unit_energy == Horsepower*day
+
+    
+

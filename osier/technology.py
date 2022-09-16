@@ -55,6 +55,8 @@ class Technology(object):
     >>> my_unit = "10 MW**-1"
     >>> my_unit = unyt_quantity.from_string(my_unit)
     unyt_quantity(10., '1/MW')
+
+    However, inverse MWh cannot be converted from a string.
     """
     
     def __init__(self, 
@@ -139,12 +141,12 @@ class Technology(object):
         if value:
             if isinstance(value, unyt.unit_object.Unit):
                 assert value.same_dimensions_as(MW*hr)
-                self._unit_time = value
+                self._unit_energy = value
             elif isinstance(value, str):
                 try:
                     unit = unyt_quantity.from_string(value).units
                     assert unit.same_dimensions_as(MW*hr)
-                    self._unit_time = unit
+                    self._unit_energy = unit
                 except UnitParseError:
                     raise UnitParseError(f"Could not interpret <{value}>.")
                 except AssertionError:
