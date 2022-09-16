@@ -59,7 +59,7 @@ class Technology(object):
 
         self.technology_name = technology_name
         self.technology_type = technology_type
-        
+
         self.unit_power = default_power_units
         self.unit_time = default_time_units
         self.unit_energy = default_energy_units
@@ -133,7 +133,7 @@ class Technology(object):
 
     @capacity.setter
     def capacity(self, value):
-        if isinstance(value, unyt.array.unyt_quantity):
+        if isinstance(value, unyt_quantity):
             self._capacity = value.to(self.unit_power)
         elif isinstance(value, float):
             self._capacity = value * self.unit_power
@@ -162,7 +162,7 @@ class Technology(object):
 
     @capital_cost.setter
     def capital_cost(self, value):
-        if isinstance(value, unyt.array.unyt_quantity):
+        if isinstance(value, unyt_quantity):
             self._capital_cost = value.to(1 / self.unit_power)
         elif isinstance(value, float):
             self._capital_cost = value / self.unit_power
@@ -191,7 +191,7 @@ class Technology(object):
 
     @om_cost_fixed.setter
     def om_cost_fixed(self, value):
-        if isinstance(value, unyt.array.unyt_quantity):
+        if isinstance(value, unyt_quantity):
             self._om_cost_fixed = value.to(1 / self.unit_power)
         elif isinstance(value, float):
             self._om_cost_fixed = value / self.unit_power
@@ -219,7 +219,7 @@ class Technology(object):
 
     @om_cost_variable.setter
     def om_cost_variable(self, value):
-        if isinstance(value, unyt.array.unyt_quantity):
+        if isinstance(value, unyt_quantity):
             self._om_cost_variable = value.to(1 / self.unit_energy)
         elif isinstance(value, float):
             self._om_cost_variable = value / self.unit_energy
@@ -248,7 +248,7 @@ class Technology(object):
 
     @fuel_cost.setter
     def fuel_cost(self, value):
-        if isinstance(value, unyt.array.unyt_quantity):
+        if isinstance(value, unyt_quantity):
             self._fuel_cost = value.to(1 / self.unit_energy)
         elif isinstance(value, float):
             self._fuel_cost = value / self.unit_energy
