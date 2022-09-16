@@ -226,7 +226,7 @@ def test_unit_time():
         PLANET_EXPRESS.unit_time = 10
     PLANET_EXPRESS.unit_time = day
     assert PLANET_EXPRESS.unit_time == day
-    
+
     PLANET_EXPRESS.unit_time = "day"
     assert PLANET_EXPRESS.unit_time == day
 
@@ -240,11 +240,8 @@ def test_unit_energy():
         PLANET_EXPRESS.unit_energy = "MW"
     with pytest.raises(ValueError) as e:
         PLANET_EXPRESS.unit_energy = 10
-    PLANET_EXPRESS.unit_energy = Horsepower*day
-    assert PLANET_EXPRESS.unit_energy == Horsepower*day
+    PLANET_EXPRESS.unit_energy = Horsepower * day
+    assert PLANET_EXPRESS.unit_energy == Horsepower * day
 
     PLANET_EXPRESS.unit_energy = "Horsepower*day"
-    assert PLANET_EXPRESS.unit_energy == Horsepower*day
-
-    
-
+    assert PLANET_EXPRESS.unit_energy == Horsepower * day
