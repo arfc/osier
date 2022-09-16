@@ -16,6 +16,7 @@ This package is in active development.
 :maxdepth: 2
 
 contrib
+reference/index
 ```
 
 ## Indices and tables
