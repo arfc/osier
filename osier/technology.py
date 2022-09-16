@@ -54,7 +54,7 @@ class Technology(object):
                 capacity = 0.0,
                 default_power_units = MW,
                 default_time_units = hr,
-                default_energy_units = MW*hr) -> None:
+                default_energy_units = None) -> None:
 
 
         self.technology_name = technology_name
@@ -122,8 +122,24 @@ class Technology(object):
 
 
     @unit_energy.setter
-    def unit_energy(self):
-        self._unit_energy = self._unit_power * self._unit_time
+    def unit_energy(self, value):
+        if value:
+            if isinstance(value, unyt.unit_object.Unit):
+                assert value.same_dimensions_as(MW*hr)
+                self._unit_time = value
+            elif isinstance(value, str):
+                try:
+                    unit = unyt_quantity.from_string(value).units
+                    assert unit.same_dimensions_as(MW*hr)
+                    self._unit_time = unit
+                except UnitParseError:
+                    raise UnitParseError(f"Could not interpret <{value}>.")
+                except AssertionError:
+                        raise AssertionError(f"{value} lacks units of energy.")
+            else:
+                raise ValueError(f"Value of type <{type(value)}> passed.")
+        else:
+            self._unit_energy = self._unit_power * self._unit_time
 
 
     @property
