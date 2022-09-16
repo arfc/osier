@@ -42,6 +42,19 @@ class Technology(object):
     Cost values are listed in the docs as [$ / physical unit]. However,
     :class:`osier` does not currently have a currency handler, therefore the 
     units are technically [1 / physical unit].
+
+    The :class:`unyt` library may not be able to interpret strings for
+    inverse units. For example:
+
+    >>> my_unit = "10 / MW"
+    >>> my_unit = unyt_quantity.from_string(my_unit)
+    ValueError: Received invalid quantity expression '10/MW'.
+
+    Instead, try the more explicit approach:
+
+    >>> my_unit = "10 MW**-1"
+    >>> my_unit = unyt_quantity.from_string(my_unit)
+    unyt_quantity(10., '1/MW')
     """
     
     def __init__(self, 
@@ -157,11 +170,11 @@ class Technology(object):
             self._capacity = value * self.unit_power
         elif isinstance(value, str):
             try:
-                self._capacity = float(value) / self.energy
+                self._capacity = float(value) * self.unit_power
             except ValueError:
                 try:
                     unyt_value = unyt_quantity.from_string(value)
-                    assert unyt_value.units.same_dimensions_as(self.unit_energy**-1)
+                    assert unyt_value.units.same_dimensions_as(self.unit_power)
                     self._fuel_cost = unyt_value
                 except UnitParseError:
                     raise UnitParseError(f"Could not interpret <{value}>.")
