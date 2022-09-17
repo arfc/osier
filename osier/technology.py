@@ -24,11 +24,11 @@ def _validate_unit(value, dimension):
         The value being tested. Should be a unit symbol.
     dimension : string
         The expected dimensions of `value`.
-        Currently accepts: ['time', 'energy', 'power'].
+        Currently accepts: ['time', 'energy', 'power', 'spec_power', 'spec_energy'].
 
     Returns
     -------
-    valid_unit : `unyt.unit_object.Unit`
+    valid_unit : :class:`unyt.unit_object.Unit`
         The validated unit.
     """
     try:
@@ -56,6 +56,28 @@ def _validate_unit(value, dimension):
 
 
 def _validate_quantity(value, dimension):
+    """
+    This function checks that a quantity has the correct
+    dimensions. Used in :class:`Technology` to set
+    data attributess.
+
+    Parameters
+    ----------
+    value : string, float, int, or :class:`unyt.unyt_quantity`
+        The value being tested. Should be something like
+    
+        >>> _validate_quantity("10 MW", dimension='power')
+        unyt_quantity(10., 'MW')
+        
+    dimension : string
+        The expected dimensions of `value`.
+        Currently accepts: ['time', 'energy', 'power', 'spec_power', 'spec_energy'].
+
+    Returns
+    -------
+    valid_quantity : :class:`unyt.unyt_quantity`
+        The validated quantity.
+    """
     try:
         exp_dim = _dim_opts[dimension]
     except KeyError:
