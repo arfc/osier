@@ -2,14 +2,14 @@ from logging.config import valid_ident
 import unyt
 from unyt import MW, hr
 from unyt import unyt_quantity
-from unyt.exceptions import UnitParseError
+from unyt.exceptions import UnitParseError, UnitConversionError
 
 
-_dim_opts = {'time':hr,
-            'power':MW,
-            'energy':MW*hr,
-            'spec_power':MW**-1,
-            'spec_energy':(MW*hr)**-1}
+_dim_opts = {'time': hr,
+             'power': MW,
+             'energy': MW * hr,
+             'spec_power': MW**-1,
+             'spec_energy': (MW * hr)**-1}
 
 
 def _validate_unit(value, dimension):
@@ -54,8 +54,39 @@ def _validate_unit(value, dimension):
 
     return valid_unit
 
+
 def _validate_quantity(value, dimension):
-    return
+    try:
+        exp_dim = _dim_opts[dimension]
+    except KeyError:
+        raise KeyError(f"Key <{dimension}> not accepted. Try: {_dim_opts}")
+
+    valid_quantity = None
+    if isinstance(value, unyt_quantity):
+        try:
+            valid_quantity = value.to(exp_dim)
+        except UnitConversionError:
+            raise UnitConversionError
+    elif isinstance(value, float):
+        self._capital_cost = value / self.unit_power
+    elif isinstance(value, int):
+        self._capital_cost = value / self.unit_power
+    elif isinstance(value, str):
+        try:
+            self._capital_cost = float(value) / self.unit_power
+        except ValueError:
+            try:
+                unyt_value = unyt_quantity.from_string(value)
+                assert unyt_value.units.same_dimensions_as(
+                    self.unit_power**-1)
+                self._capital_cost = unyt_value
+            except UnitParseError:
+                raise UnitParseError(f"Could not interpret <{value}>.")
+            except AssertionError:
+                raise AssertionError(f"{value} lacks units of 1/power.")
+    else:
+        raise ValueError(f"Value of type <{type(value)}> passed.")
+    return valid_quantity
 
 
 class Technology(object):
@@ -154,7 +185,6 @@ class Technology(object):
     def unit_time(self, value):
         self._unit_time = _validate_unit(value, dimension="time")
 
-
     @property
     def unit_energy(self):
         return self._unit_energy
@@ -165,7 +195,6 @@ class Technology(object):
             self._unit_energy = _validate_unit(value, dimension="energy")
         else:
             self._unit_energy = self._unit_power * self._unit_time
-
 
     @property
     def capacity(self):

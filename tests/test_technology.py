@@ -31,8 +31,16 @@ dict_type = {"value": 10,
 
 def test_validate_unit():
     assert _validate_unit("MW", 'power').same_dimensions_as(Horsepower)
-    assert _validate_unit("BTU", 'energy').same_dimensions_as(MW*hr)
+    assert _validate_unit("BTU", 'energy').same_dimensions_as(MW * hr)
     assert _validate_unit("day", 'time').same_dimensions_as(hr)
+    assert _validate_unit(
+        "Horsepower**-1",
+        'spec_power').same_dimensions_as(
+        MW**-1)
+    assert _validate_unit(
+        (Horsepower * day)**-1,
+        'spec_energy').same_dimensions_as(
+        (MW * hr)**-1)
 
     with pytest.raises(UnitParseError) as e:
         _validate_unit("darkmatter", "energy")
