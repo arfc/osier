@@ -1,7 +1,61 @@
+from logging.config import valid_ident
 import unyt
 from unyt import MW, hr
 from unyt import unyt_quantity
 from unyt.exceptions import UnitParseError
+
+
+_dim_opts = {'time':hr,
+            'power':MW,
+            'energy':MW*hr,
+            'spec_power':MW**-1,
+            'spec_energy':(MW*hr)**-1}
+
+
+def _validate_unit(value, dimension):
+    """
+    This function checks that a unit has the correct
+    dimensions. Used in :class:`Technology` to set
+    units.
+
+    Parameters
+    ----------
+    value : string, float, int, or :class:`unyt.unit_object.Unit`
+        The value being tested. Should be a unit symbol.
+    dimension : string
+        The expected dimensions of `value`.
+        Currently accepts: ['time', 'energy', 'power'].
+
+    Returns
+    -------
+    valid_unit : `unyt.unit_object.Unit`
+        The validated unit.
+    """
+    try:
+        exp_dim = _dim_opts[dimension]
+    except KeyError:
+        raise KeyError(f"Key <{dimension}> not accepted. Try: {_dim_opts}")
+
+    valid_unit = None
+    if isinstance(value, unyt.unit_object.Unit):
+        assert value.same_dimensions_as(exp_dim)
+        valid_unit = value
+    elif isinstance(value, str):
+        try:
+            unit = unyt_quantity.from_string(value).units
+            assert unit.same_dimensions_as(exp_dim)
+            valid_unit = unit
+        except UnitParseError:
+            raise UnitParseError(f"Could not interpret <{value}>.")
+        except AssertionError:
+            raise AssertionError(f"{value} lacks units of {dimension}.")
+    else:
+        raise ValueError(f"Value of type <{type(value)}> passed.")
+
+    return valid_unit
+
+def _validate_quantity(value, dimension):
+    return
 
 
 class Technology(object):
@@ -90,20 +144,7 @@ class Technology(object):
 
     @unit_power.setter
     def unit_power(self, value):
-        if isinstance(value, unyt.unit_object.Unit):
-            assert value.same_dimensions_as(MW)
-            self._unit_power = value
-        elif isinstance(value, str):
-            try:
-                unit = unyt_quantity.from_string(value).units
-                assert unit.same_dimensions_as(MW)
-                self._unit_power = unit
-            except UnitParseError:
-                raise UnitParseError(f"Could not interpret <{value}>.")
-            except AssertionError:
-                raise AssertionError(f"{value} lacks units of power.")
-        else:
-            raise ValueError(f"Value of type <{type(value)}> passed.")
+        self._unit_power = _validate_unit(value, dimension="power")
 
     @property
     def unit_time(self):
@@ -111,20 +152,8 @@ class Technology(object):
 
     @unit_time.setter
     def unit_time(self, value):
-        if isinstance(value, unyt.unit_object.Unit):
-            assert value.same_dimensions_as(hr)
-            self._unit_time = value
-        elif isinstance(value, str):
-            try:
-                unit = unyt_quantity.from_string(value).units
-                assert unit.same_dimensions_as(hr)
-                self._unit_time = unit
-            except UnitParseError:
-                raise UnitParseError(f"Could not interpret <{value}>.")
-            except AssertionError:
-                raise AssertionError(f"{value} lacks units of time.")
-        else:
-            raise ValueError(f"Value of type <{type(value)}> passed.")
+        self._unit_time = _validate_unit(value, dimension="time")
+
 
     @property
     def unit_energy(self):
@@ -133,22 +162,10 @@ class Technology(object):
     @unit_energy.setter
     def unit_energy(self, value):
         if value:
-            if isinstance(value, unyt.unit_object.Unit):
-                assert value.same_dimensions_as(MW * hr)
-                self._unit_energy = value
-            elif isinstance(value, str):
-                try:
-                    unit = unyt_quantity.from_string(value).units
-                    assert unit.same_dimensions_as(MW * hr)
-                    self._unit_energy = unit
-                except UnitParseError:
-                    raise UnitParseError(f"Could not interpret <{value}>.")
-                except AssertionError:
-                    raise AssertionError(f"{value} lacks units of energy.")
-            else:
-                raise ValueError(f"Value of type <{type(value)}> passed.")
+            self._unit_energy = _validate_unit(value, dimension="energy")
         else:
             self._unit_energy = self._unit_power * self._unit_time
+
 
     @property
     def capacity(self):

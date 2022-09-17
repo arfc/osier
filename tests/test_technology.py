@@ -3,6 +3,7 @@ import pytest
 import unyt
 from unyt import MW, hr, BTU, Horsepower, day
 from osier import Technology
+from osier.technology import _validate_unit
 from unyt.exceptions import UnitParseError
 
 TECH_NAME = "PlanetExpress"
@@ -26,6 +27,15 @@ time_str = "10 hr"
 unknown_str = "10 fortnights"
 dict_type = {"value": 10,
              "unit": MW}
+
+
+def test_validate_unit():
+    assert _validate_unit("MW", 'power').same_dimensions_as(Horsepower)
+    assert _validate_unit("BTU", 'energy').same_dimensions_as(MW*hr)
+    assert _validate_unit("day", 'time').same_dimensions_as(hr)
+
+    with pytest.raises(UnitParseError) as e:
+        _validate_unit("darkmatter", "energy")
 
 
 def test_initialize():
