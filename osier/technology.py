@@ -1,4 +1,3 @@
-from logging.config import valid_ident
 import unyt
 from unyt import MW, hr
 from unyt import unyt_quantity

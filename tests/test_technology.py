@@ -1,10 +1,9 @@
-from pickletools import pystring
 import pytest
 import unyt
 from unyt import MW, hr, BTU, Horsepower, day
 from osier import Technology
 from osier.technology import _validate_unit, _validate_quantity
-from unyt.exceptions import UnitParseError, UnitConversionError
+from unyt.exceptions import UnitParseError
 
 TECH_NAME = "PlanetExpress"
 PLANET_EXPRESS = Technology(TECH_NAME)
