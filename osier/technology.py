@@ -66,14 +66,14 @@ def _validate_quantity(value, dimension):
         try:
             valid_quantity = value.to(exp_dim)
         except UnitConversionError:
-            raise UnitConversionError
+            raise TypeError(f"Cannot convert {value.units} to {exp_dim}")
     elif isinstance(value, float):
         valid_quantity = value * exp_dim
     elif isinstance(value, int):
         valid_quantity = value * exp_dim
     elif isinstance(value, str):
         try:
-            valid_quantity = float(value) / exp_dim
+            valid_quantity = float(value) * exp_dim
         except ValueError:
             try:
                 unyt_value = unyt_quantity.from_string(value)
@@ -201,59 +201,15 @@ class Technology(object):
 
     @capacity.setter
     def capacity(self, value):
-        if isinstance(value, unyt_quantity):
-            self._capacity = value.to(self.unit_power)
-        elif isinstance(value, float):
-            self._capacity = value * self.unit_power
-        elif isinstance(value, int):
-            self._capacity = value * self.unit_power
-        elif isinstance(value, str):
-            try:
-                self._capacity = float(value) * self.unit_power
-            except ValueError:
-                try:
-                    unyt_value = unyt_quantity.from_string(value)
-                    assert unyt_value.units.same_dimensions_as(self.unit_power)
-                    self._fuel_cost = unyt_value
-                except UnitParseError:
-                    raise UnitParseError(f"Could not interpret <{value}>.")
-                except AssertionError:
-                    raise AssertionError(f"{value} lacks units of energy.")
-        else:
-            raise ValueError(f"Value of type <{type(value)}> passed.")
+        self._capacity = _validate_quantity(value, dimension="power")
 
     @property
     def capital_cost(self):
         return self._capital_cost
 
-
     @capital_cost.setter
     def capital_cost(self, value):
         self._capital_cost = _validate_quantity(value, dimension="spec_power")
-
-    # @capital_cost.setter
-    # def capital_cost(self, value):
-    #     if isinstance(value, unyt_quantity):
-    #         self._capital_cost = value.to(1 / self.unit_power)
-    #     elif isinstance(value, float):
-    #         self._capital_cost = value / self.unit_power
-    #     elif isinstance(value, int):
-    #         self._capital_cost = value / self.unit_power
-    #     elif isinstance(value, str):
-    #         try:
-    #             self._capital_cost = float(value) / self.unit_power
-    #         except ValueError:
-    #             try:
-    #                 unyt_value = unyt_quantity.from_string(value)
-    #                 assert unyt_value.units.same_dimensions_as(
-    #                     self.unit_power**-1)
-    #                 self._capital_cost = unyt_value
-    #             except UnitParseError:
-    #                 raise UnitParseError(f"Could not interpret <{value}>.")
-    #             except AssertionError:
-    #                 raise AssertionError(f"{value} lacks units of 1/power.")
-    #     else:
-    #         raise ValueError(f"Value of type <{type(value)}> passed.")
 
     @property
     def om_cost_fixed(self):
@@ -261,27 +217,7 @@ class Technology(object):
 
     @om_cost_fixed.setter
     def om_cost_fixed(self, value):
-        if isinstance(value, unyt_quantity):
-            self._om_cost_fixed = value.to(1 / self.unit_power)
-        elif isinstance(value, float):
-            self._om_cost_fixed = value / self.unit_power
-        elif isinstance(value, int):
-            self._om_cost_fixed = value / self.unit_power
-        elif isinstance(value, str):
-            try:
-                self._om_cost_fixed = float(value) / self.unit_power
-            except ValueError:
-                try:
-                    unyt_value = unyt_quantity.from_string(value)
-                    assert unyt_value.units.same_dimensions_as(
-                        self.unit_power**-1)
-                    self._om_cost_fixed = unyt_value
-                except UnitParseError:
-                    raise UnitParseError(f"Could not interpret <{value}>.")
-                except AssertionError:
-                    raise AssertionError(f"{value} lacks units of 1/power.")
-        else:
-            raise ValueError(f"Value of type <{type(value)}> passed.")
+        self._om_cost_fixed = _validate_quantity(value, dimension="spec_power")
 
     @property
     def om_cost_variable(self):
@@ -289,27 +225,8 @@ class Technology(object):
 
     @om_cost_variable.setter
     def om_cost_variable(self, value):
-        if isinstance(value, unyt_quantity):
-            self._om_cost_variable = value.to(1 / self.unit_energy)
-        elif isinstance(value, float):
-            self._om_cost_variable = value / self.unit_energy
-        elif isinstance(value, int):
-            self._om_cost_variable = value / self.unit_energy
-        elif isinstance(value, str):
-            try:
-                self._om_cost_variable = float(value) / self.unit_energy
-            except ValueError:
-                try:
-                    unyt_value = unyt_quantity.from_string(value)
-                    assert unyt_value.units.same_dimensions_as(
-                        self.unit_energy**-1)
-                    self._om_cost_variable = unyt_value
-                except UnitParseError:
-                    raise UnitParseError(f"Could not interpret <{value}>.")
-                except AssertionError:
-                    raise AssertionError(f"{value} lacks units of energy.")
-        else:
-            raise ValueError(f"Value of type <{type(value)}> passed.")
+        self._om_cost_variable = _validate_quantity(
+            value, dimension="spec_energy")
 
     @property
     def fuel_cost(self):
@@ -317,24 +234,4 @@ class Technology(object):
 
     @fuel_cost.setter
     def fuel_cost(self, value):
-        if isinstance(value, unyt_quantity):
-            self._fuel_cost = value.to(1 / self.unit_energy)
-        elif isinstance(value, float):
-            self._fuel_cost = value / self.unit_energy
-        elif isinstance(value, int):
-            self._fuel_cost = value / self.unit_energy
-        elif isinstance(value, str):
-            try:
-                self._fuel_cost = float(value) / self.unit_energy
-            except ValueError:
-                try:
-                    unyt_value = unyt_quantity.from_string(value)
-                    assert unyt_value.units.same_dimensions_as(
-                        self.unit_energy**-1)
-                    self._fuel_cost = unyt_value
-                except UnitParseError:
-                    raise UnitParseError(f"Could not interpret <{value}>.")
-                except AssertionError:
-                    raise AssertionError(f"{value} lacks units of energy.")
-        else:
-            raise ValueError(f"Value of type <{type(value)}> passed.")
+        self._fuel_cost = _validate_quantity(value, dimension="spec_energy")

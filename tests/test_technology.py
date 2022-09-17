@@ -3,8 +3,8 @@ import pytest
 import unyt
 from unyt import MW, hr, BTU, Horsepower, day
 from osier import Technology
-from osier.technology import _validate_unit
-from unyt.exceptions import UnitParseError
+from osier.technology import _validate_unit, _validate_quantity
+from unyt.exceptions import UnitParseError, UnitConversionError
 
 TECH_NAME = "PlanetExpress"
 PLANET_EXPRESS = Technology(TECH_NAME)
@@ -44,6 +44,27 @@ def test_validate_unit():
 
     with pytest.raises(UnitParseError) as e:
         _validate_unit("darkmatter", "energy")
+
+    with pytest.raises(KeyError) as e:
+        _validate_unit("darkmatter", "fuel")
+
+
+def test_validate_quantity():
+    assert _validate_quantity(power_unyt, 'power') == 10 * (MW)
+    assert _validate_quantity(energy_unyt, 'energy') == 10 * (MW * hr)
+    assert _validate_quantity(time_unyt, 'time') == 1 * (hr)
+    assert _validate_quantity("10 Horsepower**-1",
+                              'spec_power') == 10 * (Horsepower**-1)
+    assert _validate_quantity(10 * (Horsepower * day)**-1,
+                              'spec_energy') == 10 * ((Horsepower * day)**-1)
+
+    with pytest.raises(TypeError) as e:
+        _validate_quantity(10 * MW, "energy")
+    with pytest.raises(UnitParseError) as e:
+        _validate_quantity("10 darkmatter", "energy")
+
+    with pytest.raises(KeyError) as e:
+        _validate_quantity("10 darkmatter", "fuel")
 
 
 def test_initialize():
