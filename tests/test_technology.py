@@ -1,13 +1,11 @@
 import pytest
 import unyt
-from unyt import MW, hr, BTU, Horsepower, day
+from unyt import kW, MW, hr, BTU, Horsepower, day
 from osier import Technology
 from osier.technology import _validate_unit, _validate_quantity
 from unyt.exceptions import UnitParseError
 
 TECH_NAME = "PlanetExpress"
-PLANET_EXPRESS = Technology(TECH_NAME)
-
 energy_unyt = 10.0 * MW * hr
 other_energy_unyt = 10.0 * BTU
 spec_energy_unyt = 10.0 * (MW * hr)**-1
@@ -27,6 +25,10 @@ unknown_str = "10 fortnights"
 dict_type = {"value": 10,
              "unit": MW}
 
+@pytest.fixture
+def advanced_tech():
+    PLANET_EXPRESS = Technology(TECH_NAME)
+    return PLANET_EXPRESS
 
 def test_validate_unit():
     assert _validate_unit("MW", 'power').same_dimensions_as(Horsepower)
@@ -66,220 +68,234 @@ def test_validate_quantity():
         _validate_quantity("10 darkmatter", "fuel")
 
 
-def test_initialize():
-    assert PLANET_EXPRESS.technology_name == TECH_NAME
-    assert PLANET_EXPRESS.technology_type == 'base'
-    assert PLANET_EXPRESS.capacity == 0.0
-    assert PLANET_EXPRESS.capital_cost == 0.0
-    assert PLANET_EXPRESS.om_cost_fixed == 0.0
-    assert PLANET_EXPRESS.om_cost_variable == 0.0
-    assert PLANET_EXPRESS.fuel_cost == 0.0
-    assert PLANET_EXPRESS.unit_power == MW
-    assert PLANET_EXPRESS.unit_time == hr
-    assert PLANET_EXPRESS.unit_energy == MW * hr
+def test_initialize(advanced_tech):
+    assert advanced_tech.technology_name == TECH_NAME
+    assert advanced_tech.technology_type == 'base'
+    assert advanced_tech.capacity == 0.0
+    assert advanced_tech.capital_cost == 0.0
+    assert advanced_tech.om_cost_fixed == 0.0
+    assert advanced_tech.om_cost_variable == 0.0
+    assert advanced_tech.fuel_cost == 0.0
+    assert advanced_tech.unit_power == MW
+    assert advanced_tech.unit_time == hr
+    assert advanced_tech.unit_energy == MW * hr
 
 
-def test_attribute_types():
-    assert isinstance(PLANET_EXPRESS.capacity, unyt.array.unyt_quantity)
-    assert isinstance(PLANET_EXPRESS.capital_cost, unyt.array.unyt_quantity)
-    assert isinstance(PLANET_EXPRESS.om_cost_fixed, unyt.array.unyt_quantity)
-    assert isinstance(PLANET_EXPRESS.om_cost_variable, unyt.array.unyt_quantity)
-    assert isinstance(PLANET_EXPRESS.fuel_cost, unyt.array.unyt_quantity)
-    assert isinstance(PLANET_EXPRESS.unit_power, unyt.unit_object.Unit)
-    assert isinstance(PLANET_EXPRESS.unit_energy, unyt.unit_object.Unit)
-    assert isinstance(PLANET_EXPRESS.unit_time, unyt.unit_object.Unit)
+def test_attribute_types(advanced_tech):
+    assert isinstance(advanced_tech.capacity, unyt.array.unyt_quantity)
+    assert isinstance(advanced_tech.capital_cost, unyt.array.unyt_quantity)
+    assert isinstance(advanced_tech.om_cost_fixed, unyt.array.unyt_quantity)
+    assert isinstance(advanced_tech.om_cost_variable, unyt.array.unyt_quantity)
+    assert isinstance(advanced_tech.fuel_cost, unyt.array.unyt_quantity)
+    assert isinstance(advanced_tech.unit_power, unyt.unit_object.Unit)
+    assert isinstance(advanced_tech.unit_energy, unyt.unit_object.Unit)
+    assert isinstance(advanced_tech.unit_time, unyt.unit_object.Unit)
 
 
-def test_capacity():
+def test_capacity(advanced_tech):
     with pytest.raises(ValueError) as e:
-        PLANET_EXPRESS.capacity = dict_type
+        advanced_tech.capacity = dict_type
     with pytest.raises(UnitParseError) as e:
-        PLANET_EXPRESS.capacity = unknown_str
+        advanced_tech.capacity = unknown_str
     with pytest.raises(AssertionError) as e:
-        PLANET_EXPRESS.capacity = energy_str
+        advanced_tech.capacity = energy_str
 
-    PLANET_EXPRESS.capacity = power_unyt
-    assert PLANET_EXPRESS.capacity.value == 10.0
-    assert PLANET_EXPRESS.capacity.units == MW
+    advanced_tech.capacity = power_unyt
+    assert advanced_tech.capacity.value == 10.0
+    assert advanced_tech.capacity.units == MW
 
-    PLANET_EXPRESS.capacity = power_str
-    assert PLANET_EXPRESS.capacity.value == 10.0
-    assert PLANET_EXPRESS.capacity.units == MW
+    advanced_tech.capacity = power_str
+    assert advanced_tech.capacity.value == 10.0
+    assert advanced_tech.capacity.units == MW
 
-    PLANET_EXPRESS.capacity = int_val
-    assert PLANET_EXPRESS.capacity.value == 10
-    assert PLANET_EXPRESS.capacity.units == MW
+    advanced_tech.capacity = int_val
+    assert advanced_tech.capacity.value == 10
+    assert advanced_tech.capacity.units == MW
 
-    PLANET_EXPRESS.capacity = str_val
-    assert PLANET_EXPRESS.capacity.value == 10.0
-    assert PLANET_EXPRESS.capacity.units == MW
+    advanced_tech.capacity = str_val
+    assert advanced_tech.capacity.value == 10.0
+    assert advanced_tech.capacity.units == MW
 
-    PLANET_EXPRESS.capacity = float_val * other_power_unyt
-    assert PLANET_EXPRESS.capacity.value == pytest.approx(0.007457, 0.005)
-    assert PLANET_EXPRESS.capacity.units == MW
+    advanced_tech.capacity = float_val * other_power_unyt
+    assert advanced_tech.capacity.value == pytest.approx(0.007457, 0.005)
+    assert advanced_tech.capacity.units == MW
+
+    advanced_tech.unit_power = "kW"
+    assert advanced_tech.capacity.units == kW
 
 
-def test_capital_cost():
+def test_capital_cost(advanced_tech):
     with pytest.raises(ValueError) as e:
-        PLANET_EXPRESS.capital_cost = dict_type
+        advanced_tech.capital_cost = dict_type
     with pytest.raises(UnitParseError) as e:
-        PLANET_EXPRESS.capital_cost = unknown_str
+        advanced_tech.capital_cost = unknown_str
     with pytest.raises(AssertionError) as e:
-        PLANET_EXPRESS.capital_cost = energy_str
+        advanced_tech.capital_cost = energy_str
 
-    PLANET_EXPRESS.capital_cost = spec_power_unyt
-    assert PLANET_EXPRESS.capital_cost.value == 10.0
-    assert PLANET_EXPRESS.capital_cost.units == MW**-1
+    advanced_tech.capital_cost = spec_power_unyt
+    assert advanced_tech.capital_cost.value == 10.0
+    assert advanced_tech.capital_cost.units == MW**-1
 
-    PLANET_EXPRESS.capital_cost = spec_power_str
-    assert PLANET_EXPRESS.capital_cost.value == 10.0
-    assert PLANET_EXPRESS.capital_cost.units == MW**-1
+    advanced_tech.capital_cost = spec_power_str
+    assert advanced_tech.capital_cost.value == 10.0
+    assert advanced_tech.capital_cost.units == MW**-1
 
-    PLANET_EXPRESS.capital_cost = int_val
-    assert PLANET_EXPRESS.capital_cost.value == 10
-    assert PLANET_EXPRESS.capital_cost.units == MW**-1
+    advanced_tech.capital_cost = int_val
+    assert advanced_tech.capital_cost.value == 10
+    assert advanced_tech.capital_cost.units == MW**-1
 
-    PLANET_EXPRESS.capital_cost = str_val
-    assert PLANET_EXPRESS.capital_cost.value == 10.0
-    assert PLANET_EXPRESS.capital_cost.units == MW**-1
+    advanced_tech.capital_cost = str_val
+    assert advanced_tech.capital_cost.value == 10.0
+    assert advanced_tech.capital_cost.units == MW**-1
 
-    PLANET_EXPRESS.capital_cost = float_val / other_power_unyt
-    assert PLANET_EXPRESS.capital_cost.value == pytest.approx(13410.220, 0.005)
-    assert PLANET_EXPRESS.capital_cost.units == MW**-1
+    advanced_tech.capital_cost = float_val / other_power_unyt
+    assert advanced_tech.capital_cost.value == pytest.approx(13410.220, 0.005)
+    assert advanced_tech.capital_cost.units == MW**-1
+
+    advanced_tech.unit_power = "kW"
+    assert advanced_tech.capital_cost.units == (kW)**-1
 
 
-def test_om_cost_fixed():
+def test_om_cost_fixed(advanced_tech):
     with pytest.raises(ValueError) as e:
-        PLANET_EXPRESS.om_cost_fixed = dict_type
+        advanced_tech.om_cost_fixed = dict_type
     with pytest.raises(UnitParseError) as e:
-        PLANET_EXPRESS.om_cost_fixed = unknown_str
+        advanced_tech.om_cost_fixed = unknown_str
     with pytest.raises(AssertionError) as e:
-        PLANET_EXPRESS.om_cost_fixed = energy_str
+        advanced_tech.om_cost_fixed = energy_str
 
-    PLANET_EXPRESS.om_cost_fixed = spec_power_unyt
-    assert PLANET_EXPRESS.om_cost_fixed.value == 10.0
-    assert PLANET_EXPRESS.om_cost_fixed.units == MW**-1
+    advanced_tech.om_cost_fixed = spec_power_unyt
+    assert advanced_tech.om_cost_fixed.value == 10.0
+    assert advanced_tech.om_cost_fixed.units == MW**-1
 
-    PLANET_EXPRESS.om_cost_fixed = spec_power_str
-    assert PLANET_EXPRESS.om_cost_fixed.value == 10.0
-    assert PLANET_EXPRESS.om_cost_fixed.units == MW**-1
+    advanced_tech.om_cost_fixed = spec_power_str
+    assert advanced_tech.om_cost_fixed.value == 10.0
+    assert advanced_tech.om_cost_fixed.units == MW**-1
 
-    PLANET_EXPRESS.om_cost_fixed = int_val
-    assert PLANET_EXPRESS.om_cost_fixed.value == 10
-    assert PLANET_EXPRESS.om_cost_fixed.units == MW**-1
+    advanced_tech.om_cost_fixed = int_val
+    assert advanced_tech.om_cost_fixed.value == 10
+    assert advanced_tech.om_cost_fixed.units == MW**-1
 
-    PLANET_EXPRESS.om_cost_fixed = str_val
-    assert PLANET_EXPRESS.om_cost_fixed.value == 10.0
-    assert PLANET_EXPRESS.om_cost_fixed.units == MW**-1
+    advanced_tech.om_cost_fixed = str_val
+    assert advanced_tech.om_cost_fixed.value == 10.0
+    assert advanced_tech.om_cost_fixed.units == MW**-1
 
-    PLANET_EXPRESS.om_cost_fixed = float_val / other_power_unyt
-    assert PLANET_EXPRESS.om_cost_fixed.value == pytest.approx(13410.220, 0.005)
-    assert PLANET_EXPRESS.om_cost_fixed.units == MW**-1
+    advanced_tech.om_cost_fixed = float_val / other_power_unyt
+    assert advanced_tech.om_cost_fixed.value == pytest.approx(13410.220, 0.005)
+    assert advanced_tech.om_cost_fixed.units == MW**-1
+
+    advanced_tech.unit_power = "kW"
+    assert advanced_tech.om_cost_fixed.units == (kW)**-1
 
 
-def test_om_cost_variable():
+def test_om_cost_variable(advanced_tech):
     with pytest.raises(ValueError) as e:
-        PLANET_EXPRESS.om_cost_variable = dict_type
+        advanced_tech.om_cost_variable = dict_type
     with pytest.raises(UnitParseError) as e:
-        PLANET_EXPRESS.om_cost_variable = unknown_str
+        advanced_tech.om_cost_variable = unknown_str
     with pytest.raises(AssertionError) as e:
-        PLANET_EXPRESS.om_cost_variable = power_str
+        advanced_tech.om_cost_variable = power_str
     with pytest.raises(ValueError) as e:
-        PLANET_EXPRESS.om_cost_variable = spec_energy_str
-    # assert PLANET_EXPRESS.om_cost_variable.value == 10.0
-    # assert PLANET_EXPRESS.om_cost_variable.units == (MW*hr)**-1
+        advanced_tech.om_cost_variable = spec_energy_str
+    # assert advanced_tech.om_cost_variable.value == 10.0
+    # assert advanced_tech.om_cost_variable.units == (MW*hr)**-1
 
-    PLANET_EXPRESS.om_cost_variable = spec_energy_unyt
-    assert PLANET_EXPRESS.om_cost_variable.value == 10.0
-    assert PLANET_EXPRESS.om_cost_variable.units == (MW * hr)**-1
+    advanced_tech.om_cost_variable = spec_energy_unyt
+    assert advanced_tech.om_cost_variable.value == 10.0
+    assert advanced_tech.om_cost_variable.units == (MW * hr)**-1
 
-    PLANET_EXPRESS.om_cost_variable = int_val
-    assert PLANET_EXPRESS.om_cost_variable.value == 10
-    assert PLANET_EXPRESS.om_cost_variable.units == (MW * hr)**-1
+    advanced_tech.om_cost_variable = int_val
+    assert advanced_tech.om_cost_variable.value == 10
+    assert advanced_tech.om_cost_variable.units == (MW * hr)**-1
 
-    PLANET_EXPRESS.om_cost_variable = str_val
-    assert PLANET_EXPRESS.om_cost_variable.value == 10.0
-    assert PLANET_EXPRESS.om_cost_variable.units == (MW * hr)**-1
+    advanced_tech.om_cost_variable = str_val
+    assert advanced_tech.om_cost_variable.value == 10.0
+    assert advanced_tech.om_cost_variable.units == (MW * hr)**-1
 
-    PLANET_EXPRESS.om_cost_variable = float_val / other_energy_unyt
-    assert PLANET_EXPRESS.om_cost_variable.value == pytest.approx(
+    advanced_tech.om_cost_variable = float_val / other_energy_unyt
+    assert advanced_tech.om_cost_variable.value == pytest.approx(
         3412141.5, 0.5)
-    assert PLANET_EXPRESS.om_cost_variable.units == (MW * hr)**-1
+    assert advanced_tech.om_cost_variable.units == (MW * hr)**-1
+
+    advanced_tech.unit_power = "kW"
+    advanced_tech.unit_time = "day"
+    assert advanced_tech.om_cost_variable.units == (kW*day)**-1
 
 
-def test_fuel_cost():
+def test_fuel_cost(advanced_tech):
     with pytest.raises(ValueError) as e:
-        PLANET_EXPRESS.fuel_cost = dict_type
+        advanced_tech.fuel_cost = dict_type
     with pytest.raises(UnitParseError) as e:
-        PLANET_EXPRESS.fuel_cost = unknown_str
+        advanced_tech.fuel_cost = unknown_str
     with pytest.raises(AssertionError) as e:
-        PLANET_EXPRESS.fuel_cost = power_str
+        advanced_tech.fuel_cost = power_str
     with pytest.raises(ValueError) as e:
-        PLANET_EXPRESS.fuel_cost = spec_energy_str
-        # assert PLANET_EXPRESS.fuel_cost.value == 10.0
-        # assert PLANET_EXPRESS.fuel_cost.units == (MW*hr)**-1
+        advanced_tech.fuel_cost = spec_energy_str
 
-    PLANET_EXPRESS.fuel_cost = spec_energy_unyt
-    assert PLANET_EXPRESS.fuel_cost.value == 10.0
-    assert PLANET_EXPRESS.fuel_cost.units == (MW * hr)**-1
+    advanced_tech.fuel_cost = spec_energy_unyt
+    assert advanced_tech.fuel_cost.value == 10.0
+    assert advanced_tech.fuel_cost.units == (MW * hr)**-1
 
-    PLANET_EXPRESS.fuel_cost = int_val
-    assert PLANET_EXPRESS.fuel_cost.value == 10
-    assert PLANET_EXPRESS.fuel_cost.units == (MW * hr)**-1
+    advanced_tech.fuel_cost = int_val
+    assert advanced_tech.fuel_cost.value == 10
+    assert advanced_tech.fuel_cost.units == (MW * hr)**-1
 
-    PLANET_EXPRESS.fuel_cost = str_val
-    assert PLANET_EXPRESS.fuel_cost.value == 10.0
-    assert PLANET_EXPRESS.fuel_cost.units == (MW * hr)**-1
+    advanced_tech.fuel_cost = str_val
+    assert advanced_tech.fuel_cost.value == 10.0
+    assert advanced_tech.fuel_cost.units == (MW * hr)**-1
 
-    PLANET_EXPRESS.fuel_cost = float_val / other_energy_unyt
-    assert PLANET_EXPRESS.fuel_cost.value == pytest.approx(
+    advanced_tech.fuel_cost = float_val / other_energy_unyt
+    assert advanced_tech.fuel_cost.value == pytest.approx(
         3412141.47989694, 0.5)
-    assert PLANET_EXPRESS.fuel_cost.units == (MW * hr)**-1
+    assert advanced_tech.fuel_cost.units == (MW * hr)**-1
+    
+    advanced_tech.unit_power = "kW"
+    advanced_tech.unit_time = "day"
+    assert advanced_tech.fuel_cost.units == (kW*day)**-1
 
 
-def test_unit_power():
+def test_unit_power(advanced_tech):
     with pytest.raises(UnitParseError) as e:
-        PLANET_EXPRESS.unit_power = "darkmatter"
+        advanced_tech.unit_power = "darkmatter"
     with pytest.raises(AssertionError) as e:
-        PLANET_EXPRESS.unit_power = BTU
+        advanced_tech.unit_power = BTU
     with pytest.raises(AssertionError) as e:
-        PLANET_EXPRESS.unit_power = "BTU"
+        advanced_tech.unit_power = "BTU"
     with pytest.raises(ValueError) as e:
-        PLANET_EXPRESS.unit_power = 10
-    PLANET_EXPRESS.unit_power = Horsepower
-    assert PLANET_EXPRESS.unit_power == Horsepower
+        advanced_tech.unit_power = 10
+    advanced_tech.unit_power = Horsepower
+    assert advanced_tech.unit_power == Horsepower
 
-    PLANET_EXPRESS.unit_power = "Horsepower"
-    assert PLANET_EXPRESS.unit_power == Horsepower
+    advanced_tech.unit_power = "Horsepower"
+    assert advanced_tech.unit_power == Horsepower
 
 
-def test_unit_time():
+def test_unit_time(advanced_tech):
     with pytest.raises(UnitParseError) as e:
-        PLANET_EXPRESS.unit_time = "darkmatter"
+        advanced_tech.unit_time = "darkmatter"
     with pytest.raises(AssertionError) as e:
-        PLANET_EXPRESS.unit_time = MW
+        advanced_tech.unit_time = MW
     with pytest.raises(AssertionError) as e:
-        PLANET_EXPRESS.unit_time = "MW"
+        advanced_tech.unit_time = "MW"
     with pytest.raises(ValueError) as e:
-        PLANET_EXPRESS.unit_time = 10
-    PLANET_EXPRESS.unit_time = day
-    assert PLANET_EXPRESS.unit_time == day
+        advanced_tech.unit_time = 10
+    advanced_tech.unit_time = day
+    assert advanced_tech.unit_time == day
 
-    PLANET_EXPRESS.unit_time = "day"
-    assert PLANET_EXPRESS.unit_time == day
+    advanced_tech.unit_time = "day"
+    assert advanced_tech.unit_time == day
 
 
-def test_unit_energy():
-    with pytest.raises(UnitParseError) as e:
-        PLANET_EXPRESS.unit_energy = "darkmatter"
-    with pytest.raises(AssertionError) as e:
-        PLANET_EXPRESS.unit_energy = MW
-    with pytest.raises(AssertionError) as e:
-        PLANET_EXPRESS.unit_energy = "MW"
-    with pytest.raises(ValueError) as e:
-        PLANET_EXPRESS.unit_energy = 10
-    PLANET_EXPRESS.unit_energy = Horsepower * day
-    assert PLANET_EXPRESS.unit_energy == Horsepower * day
-
-    PLANET_EXPRESS.unit_energy = "Horsepower*day"
-    assert PLANET_EXPRESS.unit_energy == Horsepower * day
+def test_unit_energy(advanced_tech):
+    advanced_tech.unit_energy = "darkmatter"
+    assert advanced_tech.unit_energy == MW*hr
+    advanced_tech.unit_energy = BTU
+    assert advanced_tech.unit_energy == MW*hr
+    advanced_tech.unit_energy = "MW"
+    assert advanced_tech.unit_energy == MW*hr
+    advanced_tech.unit_energy = 10
+    assert advanced_tech.unit_energy == MW*hr
+    advanced_tech.unit_energy = Horsepower * day
+    assert advanced_tech.unit_energy == MW*hr
+    advanced_tech.unit_energy = "Horsepower*day"
+    assert advanced_tech.unit_energy == MW*hr

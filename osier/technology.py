@@ -141,6 +141,8 @@ class Technology(object):
     default_energy_units : str or :class:`unyt.unit_object.Unit`
         An optional parameter, specifies the units
         for energy. Default is megawatt-hours [MWh]
+        Currently, `default_energy_units` is derived from the
+        time and power units.
 
     Notes
     -----
@@ -207,26 +209,24 @@ class Technology(object):
 
     @property
     def unit_energy(self):
-        return self._unit_energy
+        return self._unit_power*self._unit_time
 
     @unit_energy.setter
     def unit_energy(self, value):
-        if value:
-            self._unit_energy = _validate_unit(value, dimension="energy")
-        else:
-            self._unit_energy = self._unit_power * self._unit_time
+        self._unit_energy = self._unit_power * self._unit_time
 
     @property
     def capacity(self):
-        return self._capacity
+        return self._capacity.to(self._unit_power)
 
     @capacity.setter
     def capacity(self, value):
-        self._capacity = _validate_quantity(value, dimension="power")
+        valid_quantity = _validate_quantity(value, dimension="power")
+        self._capacity = valid_quantity.to(self._unit_power)
 
     @property
     def capital_cost(self):
-        return self._capital_cost
+        return self._capital_cost.to(self._unit_power**-1)
 
     @capital_cost.setter
     def capital_cost(self, value):
@@ -234,7 +234,7 @@ class Technology(object):
 
     @property
     def om_cost_fixed(self):
-        return self._om_cost_fixed
+        return self._om_cost_fixed.to(self._unit_power**-1)
 
     @om_cost_fixed.setter
     def om_cost_fixed(self, value):
@@ -242,7 +242,7 @@ class Technology(object):
 
     @property
     def om_cost_variable(self):
-        return self._om_cost_variable
+        return self._om_cost_variable.to(self.unit_energy**-1)
 
     @om_cost_variable.setter
     def om_cost_variable(self, value):
@@ -251,7 +251,7 @@ class Technology(object):
 
     @property
     def fuel_cost(self):
-        return self._fuel_cost
+        return self._fuel_cost.to(self.unit_energy**-1)
 
     @fuel_cost.setter
     def fuel_cost(self, value):
