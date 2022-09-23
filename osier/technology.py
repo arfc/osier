@@ -113,6 +113,10 @@ def _validate_quantity(value, dimension):
 
 class Technology(object):
     """
+    The :class:`Technology` base class contains the minimum required
+    data to solve an energy systems problem. All other technologies in
+    :mod:`osier` inherit from this class.
+
     Parameters
     ----------
     technology_name : str
