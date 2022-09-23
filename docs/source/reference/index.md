@@ -7,5 +7,6 @@
    :template: my_class.rst
 
     osier.Technology
+    osier.DispatchModel 
     
 ```
