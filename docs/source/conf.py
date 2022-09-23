@@ -32,14 +32,15 @@ release = '0.1.0'
 # ones.
 extensions = [
     "myst_parser",
-    "numpydoc",
     "sphinx.ext.napoleon",
     "sphinx.ext.autodoc",
     "sphinx.ext.autosummary",
     "sphinx.ext.intersphinx",
     "sphinx.ext.viewcode",
     "sphinx_autodoc_typehints",
-    "sphinx_design"
+    "sphinx_design",
+    "sphinx.ext.mathjax", 
+    "sphinx.ext.coverage"
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -50,6 +51,13 @@ templates_path = ['_templates']
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = []
 
+intersphinx_mapping = {
+    'python': ('https://docs.python.org/3', None),
+    'numpy': ('https://numpy.org/doc/stable/', None),
+    'astropy': ('https://docs.astropy.org/en/stable/', None),
+    'jinja2': ('https://jinja.palletsprojects.com/en/3.0.x/', None),
+    'unyt': ('https://unyt.readthedocs.io/en/stable/', None),
+}
 
 # -- Options for HTML output -------------------------------------------------
 
