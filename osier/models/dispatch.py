@@ -50,6 +50,19 @@ class DispatchModel():
         >>> demand = np.cos(hours*np.pi/180)
         >>> model = DispatchModel([wind, nuclear], demand)
         >>> model.solve()
+
+    solver : str 
+        Indicates which solver to use. May require separate installation.
+        Accepts: ['cplex']. Other solvers will be added in the future.
+    lower_bound : float
+        The least amount of energy each technology can produce per time
+        period. Default is 0.0.
+    oversupply : float
+        The amount of allowed oversupply as a percentage of demand.
+        Default is 0.0 (no oversupply allowed). 
+    undersupply : float
+        The amount of allowed undersupply as a percentage of demand.
+        Default is 0.0 (no undersupply allowed).
     """
     def __init__(self, 
                  technology_list,
