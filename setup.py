@@ -58,7 +58,8 @@ REQUIRES = [
     'dill',
     'openpyxl',
     'nrelpy',
-    'unyt']
+    'unyt',
+    'pyomo']
 EXTRAS_REQUIRE = {
     'doc': [
         'sphinx>=5.1',
