@@ -40,7 +40,7 @@ extensions = [
     "sphinx_autodoc_typehints",
     "sphinx_design",
     "sphinx.ext.mathjax", 
-    "sphinx.ext.coverage"
+    "sphinx.ext.coverage",
 ]
 
 # Add any paths that contain templates here, relative to this directory.
