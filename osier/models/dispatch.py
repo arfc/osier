@@ -79,6 +79,7 @@ class DispatchModel():
         self.model = ConcreteModel()
         self.solver = solver
         self.results = None
+        self.objective = None
     
     @property
     def n_hours(self):
@@ -184,5 +185,6 @@ class DispatchModel():
         self._write_model_equations()
         solver = po.SolverFactory(self.solver)
         results = solver.solve(self.model, tee=True)
+        self.objective = self.model.objective()
         
         self.results = self._format_results()        

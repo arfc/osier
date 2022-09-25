@@ -70,7 +70,7 @@ def test_validate_quantity():
 
 def test_initialize(advanced_tech):
     assert advanced_tech.technology_name == TECH_NAME
-    assert advanced_tech.technology_type == 'base'
+    assert advanced_tech.technology_type == 'production'
     assert advanced_tech.capacity == 0.0
     assert advanced_tech.capital_cost == 0.0
     assert advanced_tech.om_cost_fixed == 0.0
