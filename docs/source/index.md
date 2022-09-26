@@ -17,6 +17,7 @@ This package is in active development.
 
 contrib
 reference/index
+getting-started/index
 ```
 
 ## Indices and tables

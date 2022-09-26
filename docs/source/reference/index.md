@@ -10,3 +10,10 @@
     osier.DispatchModel 
     
 ```
+
+<!-- ```{toctree}
+:maxdepth: 2
+
+../contrib
+../getting-started/index
+``` -->
