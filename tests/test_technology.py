@@ -79,6 +79,22 @@ def test_initialize(advanced_tech):
     assert advanced_tech.unit_power == MW
     assert advanced_tech.unit_time == hr
     assert advanced_tech.unit_energy == MW * hr
+    assert advanced_tech.annual_fixed_cost == 0.0
+    assert advanced_tech.total_capital_cost == 0.0
+
+def test_total_capital_cost(advanced_tech):
+    advanced_tech.capital_cost = spec_power_unyt
+    advanced_tech.capacity = power_unyt
+    assert advanced_tech.total_capital_cost == 100
+
+    advanced_tech.capacity = 0.5*power_unyt
+    assert advanced_tech.total_capital_cost == 50
+    
+
+def test_variable_cost(advanced_tech):
+    advanced_tech.fuel_cost = spec_energy_unyt
+    advanced_tech.om_cost_variable = spec_energy_unyt
+    assert advanced_tech.variable_cost == 2*spec_energy_unyt
 
 
 def test_attribute_types(advanced_tech):
