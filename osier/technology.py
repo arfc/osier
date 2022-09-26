@@ -66,10 +66,10 @@ def _validate_quantity(value, dimension):
     ----------
     value : string, float, int, or :class:`unyt.unyt_quantity`
         The value being tested. Should be something like
-    
+
         >>> _validate_quantity("10 MW", dimension='power')
         unyt_quantity(10., 'MW')
-        
+
     dimension : string
         The expected dimensions of `value`.
         Currently accepts: ['time', 'energy', 'power', 'spec_power', 'spec_energy'].
@@ -123,15 +123,15 @@ class Technology(object):
         The name identifier of the technology.
     technology_type : str
         The string identifier for the type of technology.
-        Two common types are: ["production", "storage"].    
+        Two common types are: ["production", "storage"].
     technology_category : str
-        The string identifier the the technology category. 
+        The string identifier the the technology category.
         For example: "renewable," "fossil," or "nuclear."
     dispatchable : bool
-        Indicates whether the technology can be dispatched by a 
+        Indicates whether the technology can be dispatched by a
         grid operator, or if it produces variable electricity
         that must be used or stored the moment it is produced.
-        For example, solar panels and wind turbines are not 
+        For example, solar panels and wind turbines are not
         dispatchable, but nuclear and biopower are dispatchable.
         Default value is true.
     capital_cost : float or :class:`unyt.array.unyt_quantity`
@@ -230,7 +230,7 @@ class Technology(object):
 
     @property
     def unit_energy(self):
-        return self._unit_power*self._unit_time
+        return self._unit_power * self._unit_time
 
     @unit_energy.setter
     def unit_energy(self, value):
@@ -284,21 +284,20 @@ class Technology(object):
 
     @property
     def annual_fixed_cost(self):
-        return self.capacity*self.om_cost_fixed
+        return self.capacity * self.om_cost_fixed
 
     @property
     def variable_cost(self):
         return self.fuel_cost + self.om_cost_variable
 
-    
     def variable_cost_ts(self, size):
         """
-        Returns the total variable cost as a time series of 
-        length :attr:`size`. 
-        
-        .. warning:: 
-            The current implementation assumes a single constant cost 
-            for the variable cost. In the future, users will be able to 
+        Returns the total variable cost as a time series of
+        length :attr:`size`.
+
+        .. warning::
+            The current implementation assumes a single constant cost
+            for the variable cost. In the future, users will be able to
             pass their own time series data.
 
         Parameters
@@ -314,5 +313,5 @@ class Technology(object):
         """
 
         # assumes single cost
-        var_cost_ts = np.ones(size)*self.variable_cost 
+        var_cost_ts = np.ones(size) * self.variable_cost
         return var_cost_ts
