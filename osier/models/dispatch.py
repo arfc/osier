@@ -24,12 +24,19 @@ class DispatchModel():
 
     Such that,
 
+    1. The generation meets demand within a user-specified tolerance (undersupply and oversupply)
+ 
     .. math::
-        \\sum_t^Tx_u &\\geq \\left(1-\\text{undersupply}\\right)\\text{D}_t \\
+        \\sum_u^Ux_{u,t} &\\geq \\left(1-\\text{undersupply}\\right)\\text{D}_t \\
         \\forall \\ t \\in T
 
-        \\sum_t^Tx_u &\\leq \\left(1+\\text{oversupply}\\right)\\text{D}_t \\
+        \\sum_u^Ux_{u,t} &\\leq \\left(1+\\text{oversupply}\\right)\\text{D}_t \\
         \\forall \\ t \\in T
+
+    2. A technology's generation (:math:`x_u`) does not exceed its capacity to generate at any time, :math:`t`.
+    
+    .. math::
+        x_{u,t} \\leq \\textbf{CAP}_{u} \\ \\forall \\ u,t \\in U,T
         
 
     Parameters
@@ -63,6 +70,15 @@ class DispatchModel():
     undersupply : float
         The amount of allowed undersupply as a percentage of demand.
         Default is 0.0 (no undersupply allowed).
+
+    Attributes
+    ----------
+    model : :class:`pyomo.environ.ConcreteModel`
+        The :mod:`pyomo` model class that converts python code into a
+        set of linear equations.
+    upperbound : float
+        The upper bound for all decision variables. Chosen to be equal
+        to the maximum capacity for 
     """
     def __init__(self, 
                  technology_list,

@@ -1,5 +1,6 @@
 from osier import DispatchModel
 from osier import Technology
+from unyt import unyt_array
 import numpy as np
 import pytest
 import sys
@@ -40,9 +41,26 @@ def net_demand():
     return y
 
 
-def test_dispatch_model(technology_set, net_demand):
+def test_dispatch_model_initialize(technology_set, net_demand):
+    model = DispatchModel(technology_set, 
+                            net_demand=net_demand,
+                            solver=solver)
+    assert model.technology_list == technology_set
+    assert model.tech_set == [t.technology_name for t in technology_set]
+    assert model.solver == solver
+    assert len(model.capacity_dict) == len(technology_set)
+    assert len(model.indices) == len(net_demand) * len(technology_set)
+
+
+@pytest.mark.skip("Does not work with CI, yet. Requires CBC or CPLEX.")
+def test_dispatch_model_solve(technology_set, net_demand):
     model = DispatchModel(technology_set, 
                             net_demand=net_demand,
                             solver=solver)
     model.solve()
-    assert model.objective == pytest.approx(371.41, 0.05)
+    cheapest_tech = unyt_array([t.variable_cost for t in technology_set]).min()
+    expected_result = cheapest_tech * net_demand.sum()
+
+    assert model.objective == pytest.approx(expected_result, 0.001)
+    assert model.results['Nuclear'].sum() == net_demand.sum()
+    assert model.results['NaturalGas'].sum() == 0.0
