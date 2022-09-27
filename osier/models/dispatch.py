@@ -62,9 +62,9 @@ class DispatchModel():
 
     solver : str
         Indicates which solver to use. May require separate installation.
-        Accepts: ['cplex']. Other solvers will be added in the future.
+        Accepts: ['cplex', 'cbc']. Other solvers will be added in the future.
     lower_bound : float
-        The least amount of energy each technology can produce per time
+        The minimum amount of energy each technology can produce per time
         period. Default is 0.0.
     oversupply : float
         The amount of allowed oversupply as a percentage of demand.
@@ -80,7 +80,7 @@ class DispatchModel():
         set of linear equations.
     upperbound : float
         The upper bound for all decision variables. Chosen to be equal
-        to the maximum capacity for
+        to the maximum capacity of all technologies in :attr:`tech_set`.
     """
 
     def __init__(self,
@@ -159,18 +159,14 @@ class DispatchModel():
                    for u in self.model.U for t in self.model.T)
         self.model.objective = pe.Objective(sense=pe.minimize, expr=expr)
 
-    def _oversupply_constraint(self):
+    def _supply_constraints(self):
         self.model.oversupply = pe.ConstraintList()
-        for t in self.model.T:
-            generation = sum(self.model.x[u, t] for u in self.model.U)
-            over_demand = self.model.D[t] * (1 + self.oversupply)
-            self.model.oversupply.add(generation <= over_demand)
-
-    def _undersupply_constraint(self):
         self.model.undersupply = pe.ConstraintList()
         for t in self.model.T:
             generation = sum(self.model.x[u, t] for u in self.model.U)
+            over_demand = self.model.D[t] * (1 + self.oversupply)
             under_demand = self.model.D[t] * (1 - self.undersupply)
+            self.model.oversupply.add(generation <= over_demand)
             self.model.undersupply.add(generation >= under_demand)
 
     def _generation_constraint(self):
@@ -188,8 +184,7 @@ class DispatchModel():
         self._create_cost_param()
         self._create_model_variables()
         self._objective_function()
-        self._oversupply_constraint()
-        self._undersupply_constraint()
+        self._supply_constraints()
         self._generation_constraint()
 
         return
