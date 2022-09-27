@@ -55,7 +55,6 @@ def test_dispatch_model_initialize(technology_set, net_demand):
     assert len(model.indices) == len(net_demand) * len(technology_set)
 
 
-@pytest.mark.skip("Does not work with CI, yet. Requires CBC or CPLEX.")
 def test_dispatch_model_solve(technology_set, net_demand):
     model = DispatchModel(technology_set,
                           net_demand=net_demand,
