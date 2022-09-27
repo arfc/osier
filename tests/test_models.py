@@ -10,6 +10,7 @@ if "win32" in sys.platform:
 elif "linux" in sys.platform:
     solver = "cbc"
 
+TOL = 1e-5
 
 @pytest.fixture
 def technology_set():
@@ -45,6 +46,9 @@ def net_demand():
 
 
 def test_dispatch_model_initialize(technology_set, net_demand):
+    """
+    Tests that the dispatch model is properly initialized.
+    """
     model = DispatchModel(technology_set,
                           net_demand=net_demand,
                           solver=solver)
@@ -55,8 +59,10 @@ def test_dispatch_model_initialize(technology_set, net_demand):
     assert len(model.indices) == len(net_demand) * len(technology_set)
 
 
-@pytest.mark.skip("Does not work with CI, yet. Requires CBC or CPLEX.")
 def test_dispatch_model_solve(technology_set, net_demand):
+    """
+    Tests that the dispatch model produces expected results.
+    """
     model = DispatchModel(technology_set,
                           net_demand=net_demand,
                           solver=solver)
@@ -64,6 +70,6 @@ def test_dispatch_model_solve(technology_set, net_demand):
     cheapest_tech = unyt_array([t.variable_cost for t in technology_set]).min()
     expected_result = cheapest_tech * net_demand.sum()
 
-    assert model.objective == pytest.approx(expected_result, 0.001)
-    assert model.results['Nuclear'].sum() == net_demand.sum()
-    assert model.results['NaturalGas'].sum() == 0.0
+    assert model.objective == pytest.approx(expected_result, TOL)
+    assert model.results['Nuclear'].sum() == pytest.approx(net_demand.sum(), TOL)
+    assert model.results['NaturalGas'].sum() == pytest.approx(0.0, TOL)
