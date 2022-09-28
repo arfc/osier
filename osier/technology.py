@@ -330,33 +330,34 @@ class Technology(object):
 class ThermalTechnology(Technology):
     """
     The :class:`ThermalTechnology` class inherits from the :class:`Technology`
-    class. In addition, this class has ramping attributes that correspond to 
+    class. In addition, this class has ramping attributes that correspond to
     a technology's ability to increase or decrease its power level a specified
     rate.
 
     Parameters
     ----------
     ramp_up : float, :class:`unyt_quantity`
-        The rate at which a technology can increase its power, expressed as 
+        The rate at which a technology can increase its power, expressed as
         a percentage of its capacity. For example, if `ramp_up` equals 0.5,
         then the technology may ramp up its power level by 50% per unit time.
         The default is 1.0 (i.e. there is no constraint on ramping up).
 
     ramp_down : float, :class:`unyt_quantity`
-        The rate at which a technology can decrease its power, expressed as 
+        The rate at which a technology can decrease its power, expressed as
         a percentage of its capacity. For example, if `ramp_down` equals 0.5,
         then the technology may ramp down its power level by 50% per unit time.
         The default is 1.0 (i.e. there is no constraint on ramping down).
 
-    
+
     Notes
     -----
     It is common for thermal technologies to have different ramp up and ramp
-    down rates. Consider a light-water nuclear reactor that can quickly reduce 
-    its power level by inserting control rods, but must wait much longer to 
+    down rates. Consider a light-water nuclear reactor that can quickly reduce
+    its power level by inserting control rods, but must wait much longer to
     increase its power by the same amount due to a build up of neutron
     absorbing isotopes.
     """
+
     def __init__(
             self,
             technology_name,
@@ -393,6 +394,7 @@ class ThermalTechnology(Technology):
 
         self.ramp_up = ramp_up
         self.ramp_down = ramp_down
+
 
 if __name__ == "__main__":
     nuclear = ThermalTechnology(technology_name="Nuclear",

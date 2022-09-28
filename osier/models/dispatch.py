@@ -46,9 +46,15 @@ class DispatchModel():
     technology_list : list of :class:`osier.Technology`
         The list of :class:`Technology` objects to dispatch -- i.e. decide
         how much energy each technology should produce.
-    net_demand : List, :class:`numpy.ndarray`, :class:`unyt.array.unyt_array`, :class:`pandas.DataFrame`.
+    net_demand : list, :class:`numpy.ndarray`, :class:`unyt.array.unyt_array`, :class:`pandas.DataFrame`.
         The remaining energy demand to be fulfilled by the technologies in
-        :attr:`technology_list`. The example
+        :attr:`technology_list`. The `values` of an object passed as 
+        `net_demand` are used to create a supply constraint. See 
+        :attr:`oversupply` and :attr:`undersupply`. 
+        If a :class:`pandas.DataFrame` is passed, :mod:`osier` will try 
+        inferring a `time_delta` from the dataframe index. Otherwise, the
+        :attr:`time_delta` must be passed or the default is used.
+    time_delta : string, :class:`unyt.unyt_quantity`, float, int
     solver : str
         Indicates which solver to use. May require separate installation.
         Accepts: ['cplex', 'cbc']. Other solvers will be added in the future.
@@ -70,6 +76,12 @@ class DispatchModel():
     upperbound : float
         The upper bound for all decision variables. Chosen to be equal
         to the maximum capacity of all technologies in :attr:`tech_set`.
+
+    Notes
+    -----
+    Technically, :attr:`solver` will accept any solver that :class:`pyomo`
+    can use. We only list two solvers because those are the only solvers
+    in the :mod:`osier` test suite.
     """
 
     def __init__(self,
