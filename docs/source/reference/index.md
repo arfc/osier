@@ -7,8 +7,8 @@
    :template: my_class.rst
 
     osier.Technology
-    osier.DispatchModel 
-    
+    osier.ThermalTechnology
+    osier.DispatchModel
 ```
 
 <!-- ```{toctree}
