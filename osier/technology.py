@@ -1,5 +1,5 @@
 import unyt
-from unyt import MW, hr
+from unyt import MW, kW, hr
 from unyt import unyt_quantity
 from unyt.exceptions import UnitParseError, UnitConversionError
 
@@ -134,6 +134,10 @@ class Technology(object):
         For example, solar panels and wind turbines are not
         dispatchable, but nuclear and biopower are dispatchable.
         Default value is true.
+    renewable : bool
+        Indicates whether the technology is considered "renewable."
+        Useful for determining if a technology will contribute to
+        a renewable portfolio standard (RPS).
     capital_cost : float or :class:`unyt.array.unyt_quantity`
         Specifies the capital cost. If float,
         the default unit is $/MW.
@@ -146,6 +150,8 @@ class Technology(object):
     fuel_cost : float or :class:`unyt.array.unyt_quantity`
         Specifies the fuel costs.
         If float, the default unit is $/MWh.
+    fuel_type : str
+        Specifies the type of fuel consumed by the technology.
     capacity : float or :class:`unyt.array.unyt_quantity`
         Specifies the technology capacity.
         If float, the default unit is MW
@@ -188,10 +194,12 @@ class Technology(object):
                  technology_type='production',
                  technology_category='base',
                  dispatchable=True,
+                 renewable=False,
                  capital_cost=0.0,
                  om_cost_fixed=0.0,
                  om_cost_variable=0.0,
                  fuel_cost=0.0,
+                 fuel_type=None,
                  capacity=0.0,
                  default_power_units=MW,
                  default_time_units=hr,
@@ -201,6 +209,8 @@ class Technology(object):
         self.technology_type = technology_type
         self.technology_category = technology_category
         self.dispatchable = dispatchable
+        self.renewable = renewable
+        self.fuel_type = fuel_type
 
         self.unit_power = default_power_units
         self.unit_time = default_time_units
@@ -315,3 +325,83 @@ class Technology(object):
         # assumes single cost
         var_cost_ts = np.ones(size) * self.variable_cost
         return var_cost_ts
+
+
+class ThermalTechnology(Technology):
+    """
+    The :class:`ThermalTechnology` class inherits from the :class:`Technology`
+    class. In addition, this class has ramping attributes that correspond to 
+    a technology's ability to increase or decrease its power level a specified
+    rate.
+
+    Parameters
+    ----------
+    ramp_up : float, :class:`unyt_quantity`
+        The rate at which a technology can increase its power, expressed as 
+        a percentage of its capacity. For example, if `ramp_up` equals 0.5,
+        then the technology may ramp up its power level by 50% per unit time.
+        The default is 1.0 (i.e. there is no constraint on ramping up).
+
+    ramp_down : float, :class:`unyt_quantity`
+        The rate at which a technology can decrease its power, expressed as 
+        a percentage of its capacity. For example, if `ramp_down` equals 0.5,
+        then the technology may ramp down its power level by 50% per unit time.
+        The default is 1.0 (i.e. there is no constraint on ramping down).
+
+    
+    Notes
+    -----
+    It is common for thermal technologies to have different ramp up and ramp
+    down rates. Consider a light-water nuclear reactor that can quickly reduce 
+    its power level by inserting control rods, but must wait much longer to 
+    increase its power by the same amount due to a build up of neutron
+    absorbing isotopes.
+    """
+    def __init__(
+            self,
+            technology_name,
+            technology_type='production',
+            technology_category='thermal',
+            dispatchable=True,
+            renewable=False,
+            capital_cost=0,
+            om_cost_fixed=0,
+            om_cost_variable=0,
+            fuel_cost=0,
+            fuel_type=None,
+            capacity=0,
+            default_power_units=MW,
+            default_time_units=hr,
+            default_energy_units=None,
+            ramp_up=1.0,
+            ramp_down=1.0) -> None:
+        super().__init__(
+            technology_name,
+            technology_type,
+            technology_category,
+            dispatchable,
+            renewable,
+            capital_cost,
+            om_cost_fixed,
+            om_cost_variable,
+            fuel_cost,
+            fuel_type,
+            capacity,
+            default_power_units,
+            default_time_units,
+            default_energy_units)
+
+        self.ramp_up = ramp_up
+        self.ramp_down = ramp_down
+
+if __name__ == "__main__":
+    nuclear = ThermalTechnology(technology_name="Nuclear",
+                                capital_cost=7,
+                                fuel_cost=0.2,
+                                om_cost_fixed=10,
+                                om_cost_variable=3)
+
+    nuclear.capacity = 20
+    print(nuclear.annual_fixed_cost, nuclear.capacity)
+    nuclear.unit_power = kW
+    print(nuclear.annual_fixed_cost, nuclear.capacity)
