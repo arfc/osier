@@ -187,8 +187,6 @@ class DispatchModel():
         self._supply_constraints()
         self._generation_constraint()
 
-        return
-
     def _format_results(self):
         df = pd.DataFrame(index=self.model.T)
         for u in self.model.U:
