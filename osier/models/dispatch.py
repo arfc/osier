@@ -237,8 +237,6 @@ class DispatchModel():
             self._create_ramping_params()
         #     self._ramping_constraints()
 
-        return
-
     def _format_results(self):
         df = pd.DataFrame(index=self.model.T)
         for u in self.model.U:

@@ -9,6 +9,8 @@ if "win32" in sys.platform:
     solver = 'cplex'
 elif "linux" in sys.platform:
     solver = "cbc"
+else:
+    solver = "cbc"
 
 TOL = 1e-5
 
