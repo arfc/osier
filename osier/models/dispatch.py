@@ -46,20 +46,9 @@ class DispatchModel():
     technology_list : list of :class:`osier.Technology`
         The list of :class:`Technology` objects to dispatch -- i.e. decide
         how much energy each technology should produce.
-    net_demand : List, :class:`numpy.ndarray`, :class:`unyt.array.unyt_array`
+    net_demand : List, :class:`numpy.ndarray`, :class:`unyt.array.unyt_array`, :class:`pandas.DataFrame`.
         The remaining energy demand to be fulfilled by the technologies in
-        :attr:`technology_list`. For example:
-
-        >>> from osier import DispatchModel
-        >>> from osier import Technology
-        >>> wind = Technology("wind")
-        >>> nuclear = Technology("nuclear")
-        >>> import numpy as np
-        >>> hours = np.arange(24)
-        >>> demand = np.cos(hours*np.pi/180)
-        >>> model = DispatchModel([wind, nuclear], demand)
-        >>> model.solve()
-
+        :attr:`technology_list`. The example
     solver : str
         Indicates which solver to use. May require separate installation.
         Accepts: ['cplex', 'cbc']. Other solvers will be added in the future.
@@ -131,6 +120,26 @@ class DispatchModel():
         return dict(zip(self.indices, v_costs))
 
     @property
+    def ramping_techs(self):
+        return [t.technology_name
+                for t in self.technology_list 
+                if t.technology_category == "thermal"]
+
+    @property
+    def ramp_up_params(self):
+        rates_dict = {t.technology_name : t.ramp_up
+                for t in self.technology_list 
+                if t.technology_category == "thermal"}
+        return rates_dict
+
+    @property
+    def ramp_down_params(self):
+        rates_dict = {t.technology_name : t.ramp_down
+                for t in self.technology_list 
+                if t.technology_category == "thermal"}
+        return rates_dict
+
+    @property
     def upper_bound(self):
         caps = unyt_array([t.capacity for t in self.technology_list])
         return caps.max().to_value()
@@ -138,6 +147,9 @@ class DispatchModel():
     def _create_model_indices(self):
         self.model.U = pe.Set(initialize=self.tech_set, ordered=True)
         self.model.T = pe.Set(initialize=self.time_set, ordered=True)
+        self.model.R = pe.Set(initialize=self.ramping_techs, 
+                                ordered=True, 
+                                within=self.model.U)
 
     def _create_demand_param(self):
         self.model.D = pe.Param(self.model.T, initialize=dict(
@@ -148,6 +160,10 @@ class DispatchModel():
             self.model.U,
             self.model.T,
             initialize=self.cost_params)
+    
+    def _create_ramping_params(self):
+        self.model.ramp_up = pe.Param(self.model.R, initialize=self.ramp_up_params)
+        self.model.ramp_down = pe.Param(self.model.R, initialize=self.ramp_down_params)
 
     def _create_model_variables(self):
         self.model.x = pe.Var(self.model.U, self.model.T,
@@ -171,11 +187,30 @@ class DispatchModel():
 
     def _generation_constraint(self):
         self.model.gen_limit = pe.ConstraintList()
-        for t in self.model.T:
-            for u in self.model.U:
+        for u in self.model.U:
+            unit_capacity = self.capacity_dict[u].to_value()
+            for t in self.model.T:
                 unit_generation = self.model.x[u, t]
-                unit_capacity = self.capacity_dict[u].to_value()
                 self.model.gen_limit.add(unit_generation <= unit_capacity)
+    
+    # def _ramping_constraints(self):
+    #     self.model.ramp_up_limit = pe.ConstraintList()
+    #     self.model.ramp_down_limit = pe.ConstraintList()
+
+    #     for r in self.model.R:
+    #         ramp_up = self.model.ramp_up[r]
+    #         ramp_down = self.model.ramp_down[r]
+    #         for t in self.model.T:
+    #             if t != self.model.T.first():
+    #                 t_prev = self.model.T.prev(t) 
+    #                 t_next = self.model.T.next(t)
+    #                 # print('calculating previous generation')
+    #                 previous_gen = self.model.x[r, t_prev]
+    #                 next_gen = self.model.x[r, t_next]
+    #                 current_gen = self.model.x[r, t]
+    #                 self.model.ramp_up_limit.add(current_gen <= (1+ramp_up)*previous_gen)
+    #                 self.model.ramp_down_limit.add(current_gen >= (1-ramp_down)*previous_gen)
+
 
     def _write_model_equations(self):
 
@@ -186,6 +221,9 @@ class DispatchModel():
         self._objective_function()
         self._supply_constraints()
         self._generation_constraint()
+        if len(self.ramping_techs) > 0:
+            self._create_ramping_params()
+        #     self._ramping_constraints()
 
         return
 
@@ -199,6 +237,9 @@ class DispatchModel():
     def solve(self):
         self._write_model_equations()
         solver = po.SolverFactory(self.solver)
+
+        # self.model.ramp_up_limit.pprint()
+
         results = solver.solve(self.model, tee=True)
         self.objective = self.model.objective()
 
