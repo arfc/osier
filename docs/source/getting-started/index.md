@@ -15,5 +15,5 @@ of [Anaconda/conda](https://www.anaconda.com/products/distribution) installed.
 Then you can install it using
 
 ```bash
-$ conda install coincbc
+$ conda install -c conda-forge coincbc
 ```
