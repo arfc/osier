@@ -142,7 +142,6 @@ class DispatchModel():
     @time_delta.setter
     def time_delta(self, value):
         if value:
-            print("setting value================")
             valid_quantity = _validate_quantity(value, dimension='time')
             self._time_delta = valid_quantity
         else:
