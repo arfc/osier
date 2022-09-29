@@ -12,7 +12,7 @@
 #
 # import os
 # import sys
-# sys.path.insert(0, os.path.abspath('.'))
+# sys.path.insert(0, os.path.abspath('../..'))
 
 
 # -- Project information -----------------------------------------------------
@@ -23,6 +23,8 @@ author = 'Samuel Dotson'
 
 # The full version, including alpha/beta/rc tags
 release = '0.1.0'
+
+# from osier import *
 
 
 # -- General configuration ---------------------------------------------------
@@ -39,8 +41,9 @@ extensions = [
     "sphinx.ext.viewcode",
     "sphinx_autodoc_typehints",
     "sphinx_design",
-    "sphinx.ext.mathjax", 
-    "sphinx.ext.coverage",
+    "numpydoc"
+    # "sphinx.ext.mathjax", 
+    # "sphinx.ext.coverage",
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -70,4 +73,4 @@ html_theme = 'pydata_sphinx_theme'
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static']
+# html_static_path = ['_static']

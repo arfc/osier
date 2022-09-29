@@ -3,8 +3,15 @@ import numpy as np
 import pyomo.environ as pe
 import pyomo.opt as po
 from pyomo.environ import ConcreteModel
-from unyt import unyt_array
+from unyt import unyt_array, hr
 import itertools as it
+from osier import _validate_quantity
+import warnings
+
+_freq_opts = {'D': 'day',
+              'H': 'hour',
+              'S': 'second',
+              'T': 'minute'}
 
 
 class DispatchModel():
@@ -31,7 +38,7 @@ class DispatchModel():
         \\sum_u^Ux_{u,t} &\\geq \\left(1-\\text{undersupply}\\right)\\text{D}_t
         \\ \\forall \\ t \\in T
 
-        \\sum_u^Ux_{u,t} &\\leq \\left(1+\\text{oversupply}\\right)\\text{D}_t 
+        \\sum_u^Ux_{u,t} &\\leq \\left(1+\\text{oversupply}\\right)\\text{D}_t
         \\ \\forall \\ t \\in T
 
     2. A technology's generation (:math:`x_u`) does not exceed its capacity to
@@ -48,13 +55,22 @@ class DispatchModel():
         how much energy each technology should produce.
     net_demand : list, :class:`numpy.ndarray`, :class:`unyt.array.unyt_array`, :class:`pandas.DataFrame`.
         The remaining energy demand to be fulfilled by the technologies in
-        :attr:`technology_list`. The `values` of an object passed as 
-        `net_demand` are used to create a supply constraint. See 
-        :attr:`oversupply` and :attr:`undersupply`. 
-        If a :class:`pandas.DataFrame` is passed, :mod:`osier` will try 
+        :attr:`technology_list`. The `values` of an object passed as
+        `net_demand` are used to create a supply constraint. See
+        :attr:`oversupply` and :attr:`undersupply`.
+        If a :class:`pandas.DataFrame` is passed, :mod:`osier` will try
         inferring a `time_delta` from the dataframe index. Otherwise, the
         :attr:`time_delta` must be passed or the default is used.
-    time_delta : string, :class:`unyt.unyt_quantity`, float, int
+    time_delta : str, :class:`unyt.unyt_quantity`, float, int
+        Specifies the amount of time between two time slices. The default is
+        one hour. Can be overridden by specifying a unit with the value. For
+        example:
+
+        >>> time_delta = "5 minutes"
+        >>> from unyt import days
+        >>> time_delta = 30*days
+
+        would both work.
     solver : str
         Indicates which solver to use. May require separate installation.
         Accepts: ['cplex', 'cbc']. Other solvers will be added in the future.
@@ -82,16 +98,20 @@ class DispatchModel():
     Technically, :attr:`solver` will accept any solver that :class:`pyomo`
     can use. We only list two solvers because those are the only solvers
     in the :mod:`osier` test suite.
+    The default value for :attr:`time_delta` in :attr:`__init__` is
+    :type:`None`.
     """
 
     def __init__(self,
                  technology_list,
                  net_demand,
+                 time_delta=None,
                  solver='cplex',
                  lower_bound=0.0,
                  oversupply=0.0,
                  undersupply=0.0):
         self.net_demand = net_demand
+        self.time_delta = time_delta
         self.technology_list = technology_list
         self.lower_bound = lower_bound
         self.oversupply = oversupply
@@ -100,6 +120,29 @@ class DispatchModel():
         self.solver = solver
         self.results = None
         self.objective = None
+
+    @property
+    def time_delta(self):
+        return self._time_delta
+
+    @time_delta.setter
+    def time_delta(self, value):
+        if value:
+            valid_quantity = _validate_quantity(value, dimension='time')
+            self._time_delta = valid_quantity
+        else:
+            if isinstance(self.net_demand, pd.DataFrame):
+                try:
+                    freq = self.net_demand.index.inferred_freq
+                    self._time_delta = f"1 {_freq_opts[freq]}"
+                except KeyError:
+                    warnings.warn(
+                        ("Could not infer time delta from pandas dataframe. "
+                        "Setting delta to 1 hour."),
+                        UserWarning)
+                    self._time_delta = 1*hr
+            else:
+                self._time_delta = 1*hr
 
     @property
     def n_hours(self):
@@ -134,21 +177,21 @@ class DispatchModel():
     @property
     def ramping_techs(self):
         return [t.technology_name
-                for t in self.technology_list 
+                for t in self.technology_list
                 if t.technology_category == "thermal"]
 
     @property
     def ramp_up_params(self):
-        rates_dict = {t.technology_name : t.ramp_up
-                for t in self.technology_list 
-                if t.technology_category == "thermal"}
+        rates_dict = {t.technology_name: t.ramp_up
+                      for t in self.technology_list
+                      if t.technology_category == "thermal"}
         return rates_dict
 
     @property
     def ramp_down_params(self):
-        rates_dict = {t.technology_name : t.ramp_down
-                for t in self.technology_list 
-                if t.technology_category == "thermal"}
+        rates_dict = {t.technology_name: t.ramp_down
+                      for t in self.technology_list
+                      if t.technology_category == "thermal"}
         return rates_dict
 
     @property
@@ -159,9 +202,9 @@ class DispatchModel():
     def _create_model_indices(self):
         self.model.U = pe.Set(initialize=self.tech_set, ordered=True)
         self.model.T = pe.Set(initialize=self.time_set, ordered=True)
-        self.model.R = pe.Set(initialize=self.ramping_techs, 
-                                ordered=True, 
-                                within=self.model.U)
+        self.model.R = pe.Set(initialize=self.ramping_techs,
+                              ordered=True,
+                              within=self.model.U)
 
     def _create_demand_param(self):
         self.model.D = pe.Param(self.model.T, initialize=dict(
@@ -172,10 +215,12 @@ class DispatchModel():
             self.model.U,
             self.model.T,
             initialize=self.cost_params)
-    
+
     def _create_ramping_params(self):
-        self.model.ramp_up = pe.Param(self.model.R, initialize=self.ramp_up_params)
-        self.model.ramp_down = pe.Param(self.model.R, initialize=self.ramp_down_params)
+        self.model.ramp_up = pe.Param(
+            self.model.R, initialize=self.ramp_up_params)
+        self.model.ramp_down = pe.Param(
+            self.model.R, initialize=self.ramp_down_params)
 
     def _create_model_variables(self):
         self.model.x = pe.Var(self.model.U, self.model.T,
@@ -204,7 +249,7 @@ class DispatchModel():
             for t in self.model.T:
                 unit_generation = self.model.x[u, t]
                 self.model.gen_limit.add(unit_generation <= unit_capacity)
-    
+
     # def _ramping_constraints(self):
     #     self.model.ramp_up_limit = pe.ConstraintList()
     #     self.model.ramp_down_limit = pe.ConstraintList()
@@ -214,7 +259,7 @@ class DispatchModel():
     #         ramp_down = self.model.ramp_down[r]
     #         for t in self.model.T:
     #             if t != self.model.T.first():
-    #                 t_prev = self.model.T.prev(t) 
+    #                 t_prev = self.model.T.prev(t)
     #                 t_next = self.model.T.next(t)
     #                 # print('calculating previous generation')
     #                 previous_gen = self.model.x[r, t_prev]
@@ -222,7 +267,6 @@ class DispatchModel():
     #                 current_gen = self.model.x[r, t]
     #                 self.model.ramp_up_limit.add(current_gen <= (1+ramp_up)*previous_gen)
     #                 self.model.ramp_down_limit.add(current_gen >= (1-ramp_down)*previous_gen)
-
 
     def _write_model_equations(self):
 
