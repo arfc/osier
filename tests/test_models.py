@@ -1,6 +1,7 @@
 from osier import DispatchModel
 from osier import Technology, ThermalTechnology
 from unyt import unyt_array
+import unyt
 import numpy as np
 import pytest
 import sys
@@ -51,8 +52,8 @@ def technology_set_2():
                          om_cost_variable=20,
                          om_cost_fixed=50,
                          fuel_cost=5,
-                         ramp_up=0.5,
-                         ramp_down=0.75,
+                         ramp_up_rate=0.5,
+                         ramp_down_rate=0.75,
                          )
     natural_gas = ThermalTechnology(technology_name='NaturalGas',
                              capacity=1e3,
@@ -60,8 +61,8 @@ def technology_set_2():
                              om_cost_variable=12,
                              om_cost_fixed=30,
                              fuel_cost=20,
-                             ramp_up=0.9,
-                             ramp_down=0.9,
+                             ramp_up_rate=0.9,
+                             ramp_down_rate=0.9,
                              )
 
     return [nuclear, natural_gas]
@@ -90,6 +91,7 @@ def test_dispatch_model_initialize(technology_set_1, net_demand):
     assert model.solver == solver
     assert len(model.capacity_dict) == len(technology_set_1)
     assert len(model.indices) == len(net_demand) * len(technology_set_1)
+    assert model.time_delta == 1*unyt.hour
 
 
 def test_dispatch_model_solve_case1(technology_set_1, net_demand):

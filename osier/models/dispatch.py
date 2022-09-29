@@ -5,7 +5,7 @@ import pyomo.opt as po
 from pyomo.environ import ConcreteModel
 from unyt import unyt_array, hr
 import itertools as it
-from osier import _validate_quantity
+from osier.technology import _validate_quantity
 import warnings
 
 _freq_opts = {'D': 'day',
@@ -47,6 +47,19 @@ class DispatchModel():
     .. math::
         x_{u,t} \\leq \\textbf{CAP}_{u} \\ \\forall \\ u,t \\in U,T
 
+    3. Technologies may not exceed their ramp up rate. 
+
+    .. math::
+        \\frac{x_{r,t} - x_{r,t-1}}{\\Delta t} = \\Delta P_{r,t} \\leq
+        (\\text{ramp up})\\textbf{CAP}_u\\Delta t \\ \\forall \\ r,t
+        \\in R \\subset U, T
+
+    or ramp down rate
+
+    .. math::
+        \\frac{x_{r,t} - x_{r,t-1}}{\\Delta t} = \\Delta P_{r,t} \\leq
+        -(\\text{ramp down})\\textbf{CAP}_u\\Delta t \\ \\forall \\ r,t
+        \\in R \\subset U, T
 
     Parameters
     ----------
@@ -95,11 +108,12 @@ class DispatchModel():
 
     Notes
     -----
-    Technically, :attr:`solver` will accept any solver that :class:`pyomo`
+    1. Technically, :attr:`solver` will accept any solver that :class:`pyomo`
     can use. We only list two solvers because those are the only solvers
     in the :mod:`osier` test suite.
-    The default value for :attr:`time_delta` in :attr:`__init__` is
-    :type:`None`.
+
+    2. The default value for :attr:`time_delta` in :attr:`__init__` is
+    `None`. This is replaced by a setter method in :class:`Dispatch`.
     """
 
     def __init__(self,
@@ -182,14 +196,14 @@ class DispatchModel():
 
     @property
     def ramp_up_params(self):
-        rates_dict = {t.technology_name: t.ramp_up
+        rates_dict = {t.technology_name : (t.ramp_up * self.time_delta).to_value()
                       for t in self.technology_list
                       if t.technology_category == "thermal"}
         return rates_dict
 
     @property
     def ramp_down_params(self):
-        rates_dict = {t.technology_name: t.ramp_down
+        rates_dict = {t.technology_name : (t.ramp_down * self.time_delta).to_value()
                       for t in self.technology_list
                       if t.technology_category == "thermal"}
         return rates_dict
@@ -250,23 +264,21 @@ class DispatchModel():
                 unit_generation = self.model.x[u, t]
                 self.model.gen_limit.add(unit_generation <= unit_capacity)
 
-    # def _ramping_constraints(self):
-    #     self.model.ramp_up_limit = pe.ConstraintList()
-    #     self.model.ramp_down_limit = pe.ConstraintList()
+    def _ramping_constraints(self):
+        self.model.ramp_up_limit = pe.ConstraintList()
+        self.model.ramp_down_limit = pe.ConstraintList()
 
-    #     for r in self.model.R:
-    #         ramp_up = self.model.ramp_up[r]
-    #         ramp_down = self.model.ramp_down[r]
-    #         for t in self.model.T:
-    #             if t != self.model.T.first():
-    #                 t_prev = self.model.T.prev(t)
-    #                 t_next = self.model.T.next(t)
-    #                 # print('calculating previous generation')
-    #                 previous_gen = self.model.x[r, t_prev]
-    #                 next_gen = self.model.x[r, t_next]
-    #                 current_gen = self.model.x[r, t]
-    #                 self.model.ramp_up_limit.add(current_gen <= (1+ramp_up)*previous_gen)
-    #                 self.model.ramp_down_limit.add(current_gen >= (1-ramp_down)*previous_gen)
+        for r in self.model.R:
+            ramp_up = self.model.ramp_up[r]
+            ramp_down = self.model.ramp_down[r]
+            for t in self.model.T:
+                if t != self.model.T.first():
+                    t_prev = self.model.T.prev(t)
+                    previous_gen = self.model.x[r, t_prev]
+                    current_gen = self.model.x[r, t]
+                    delta_power = (current_gen - previous_gen) / self.time_delta.to_value()
+                    self.model.ramp_up_limit.add(delta_power <= ramp_up)
+                    self.model.ramp_down_limit.add(delta_power >= -ramp_down)
 
     def _write_model_equations(self):
 
@@ -279,7 +291,7 @@ class DispatchModel():
         self._generation_constraint()
         if len(self.ramping_techs) > 0:
             self._create_ramping_params()
-        #     self._ramping_constraints()
+            self._ramping_constraints()
 
     def _format_results(self):
         df = pd.DataFrame(index=self.model.T)
@@ -291,9 +303,6 @@ class DispatchModel():
     def solve(self):
         self._write_model_equations()
         solver = po.SolverFactory(self.solver)
-
-        # self.model.ramp_up_limit.pprint()
-
         results = solver.solve(self.model, tee=True)
         self.objective = self.model.objective()
 
