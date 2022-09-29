@@ -142,13 +142,20 @@ class DispatchModel():
     @time_delta.setter
     def time_delta(self, value):
         if value:
+            print("setting value================")
             valid_quantity = _validate_quantity(value, dimension='time')
             self._time_delta = valid_quantity
         else:
             if isinstance(self.net_demand, pd.DataFrame):
                 try:
-                    freq = self.net_demand.index.inferred_freq
-                    self._time_delta = f"1 {_freq_opts[freq]}"
+                    freq_list = list(self.net_demand.index.inferred_freq)
+                    freq_key = freq_list[-1]
+                    try:
+                        value = float(freq_list[0])
+                    except ValueError:
+                        value = 1.0
+                    self._time_delta = _validate_quantity(f"{value} {_freq_opts[freq_key]}",
+                                                            dimension='time')
                 except KeyError:
                     warnings.warn(
                         ("Could not infer time delta from pandas dataframe. "

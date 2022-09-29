@@ -405,18 +405,3 @@ class ThermalTechnology(Technology):
     @property
     def ramp_down(self):
         return (self.capacity * self.ramp_down_rate).to(self.unit_power*self.unit_time**-1)
-
-
-if __name__ == "__main__":
-    nuclear = ThermalTechnology(technology_name="Nuclear",
-                                capital_cost=7,
-                                fuel_cost=0.2,
-                                om_cost_fixed=10,
-                                om_cost_variable=3,
-                                ramp_up_rate=0.25)
-
-    nuclear.capacity = 20
-    print(nuclear.annual_fixed_cost, nuclear.capacity)
-    nuclear.unit_power = kW
-    print(nuclear.annual_fixed_cost, nuclear.capacity)
-    print(nuclear.ramp_up)
