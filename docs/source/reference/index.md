@@ -7,13 +7,5 @@
    :template: my_class.rst
 
     osier.Technology
-    osier.ThermalTechnology
     osier.DispatchModel
 ```
-
-<!-- ```{toctree}
-:maxdepth: 2
-
-../contrib
-../getting-started/index
-``` -->

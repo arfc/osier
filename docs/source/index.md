@@ -15,9 +15,9 @@ This package is in active development.
 ```{toctree}
 :maxdepth: 2
 
-    contrib
-    reference/index
-    getting-started/index
+contrib
+reference/index
+getting-started/index
 ```
 
 ## Indices and tables
