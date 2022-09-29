@@ -9,6 +9,7 @@ import numpy as np
 _dim_opts = {'time': hr,
              'power': MW,
              'energy': MW * hr,
+             'spec_time':hr**-1,
              'spec_power': MW**-1,
              'spec_energy': (MW * hr)**-1}
 
@@ -336,13 +337,13 @@ class ThermalTechnology(Technology):
 
     Parameters
     ----------
-    ramp_up : float, :class:`unyt_quantity`
+    ramp_up_rate : float, :class:`unyt_quantity`
         The rate at which a technology can increase its power, expressed as
         a percentage of its capacity. For example, if `ramp_up` equals 0.5,
         then the technology may ramp up its power level by 50% per unit time.
         The default is 1.0 (i.e. there is no constraint on ramping up).
 
-    ramp_down : float, :class:`unyt_quantity`
+    ramp_down_rate : float, :class:`unyt_quantity`
         The rate at which a technology can decrease its power, expressed as
         a percentage of its capacity. For example, if `ramp_down` equals 0.5,
         then the technology may ramp down its power level by 50% per unit time.
@@ -374,8 +375,8 @@ class ThermalTechnology(Technology):
             default_power_units=MW,
             default_time_units=hr,
             default_energy_units=None,
-            ramp_up=1.0,
-            ramp_down=1.0) -> None:
+            ramp_up_rate=1.0*hr**-1,
+            ramp_down_rate=1.0*hr**-1) -> None:
         super().__init__(
             technology_name,
             technology_type,
@@ -392,8 +393,18 @@ class ThermalTechnology(Technology):
             default_time_units,
             default_energy_units)
 
-        self.ramp_up = ramp_up
-        self.ramp_down = ramp_down
+        self.ramp_up_rate = _validate_quantity(ramp_up_rate, 
+                                                dimension='spec_time')
+        self.ramp_down_rate = _validate_quantity(ramp_down_rate,
+                                                dimension='spec_time')
+
+    @property
+    def ramp_up(self):
+        return (self.capacity * self.ramp_up_rate).to(self.unit_power*self.unit_time**-1)
+
+    @property
+    def ramp_down(self):
+        return (self.capacity * self.ramp_down_rate).to(self.unit_power*self.unit_time**-1)
 
 
 if __name__ == "__main__":
@@ -401,9 +412,11 @@ if __name__ == "__main__":
                                 capital_cost=7,
                                 fuel_cost=0.2,
                                 om_cost_fixed=10,
-                                om_cost_variable=3)
+                                om_cost_variable=3,
+                                ramp_up_rate=0.25)
 
     nuclear.capacity = 20
     print(nuclear.annual_fixed_cost, nuclear.capacity)
     nuclear.unit_power = kW
     print(nuclear.annual_fixed_cost, nuclear.capacity)
+    print(nuclear.ramp_up)
