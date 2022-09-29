@@ -47,7 +47,7 @@ class DispatchModel():
     .. math::
         x_{u,t} \\leq \\textbf{CAP}_{u} \\ \\forall \\ u,t \\in U,T
 
-    3. Technologies may not exceed their ramp up rate. 
+    3. Technologies may not exceed their ramp up rate.
 
     .. math::
         \\frac{x_{r,t} - x_{r,t-1}}{\\Delta t} = \\Delta P_{r,t} \\leq
@@ -153,16 +153,16 @@ class DispatchModel():
                         value = float(freq_list[0])
                     except ValueError:
                         value = 1.0
-                    self._time_delta = _validate_quantity(f"{value} {_freq_opts[freq_key]}",
-                                                            dimension='time')
+                    self._time_delta = _validate_quantity(
+                        f"{value} {_freq_opts[freq_key]}", dimension='time')
                 except KeyError:
                     warnings.warn(
                         ("Could not infer time delta from pandas dataframe. "
-                        "Setting delta to 1 hour."),
+                         "Setting delta to 1 hour."),
                         UserWarning)
-                    self._time_delta = 1*hr
+                    self._time_delta = 1 * hr
             else:
-                self._time_delta = 1*hr
+                self._time_delta = 1 * hr
 
     @property
     def n_hours(self):
@@ -202,14 +202,14 @@ class DispatchModel():
 
     @property
     def ramp_up_params(self):
-        rates_dict = {t.technology_name : (t.ramp_up * self.time_delta).to_value()
+        rates_dict = {t.technology_name: (t.ramp_up * self.time_delta).to_value()
                       for t in self.technology_list
                       if t.technology_category == "thermal"}
         return rates_dict
 
     @property
     def ramp_down_params(self):
-        rates_dict = {t.technology_name : (t.ramp_down * self.time_delta).to_value()
+        rates_dict = {t.technology_name: (t.ramp_down * self.time_delta).to_value()
                       for t in self.technology_list
                       if t.technology_category == "thermal"}
         return rates_dict
@@ -282,7 +282,8 @@ class DispatchModel():
                     t_prev = self.model.T.prev(t)
                     previous_gen = self.model.x[r, t_prev]
                     current_gen = self.model.x[r, t]
-                    delta_power = (current_gen - previous_gen) / self.time_delta.to_value()
+                    delta_power = (current_gen - previous_gen) / \
+                        self.time_delta.to_value()
                     self.model.ramp_up_limit.add(delta_power <= ramp_up)
                     self.model.ramp_down_limit.add(delta_power >= -ramp_down)
 

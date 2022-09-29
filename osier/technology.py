@@ -9,7 +9,7 @@ import numpy as np
 _dim_opts = {'time': hr,
              'power': MW,
              'energy': MW * hr,
-             'spec_time':hr**-1,
+             'spec_time': hr**-1,
              'spec_power': MW**-1,
              'spec_energy': (MW * hr)**-1}
 
@@ -375,8 +375,8 @@ class ThermalTechnology(Technology):
             default_power_units=MW,
             default_time_units=hr,
             default_energy_units=None,
-            ramp_up_rate=1.0*hr**-1,
-            ramp_down_rate=1.0*hr**-1) -> None:
+            ramp_up_rate=1.0 * hr**-1,
+            ramp_down_rate=1.0 * hr**-1) -> None:
         super().__init__(
             technology_name,
             technology_type,
@@ -393,15 +393,25 @@ class ThermalTechnology(Technology):
             default_time_units,
             default_energy_units)
 
-        self.ramp_up_rate = _validate_quantity(ramp_up_rate, 
-                                                dimension='spec_time')
+        self.ramp_up_rate = _validate_quantity(ramp_up_rate,
+                                               dimension='spec_time')
         self.ramp_down_rate = _validate_quantity(ramp_down_rate,
-                                                dimension='spec_time')
+                                                 dimension='spec_time')
 
     @property
     def ramp_up(self):
-        return (self.capacity * self.ramp_up_rate).to(self.unit_power*self.unit_time**-1)
+        return (
+            self.capacity *
+            self.ramp_up_rate).to(
+            self.unit_power *
+            self.unit_time**-
+            1)
 
     @property
     def ramp_down(self):
-        return (self.capacity * self.ramp_down_rate).to(self.unit_power*self.unit_time**-1)
+        return (
+            self.capacity *
+            self.ramp_down_rate).to(
+            self.unit_power *
+            self.unit_time**-
+            1)
