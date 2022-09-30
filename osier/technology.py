@@ -322,8 +322,6 @@ class Technology(object):
         var_cost_ts : :class:`numpy.ndarray`
             The variable cost time series.
         """
-
-        # assumes single cost
         var_cost_ts = np.ones(size) * self.variable_cost
         return var_cost_ts
 
@@ -337,6 +335,8 @@ class ThermalTechnology(Technology):
 
     Parameters
     ----------
+    heat_rate : int, float
+        The heat rate of a given technology. 
     ramp_up_rate : float, :class:`unyt_quantity`
         The rate at which a technology can increase its power, expressed as
         a percentage of its capacity. For example, if `ramp_up` equals 0.5,
@@ -375,6 +375,7 @@ class ThermalTechnology(Technology):
             default_power_units=MW,
             default_time_units=hr,
             default_energy_units=None,
+            heat_rate=None,
             ramp_up_rate=1.0 * hr**-1,
             ramp_down_rate=1.0 * hr**-1) -> None:
         super().__init__(
@@ -393,6 +394,7 @@ class ThermalTechnology(Technology):
             default_time_units,
             default_energy_units)
 
+        self.heat_rate = heat_rate
         self.ramp_up_rate = _validate_quantity(ramp_up_rate,
                                                dimension='spec_time')
         self.ramp_down_rate = _validate_quantity(ramp_down_rate,
@@ -404,8 +406,8 @@ class ThermalTechnology(Technology):
             self.capacity *
             self.ramp_up_rate).to(
             self.unit_power *
-            self.unit_time**-
-            1)
+            self.unit_time**-1
+            )
 
     @property
     def ramp_down(self):
@@ -413,5 +415,5 @@ class ThermalTechnology(Technology):
             self.capacity *
             self.ramp_down_rate).to(
             self.unit_power *
-            self.unit_time**-
-            1)
+            self.unit_time**-1
+            )
