@@ -58,7 +58,8 @@ REQUIRES = [
     'dill',
     'openpyxl',
     'nrelpy',
-    'unyt']
+    'unyt',
+    'pyomo']
 EXTRAS_REQUIRE = {
     'doc': [
         'sphinx>=5.1',
@@ -66,7 +67,8 @@ EXTRAS_REQUIRE = {
         "sphinx_design",
         "sphinx-autodoc-typehints",
         'numpydoc',
-        'pydata_sphinx_theme', ]}
+        'pydata_sphinx_theme'
+        ]}
 PYTHON_REQUIRES = ">= 3.6"
 
 PACKAGES = find_packages()

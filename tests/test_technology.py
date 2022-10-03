@@ -25,10 +25,12 @@ unknown_str = "10 fortnights"
 dict_type = {"value": 10,
              "unit": MW}
 
+
 @pytest.fixture
 def advanced_tech():
     PLANET_EXPRESS = Technology(TECH_NAME)
     return PLANET_EXPRESS
+
 
 def test_validate_unit():
     assert _validate_unit("MW", 'power').same_dimensions_as(Horsepower)
@@ -70,7 +72,7 @@ def test_validate_quantity():
 
 def test_initialize(advanced_tech):
     assert advanced_tech.technology_name == TECH_NAME
-    assert advanced_tech.technology_type == 'base'
+    assert advanced_tech.technology_type == 'production'
     assert advanced_tech.capacity == 0.0
     assert advanced_tech.capital_cost == 0.0
     assert advanced_tech.om_cost_fixed == 0.0
@@ -79,6 +81,23 @@ def test_initialize(advanced_tech):
     assert advanced_tech.unit_power == MW
     assert advanced_tech.unit_time == hr
     assert advanced_tech.unit_energy == MW * hr
+    assert advanced_tech.annual_fixed_cost == 0.0
+    assert advanced_tech.total_capital_cost == 0.0
+
+
+def test_total_capital_cost(advanced_tech):
+    advanced_tech.capital_cost = spec_power_unyt
+    advanced_tech.capacity = power_unyt
+    assert advanced_tech.total_capital_cost == 100
+
+    advanced_tech.capacity = 0.5 * power_unyt
+    assert advanced_tech.total_capital_cost == 50
+
+
+def test_variable_cost(advanced_tech):
+    advanced_tech.fuel_cost = spec_energy_unyt
+    advanced_tech.om_cost_variable = spec_energy_unyt
+    assert advanced_tech.variable_cost == 2 * spec_energy_unyt
 
 
 def test_attribute_types(advanced_tech):
@@ -219,7 +238,7 @@ def test_om_cost_variable(advanced_tech):
 
     advanced_tech.unit_power = "kW"
     advanced_tech.unit_time = "day"
-    assert advanced_tech.om_cost_variable.units == (kW*day)**-1
+    assert advanced_tech.om_cost_variable.units == (kW * day)**-1
 
 
 def test_fuel_cost(advanced_tech):
@@ -248,10 +267,10 @@ def test_fuel_cost(advanced_tech):
     assert advanced_tech.fuel_cost.value == pytest.approx(
         3412141.47989694, 0.5)
     assert advanced_tech.fuel_cost.units == (MW * hr)**-1
-    
+
     advanced_tech.unit_power = "kW"
     advanced_tech.unit_time = "day"
-    assert advanced_tech.fuel_cost.units == (kW*day)**-1
+    assert advanced_tech.fuel_cost.units == (kW * day)**-1
 
 
 def test_unit_power(advanced_tech):
@@ -288,14 +307,14 @@ def test_unit_time(advanced_tech):
 
 def test_unit_energy(advanced_tech):
     advanced_tech.unit_energy = "darkmatter"
-    assert advanced_tech.unit_energy == MW*hr
+    assert advanced_tech.unit_energy == MW * hr
     advanced_tech.unit_energy = BTU
-    assert advanced_tech.unit_energy == MW*hr
+    assert advanced_tech.unit_energy == MW * hr
     advanced_tech.unit_energy = "MW"
-    assert advanced_tech.unit_energy == MW*hr
+    assert advanced_tech.unit_energy == MW * hr
     advanced_tech.unit_energy = 10
-    assert advanced_tech.unit_energy == MW*hr
+    assert advanced_tech.unit_energy == MW * hr
     advanced_tech.unit_energy = Horsepower * day
-    assert advanced_tech.unit_energy == MW*hr
+    assert advanced_tech.unit_energy == MW * hr
     advanced_tech.unit_energy = "Horsepower*day"
-    assert advanced_tech.unit_energy == MW*hr
+    assert advanced_tech.unit_energy == MW * hr

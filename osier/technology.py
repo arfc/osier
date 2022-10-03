@@ -3,6 +3,8 @@ from unyt import MW, hr
 from unyt import unyt_quantity
 from unyt.exceptions import UnitParseError, UnitConversionError
 
+import numpy as np
+
 
 _dim_opts = {'time': hr,
              'power': MW,
@@ -64,10 +66,10 @@ def _validate_quantity(value, dimension):
     ----------
     value : string, float, int, or :class:`unyt.unyt_quantity`
         The value being tested. Should be something like
-    
+
         >>> _validate_quantity("10 MW", dimension='power')
         unyt_quantity(10., 'MW')
-        
+
     dimension : string
         The expected dimensions of `value`.
         Currently accepts: ['time', 'energy', 'power', 'spec_power', 'spec_energy'].
@@ -111,12 +113,27 @@ def _validate_quantity(value, dimension):
 
 class Technology(object):
     """
+    The :class:`Technology` base class contains the minimum required
+    data to solve an energy systems problem. All other technologies in
+    :mod:`osier` inherit from this class.
+
     Parameters
     ----------
-    technology_name : string
+    technology_name : str
         The name identifier of the technology.
-    technology_type : string
+    technology_type : str
         The string identifier for the type of technology.
+        Two common types are: ["production", "storage"].
+    technology_category : str
+        The string identifier the the technology category.
+        For example: "renewable," "fossil," or "nuclear."
+    dispatchable : bool
+        Indicates whether the technology can be dispatched by a
+        grid operator, or if it produces variable electricity
+        that must be used or stored the moment it is produced.
+        For example, solar panels and wind turbines are not
+        dispatchable, but nuclear and biopower are dispatchable.
+        Default value is true.
     capital_cost : float or :class:`unyt.array.unyt_quantity`
         Specifies the capital cost. If float,
         the default unit is $/MW.
@@ -168,7 +185,9 @@ class Technology(object):
 
     def __init__(self,
                  technology_name,
-                 technology_type='base',
+                 technology_type='production',
+                 technology_category='base',
+                 dispatchable=True,
                  capital_cost=0.0,
                  om_cost_fixed=0.0,
                  om_cost_variable=0.0,
@@ -180,6 +199,8 @@ class Technology(object):
 
         self.technology_name = technology_name
         self.technology_type = technology_type
+        self.technology_category = technology_category
+        self.dispatchable = dispatchable
 
         self.unit_power = default_power_units
         self.unit_time = default_time_units
@@ -209,7 +230,7 @@ class Technology(object):
 
     @property
     def unit_energy(self):
-        return self._unit_power*self._unit_time
+        return self._unit_power * self._unit_time
 
     @unit_energy.setter
     def unit_energy(self, value):
@@ -256,3 +277,41 @@ class Technology(object):
     @fuel_cost.setter
     def fuel_cost(self, value):
         self._fuel_cost = _validate_quantity(value, dimension="spec_energy")
+
+    @property
+    def total_capital_cost(self):
+        return self.capacity * self.capital_cost
+
+    @property
+    def annual_fixed_cost(self):
+        return self.capacity * self.om_cost_fixed
+
+    @property
+    def variable_cost(self):
+        return self.fuel_cost + self.om_cost_variable
+
+    def variable_cost_ts(self, size):
+        """
+        Returns the total variable cost as a time series of
+        length :attr:`size`.
+
+        .. warning::
+            The current implementation assumes a single constant cost
+            for the variable cost. In the future, users will be able to
+            pass their own time series data.
+
+        Parameters
+        ----------
+        size : int
+            The number of periods, i.e. length, of the
+            time series.
+
+        Returns
+        -------
+        var_cost_ts : :class:`numpy.ndarray`
+            The variable cost time series.
+        """
+
+        # assumes single cost
+        var_cost_ts = np.ones(size) * self.variable_cost
+        return var_cost_ts
