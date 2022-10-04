@@ -208,5 +208,5 @@ def test_dispatch_model_solve_case3(technology_set_3, net_demand):
                        / nuclear.capacity.to_value()).max()
     min_power_delta = ((model.results.Nuclear.diff())
                        / nuclear.capacity.to_value()).min()
-    assert max_power_delta == nuclear.ramp_up_rate.to_value()
-    assert min_power_delta == -nuclear.ramp_down_rate.to_value()
+    assert max_power_delta == pytest.approx(nuclear.ramp_up_rate.to_value(), TOL)
+    assert min_power_delta == pytest.approx(-nuclear.ramp_down_rate.to_value(), TOL)
