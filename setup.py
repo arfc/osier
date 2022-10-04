@@ -62,7 +62,7 @@ REQUIRES = [
     'pyomo']
 EXTRAS_REQUIRE = {
     'doc': [
-        'sphinx>=5.1',
+        'sphinx==5.1.1',
         'myst-parser',
         "sphinx_design",
         "sphinx-autodoc-typehints",
