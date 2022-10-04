@@ -7,7 +7,7 @@ from setuptools import setup, find_packages
 # Format expected by setup.py and doc/source/conf.py: string of form "X.Y.Z"
 _version_major = 0
 _version_minor = 1
-_version_micro = ''  # use '' for first of series, number for 1 and above
+_version_micro = 3  # use '' for first of series, number for 1 and above
 # _version_extra = 'dev'
 _version_extra = ''  # Uncomment this for full releases
 
@@ -39,8 +39,8 @@ DESCRIPTION = description
 with open("README.md", encoding="utf-8") as f:
     LONG_DESCRIPTION = f.read()
 LONG_DESCRIPTION_CONTENT_TYPE = 'text/markdown'
-URL = "http://github.com/arfc/osier"
-DOWNLOAD_URL = ""
+URL = "https://osier.readthedocs.io/en/latest/"
+DOWNLOAD_URL = "http://github.com/arfc/osier"
 LICENSE = "BSD-3"
 AUTHOR = "Samuel Dotson"
 AUTHOR_EMAIL = "sgd2@illinois.edu"

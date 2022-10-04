@@ -3,13 +3,17 @@
 Open source multi-objective energy system framework
 
 [![Build Status](https://github.com/arfc/osier/actions/workflows/CI.yml/badge.svg)](https://github.com/arfc/osier/actions/workflows/CI.yml)
+[![Documentation Status](https://readthedocs.org/projects/osier/badge/?version=latest)](https://osier.readthedocs.io/en/latest/?badge=latest)
+
 
 
 ## Installation
 
-`osier` is not currently on PyPI or Conda-forge (we hope this will change
-soon). It may be installed by executing the following commands on the command
-line:
+`osier` is available through [PyPI](https://pypi.org/project/osier/). It may be installed with 
+```bash
+pip install osier
+``` 
+or by cloning this repository and building from source:
 
 ```bash
 git clone git@github.com:arfc/osier.git  # requires ssh-keys
@@ -22,8 +26,9 @@ pip install .
 pip install .[doc]
 ```
 
-Someday, the `osier` documentation will be hosted on its own website. For
-now the documentation may be built with
+## Documentation
+The documentation for `osier` can be viewed [here](https://osier.readthedocs.io/en/latest/). 
+You can also build the docs locally with:
 
 ```bash
 cd osier/docs
