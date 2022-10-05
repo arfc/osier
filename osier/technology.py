@@ -326,17 +326,14 @@ class Technology(object):
         return var_cost_ts
 
 
-class ThermalTechnology(Technology):
+class RampingTechnology(Technology):
     """
-    The :class:`ThermalTechnology` class inherits from the :class:`Technology`
-    class. In addition, this class has ramping attributes that correspond to
-    a technology's ability to increase or decrease its power level a specified
-    rate.
+    The :class:`RampingTechnology` class extends the :class:`Technology`
+    class by adding ramping attributes that correspond to a technology's
+    ability to increase or decrease its power level a specified rate.
 
     Parameters
     ----------
-    heat_rate : int, float
-        The heat rate of a given technology. 
     ramp_up_rate : float, :class:`unyt_quantity`
         The rate at which a technology can increase its power, expressed as
         a percentage of its capacity. For example, if `ramp_up` equals 0.5,
@@ -352,11 +349,118 @@ class ThermalTechnology(Technology):
 
     Notes
     -----
-    It is common for thermal technologies to have different ramp up and ramp
+    It is common for a ramping technology to have different ramp up and ramp
     down rates. Consider a light-water nuclear reactor that can quickly reduce
     its power level by inserting control rods, but must wait much longer to
     increase its power by the same amount due to a build up of neutron
     absorbing isotopes.
+    """
+
+    def __init__(
+            self,
+            technology_name,
+            technology_type='production',
+            technology_category='ramping',
+            dispatchable=True,
+            renewable=False,
+            capital_cost=0,
+            om_cost_fixed=0,
+            om_cost_variable=0,
+            fuel_cost=0,
+            fuel_type=None,
+            capacity=0,
+            default_power_units=MW,
+            default_time_units=hr,
+            default_energy_units=None,
+            ramp_up_rate=1.0 * hr**-1,
+            ramp_down_rate=1.0 * hr**-1) -> None:
+        super().__init__(
+            technology_name,
+            technology_type,
+            technology_category,
+            dispatchable,
+            renewable,
+            capital_cost,
+            om_cost_fixed,
+            om_cost_variable,
+            fuel_cost,
+            fuel_type,
+            capacity,
+            default_power_units,
+            default_time_units,
+            default_energy_units)
+
+        self.ramp_up_rate = _validate_quantity(ramp_up_rate,
+                                               dimension='spec_time')
+        self.ramp_down_rate = _validate_quantity(ramp_down_rate,
+                                                 dimension='spec_time')
+
+    @property
+    def ramp_up(self):
+        return (
+            self.capacity *
+            self.ramp_up_rate).to(
+            self.unit_power *
+            self.unit_time**-1
+        )
+
+    @property
+    def ramp_down(self):
+        return (
+            self.capacity *
+            self.ramp_down_rate).to(
+            self.unit_power *
+            self.unit_time**-1
+        )
+
+
+class StorageTechnology(Technology):
+    """
+
+    """
+
+    def __init__(
+            self,
+            technology_name,
+            technology_type='production',
+            technology_category='storage',
+            dispatchable=True,
+            renewable=False,
+            capital_cost=0,
+            om_cost_fixed=0,
+            om_cost_variable=0,
+            fuel_cost=0,
+            fuel_type=None,
+            capacity=0,
+            default_power_units=MW,
+            default_time_units=hr,
+            default_energy_units=None) -> None:
+        super().__init__(
+            technology_name,
+            technology_type,
+            technology_category,
+            dispatchable,
+            renewable,
+            capital_cost,
+            om_cost_fixed,
+            om_cost_variable,
+            fuel_cost,
+            fuel_type,
+            capacity,
+            default_power_units,
+            default_time_units,
+            default_energy_units)
+
+
+class ThermalTechnology(RampingTechnology):
+    """
+    The :class:`ThermalTechnology` class extends the :class:`RampingTechnology`
+    class by adding a heat rate.
+
+    Parameters
+    ----------
+    heat_rate : int, float
+        The heat rate of a given technology.
     """
 
     def __init__(
@@ -392,28 +496,8 @@ class ThermalTechnology(Technology):
             capacity,
             default_power_units,
             default_time_units,
-            default_energy_units)
+            default_energy_units,
+            ramp_up_rate,
+            ramp_down_rate)
 
         self.heat_rate = heat_rate
-        self.ramp_up_rate = _validate_quantity(ramp_up_rate,
-                                               dimension='spec_time')
-        self.ramp_down_rate = _validate_quantity(ramp_down_rate,
-                                                 dimension='spec_time')
-
-    @property
-    def ramp_up(self):
-        return (
-            self.capacity *
-            self.ramp_up_rate).to(
-            self.unit_power *
-            self.unit_time**-1
-            )
-
-    @property
-    def ramp_down(self):
-        return (
-            self.capacity *
-            self.ramp_down_rate).to(
-            self.unit_power *
-            self.unit_time**-1
-            )
