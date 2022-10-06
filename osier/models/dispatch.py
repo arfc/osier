@@ -152,13 +152,17 @@ class DispatchModel():
                     try:
                         value = float(freq_list[0])
                     except ValueError:
+                        warnings.warn((f"Could not convert value "
+                                       f"{freq_list[0]} to float. "
+                                       "Setting to 1.0."),
+                                      UserWarning)
                         value = 1.0
                     self._time_delta = _validate_quantity(
                         f"{value} {_freq_opts[freq_key]}", dimension='time')
                 except KeyError:
                     warnings.warn(
-                        ("Could not infer time delta from pandas dataframe. "
-                         "Setting delta to 1 hour."),
+                        (f"Could not infer time delta with freq {freq_key} "
+                         "from pandas dataframe. Setting delta to 1 hour."),
                         UserWarning)
                     self._time_delta = 1 * hr
             else:
@@ -195,23 +199,47 @@ class DispatchModel():
         return dict(zip(self.indices, v_costs))
 
     @property
+    def storage_techs(self):
+        return [t.technology_name
+                for t in self.technology_list
+                if hasattr(t, "storage_capacity")]
+
+    @property
+    def storage_upper_bound(self):
+        caps = unyt_array([t.storage_capacity
+                           for t in self.technology_list
+                           if hasattr(t, "storage_capacity")])
+        return caps.max().to_value()
+
+    @property
+    def max_storage_params(self):
+        storage_dict = {t.technology_name: t.storage_capacity.to_value()
+                        for t in self.technology_list
+                        if hasattr(t, "storage_capacity")}
+        return storage_dict
+
+    @property
     def ramping_techs(self):
         return [t.technology_name
                 for t in self.technology_list
-                if t.technology_category == "thermal"]
+                if hasattr(t, 'ramp_up')]
 
     @property
     def ramp_up_params(self):
-        rates_dict = {t.technology_name: (t.ramp_up * self.time_delta).to_value()
-                      for t in self.technology_list
-                      if t.technology_category == "thermal"}
+        rates_dict = {
+            t.technology_name: (
+                t.ramp_up *
+                self.time_delta).to_value() for t in self.technology_list
+            if hasattr(t, 'ramp_up')}
         return rates_dict
 
     @property
     def ramp_down_params(self):
-        rates_dict = {t.technology_name: (t.ramp_down * self.time_delta).to_value()
-                      for t in self.technology_list
-                      if t.technology_category == "thermal"}
+        rates_dict = {
+            t.technology_name: (
+                t.ramp_down *
+                self.time_delta).to_value() for t in self.technology_list
+            if hasattr(t, 'ramp_up')}
         return rates_dict
 
     @property
@@ -222,9 +250,14 @@ class DispatchModel():
     def _create_model_indices(self):
         self.model.U = pe.Set(initialize=self.tech_set, ordered=True)
         self.model.T = pe.Set(initialize=self.time_set, ordered=True)
-        self.model.R = pe.Set(initialize=self.ramping_techs,
-                              ordered=True,
-                              within=self.model.U)
+        if len(self.ramping_techs) > 0:
+            self.model.R = pe.Set(initialize=self.ramping_techs,
+                                  ordered=True,
+                                  within=self.model.U)
+        if len(self.storage_techs) > 0:
+            self.model.S = pe.Set(initialize=self.storage_techs,
+                                  ordered=True,
+                                  within=self.model.U)
 
     def _create_demand_param(self):
         self.model.D = pe.Param(self.model.T, initialize=dict(
@@ -242,10 +275,26 @@ class DispatchModel():
         self.model.ramp_down = pe.Param(
             self.model.R, initialize=self.ramp_down_params)
 
+    def _create_storage_params(self):
+        self.model.storage_capacity = pe.Param(
+            self.model.S, initialize=self.max_storage_params
+        )
+
     def _create_model_variables(self):
         self.model.x = pe.Var(self.model.U, self.model.T,
-                              domain=pe.Reals,
+                              domain=pe.NonNegativeReals,
                               bounds=(self.lower_bound, self.upper_bound))
+
+        if len(self.storage_techs) > 0:
+            self.model.storage_level = pe.Var(self.model.S, self.model.T,
+                                              domain=pe.NonNegativeReals,
+                                              bounds=(self.lower_bound,
+                                                      self.storage_upper_bound)
+                                              )
+            self.model.charge = pe.Var(self.model.S, self.model.T,
+                                       domain=pe.NonNegativeReals,
+                                       bounds=(self.lower_bound,
+                                               self.upper_bound))
 
     def _objective_function(self):
         expr = sum(self.model.C[u, t] * self.model.x[u, t]

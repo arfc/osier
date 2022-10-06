@@ -428,17 +428,17 @@ class StorageTechnology(Technology):
 
     Parameters
     ----------
-    energy_capacity : float, :class:`unyt.array.unyt_quantity`
+    storage_capacity : float, :class:`unyt.array.unyt_quantity`
         The maximum amount of energy storable by the technology.
     initial_storage : float, :class:`unyt.array.unyt_quantity`
-        The initial stored energy. Cannot exceed :attr:`energy_capacity`.
+        The initial stored energy. Cannot exceed :attr:`storage_capacity`.
     """
 
     def __init__(
             self,
             technology_name,
-            technology_type='production',
-            technology_category='storage',
+            technology_type='storage',
+            technology_category='base',
             dispatchable=True,
             renewable=False,
             capital_cost=0,
@@ -448,7 +448,7 @@ class StorageTechnology(Technology):
             fuel_type=None,
             capacity=0,
             efficiency=1.0,
-            energy_capacity=0,
+            storage_capacity=0,
             initial_storage=0,
             default_power_units=MW,
             default_time_units=hr,
@@ -470,17 +470,17 @@ class StorageTechnology(Technology):
             default_time_units,
             default_energy_units)
 
-        self.energy_capacity = energy_capacity
+        self.storage_capacity = storage_capacity
         self.initial_storage = initial_storage
 
     @property
-    def energy_capacity(self):
-        return self._energy_capacity
+    def storage_capacity(self):
+        return self._storage_capacity
     
-    @energy_capacity.setter
-    def energy_capacity(self, value):
+    @storage_capacity.setter
+    def storage_capacity(self, value):
         valid_quantity = _validate_quantity(value, dimension='energy')
-        self._energy_capacity = valid_quantity
+        self._storage_capacity = valid_quantity
 
     @property
     def initial_storage(self):
