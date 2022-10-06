@@ -1,3 +1,4 @@
+from locale import currency
 import pandas as pd
 import numpy as np
 import pyomo.environ as pe
@@ -102,9 +103,12 @@ class DispatchModel():
     model : :class:`pyomo.environ.ConcreteModel`
         The :mod:`pyomo` model class that converts python code into a
         set of linear equations.
-    upperbound : float
+    upper_bound : float
         The upper bound for all decision variables. Chosen to be equal
         to the maximum capacity of all technologies in :attr:`tech_set`.
+    storage_upper_bound : float
+        The upper bound for storage decision variables.
+
 
     Notes
     -----
@@ -282,9 +286,14 @@ class DispatchModel():
         self.model.ramp_down = pe.Param(
             self.model.R, initialize=self.ramp_down_params)
 
-    def _create_storage_params(self):
+    def _create_max_storage_params(self):
         self.model.storage_capacity = pe.Param(
             self.model.S, initialize=self.max_storage_params
+        )
+
+    def _create_init_storage_params(self):
+        self.model.initial_storage = pe.Param(
+            self.model.S, initialize=self.initial_storage_params
         )
 
     def _create_model_variables(self):
@@ -343,6 +352,41 @@ class DispatchModel():
                     self.model.ramp_up_limit.add(delta_power <= ramp_up)
                     self.model.ramp_down_limit.add(delta_power >= -ramp_down)
 
+    def _storage_constraints(self):
+        self.model.discharge_limit = pe.ConstraintList()
+        self.model.charge_limit = pe.ConstraintList()
+        self.model.storage_limit = pe.ConstraintList()
+        self.model.set_storage = pe.ConstraintList()
+        for s in self.model.S:
+            storage_cap = self.model.storage_capacity[s]
+            initial_storage = self.model.initial_storage[s]
+            for t in self.model.T:
+                if t == self.model.T.first():
+                    self.model.set_storage.add(self.model.storage_level[s, t]\
+                                                 == initial_storage)
+                    self.model.discharge_limit.add(
+                        self.model.x[s,t] <= initial_storage)
+                    self.model.charge_limit.add(self.model.charge[s, t] \
+                                                <= storage_cap 
+                                                - initial_storage)
+                else:
+                    t_prev = self.model.T.prev(t)
+                    previous_storage = self.model.storage_level[s, t_prev]
+                    current_discharge = self.model.x[s, t]
+                    current_charge = self.model.charge[s, t]
+                    self.model.set_storage.add(
+                                                self.model.storage_level[s,t]\
+                                                    == previous_storage \
+                                                    + current_charge \
+                                                    - current_discharge
+                                                )
+                    self.model.charge_limit.add(current_charge <= storage_cap \
+                                                - previous_storage)
+                    self.model.discharge_limit.add(
+                        current_discharge <= previous_storage)
+                self.model.storage_limit.add(
+                    self.model.storage_level[s, t] <= storage_cap)
+
     def _write_model_equations(self):
 
         self._create_model_indices()
@@ -355,12 +399,23 @@ class DispatchModel():
         if len(self.ramping_techs) > 0:
             self._create_ramping_params()
             self._ramping_constraints()
+        if len(self.storage_techs) > 0:
+            self._create_init_storage_params()
+            self._create_max_storage_params()
+            self._storage_constraints()
 
     def _format_results(self):
         df = pd.DataFrame(index=self.model.T)
         for u in self.model.U:
             df[u] = [self.model.x[u, t].value for t in self.model.T]
 
+
+        if len(self.storage_techs) > 0:
+            for s in self.model.S:
+                df[f"{s}_charge"] = [self.model.charge[s, t].value
+                                     for t in self.model.T]
+                df[f"{s}_level"] = [self.model.storage_level[s, t].value
+                                    for t in self.model.T]
         return df
 
     def solve(self):
