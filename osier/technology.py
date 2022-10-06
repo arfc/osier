@@ -476,7 +476,7 @@ class StorageTechnology(Technology):
     @property
     def storage_capacity(self):
         return self._storage_capacity
-    
+
     @storage_capacity.setter
     def storage_capacity(self, value):
         valid_quantity = _validate_quantity(value, dimension='energy')
@@ -485,10 +485,15 @@ class StorageTechnology(Technology):
     @property
     def initial_storage(self):
         return self._initial_storage
-    
+
     @initial_storage.setter
     def initial_storage(self, value):
         valid_quantity = _validate_quantity(value, dimension='energy')
+        try:
+            assert valid_quantity <= self._storage_capacity
+        except AssertionError:
+            raise AssertionError("Initial storage exceeds storage capacity.")
+            
         self._initial_storage = valid_quantity
 
 
@@ -543,3 +548,53 @@ class ThermalTechnology(RampingTechnology):
             ramp_down_rate)
 
         self.heat_rate = heat_rate
+
+
+class RampingStorageTechnology(RampingTechnology, StorageTechnology):
+    """
+    :class:`RampingStorageTechnology` extends the :class:`RampingTechnology`
+    and :class:`StorageTechnology` classes by combining storage and ramping
+    parameters.
+
+    Parameters
+    ----------
+    null
+    """
+
+    def __init__(
+            self,
+            technology_name,
+            technology_type='production',
+            technology_category='ramping',
+            dispatchable=True,
+            renewable=False,
+            capital_cost=0,
+            om_cost_fixed=0,
+            om_cost_variable=0,
+            fuel_cost=0,
+            fuel_type=None,
+            capacity=0,
+            efficiency=1,
+            default_power_units=MW,
+            default_time_units=hr,
+            default_energy_units=None,
+            ramp_up_rate=1 * hr ** -1,
+            ramp_down_rate=1 * hr ** -1) -> None:
+        super().__init__(
+            technology_name,
+            technology_type,
+            technology_category,
+            dispatchable,
+            renewable,
+            capital_cost,
+            om_cost_fixed,
+            om_cost_variable,
+            fuel_cost,
+            fuel_type,
+            capacity,
+            efficiency,
+            default_power_units,
+            default_time_units,
+            default_energy_units,
+            ramp_up_rate,
+            ramp_down_rate)

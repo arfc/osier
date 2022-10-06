@@ -219,6 +219,13 @@ class DispatchModel():
         return storage_dict
 
     @property
+    def initial_storage_params(self):
+        storage_dict = {t.technology_name: t.initial_storage.to_value()
+                        for t in self.technology_list
+                        if hasattr(t, "initial_storage")}
+        return storage_dict
+
+    @property
     def ramping_techs(self):
         return [t.technology_name
                 for t in self.technology_list
