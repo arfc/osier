@@ -187,6 +187,11 @@ class DispatchModel():
         return dict(zip(self.tech_set, capacity_set))
 
     @property
+    def efficiency_dict(self):
+        capacity_set = [t.efficiency for t in self.technology_list]
+        return dict(zip(self.tech_set, capacity_set))
+
+    @property
     def time_set(self):
         return range(self.n_hours)
 
@@ -358,16 +363,17 @@ class DispatchModel():
         self.model.storage_limit = pe.ConstraintList()
         self.model.set_storage = pe.ConstraintList()
         for s in self.model.S:
+            efficiency = self.efficiency_dict[s]
             storage_cap = self.model.storage_capacity[s]
             initial_storage = self.model.initial_storage[s]
             for t in self.model.T:
                 if t == self.model.T.first():
-                    self.model.set_storage.add(self.model.storage_level[s, t]\
-                                                 == initial_storage)
+                    self.model.set_storage.add(self.model.storage_level[s, t]
+                                               == initial_storage)
                     self.model.discharge_limit.add(
-                        self.model.x[s,t] <= initial_storage)
-                    self.model.charge_limit.add(self.model.charge[s, t] \
-                                                <= storage_cap 
+                        self.model.x[s, t] <= initial_storage)
+                    self.model.charge_limit.add(self.model.charge[s, t]
+                                                <= storage_cap
                                                 - initial_storage)
                 else:
                     t_prev = self.model.T.prev(t)
@@ -375,13 +381,14 @@ class DispatchModel():
                     current_discharge = self.model.x[s, t]
                     current_charge = self.model.charge[s, t]
                     self.model.set_storage.add(
-                                                self.model.storage_level[s,t]\
-                                                    == previous_storage \
-                                                    + current_charge \
-                                                    - current_discharge
-                                                )
-                    self.model.charge_limit.add(current_charge <= storage_cap \
-                                                - previous_storage)
+                        self.model.storage_level[s, t]
+                        == previous_storage
+                        + efficiency * current_charge
+                        - current_discharge
+                    )
+                    self.model.charge_limit.add(
+                        efficiency * current_charge
+                        <= storage_cap - previous_storage)
                     self.model.discharge_limit.add(
                         current_discharge <= previous_storage)
                 self.model.storage_limit.add(
@@ -408,7 +415,6 @@ class DispatchModel():
         df = pd.DataFrame(index=self.model.T)
         for u in self.model.U:
             df[u] = [self.model.x[u, t].value for t in self.model.T]
-
 
         if len(self.storage_techs) > 0:
             for s in self.model.S:
