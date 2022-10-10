@@ -152,7 +152,7 @@ class Technology(object):
     capacit_factor : Optional, float
         Specifies the 'usable' fraction of a technology's capacity.
         Default is 1.0, i.e. all of the technology's capacity is 
-        usable all of the time.
+        usable all of the time. A time averaged quantity.
     default_power_units : str or :class:`unyt.unit_object.Unit`
         An optional parameter, specifies the units
         for power. Default is megawatts [MW].
