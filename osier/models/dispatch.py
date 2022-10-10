@@ -1,4 +1,3 @@
-from locale import currency
 import pandas as pd
 import numpy as np
 import pyomo.environ as pe
@@ -85,6 +84,9 @@ class DispatchModel():
         >>> time_delta = 30*days
 
         would both work.
+    demand_units : str, :class:`unyt.unyt_quantity`, float, int
+        Specifies the units for the energy demand. The default is :attr:`MWh`.
+        Can be overridden by specifying a unit with the value.
     solver : str
         Indicates which solver to use. May require separate installation.
         Accepts: ['cplex', 'cbc']. Other solvers will be added in the future.
@@ -124,12 +126,14 @@ class DispatchModel():
                  technology_list,
                  net_demand,
                  time_delta=None,
+                 demand_units=None,
                  solver='cplex',
                  lower_bound=0.0,
                  oversupply=0.0,
                  undersupply=0.0):
         self.net_demand = net_demand
         self.time_delta = time_delta
+        self.demand_units = demand_units
         self.technology_list = technology_list
         self.lower_bound = lower_bound
         self.oversupply = oversupply
@@ -171,6 +175,18 @@ class DispatchModel():
                     self._time_delta = 1 * hr
             else:
                 self._time_delta = 1 * hr
+
+    @property
+    def demand_units(self):
+        return self._demand_units
+    
+    @demand_units.setter
+    def demand_units(self, value):
+        if value:
+            valid_quantity = _validate_quantity(value, dimension='energy')
+            self._demand_units = valid_quantity
+        else:
+            warnings.warn(f"Could not infer demand units. Unit set to MWh.")
 
     @property
     def n_hours(self):
@@ -277,7 +293,7 @@ class DispatchModel():
 
     def _create_demand_param(self):
         self.model.D = pe.Param(self.model.T, initialize=dict(
-            zip(self.model.T, self.net_demand)))
+            zip(self.model.T, np.array(self.net_demand))))
 
     def _create_cost_param(self):
         self.model.C = pe.Param(
