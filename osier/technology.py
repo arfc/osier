@@ -156,6 +156,13 @@ class Technology(object):
     capacity : float or :class:`unyt.array.unyt_quantity`
         Specifies the technology capacity.
         If float, the default unit is MW
+    capacity_factor : Optional, float
+        Specifies the 'usable' fraction of a technology's capacity.
+        Default is 1.0, i.e. all of the technology's capacity is 
+        usable all of the time.
+    efficiency : float
+        The technology's energy conversion efficiency expressed as
+        a fraction. Default is 1.0.
     default_power_units : str or :class:`unyt.unit_object.Unit`
         An optional parameter, specifies the units
         for power. Default is megawatts [MW].
@@ -202,6 +209,8 @@ class Technology(object):
                  fuel_cost=0.0,
                  fuel_type=None,
                  capacity=0.0,
+                 capacity_factor=1.0,
+                 efficiency=1.0,
                  default_power_units=MW,
                  default_time_units=hr,
                  default_energy_units=None) -> None:
@@ -218,6 +227,8 @@ class Technology(object):
         self.unit_energy = default_energy_units
 
         self.capacity = capacity
+        self.capacity_factor = capacity_factor
+        self.efficiency = efficiency
         self.capital_cost = capital_cost
         self.om_cost_fixed = om_cost_fixed
         self.om_cost_variable = om_cost_variable
@@ -369,6 +380,7 @@ class RampingTechnology(Technology):
             fuel_cost=0,
             fuel_type=None,
             capacity=0,
+            capacity_factor=1.0,
             efficiency=1.0,
             default_power_units=MW,
             default_time_units=hr,
@@ -387,6 +399,7 @@ class RampingTechnology(Technology):
             fuel_cost,
             fuel_type,
             capacity,
+            capacity_factor,
             efficiency,
             default_power_units,
             default_time_units,
@@ -443,6 +456,7 @@ class StorageTechnology(Technology):
             fuel_type=None,
             capacity=0,
             efficiency=1.0,
+            capacity_factor=1.0,
             storage_capacity=0,
             initial_storage=0,
             default_power_units=MW,
@@ -460,6 +474,7 @@ class StorageTechnology(Technology):
             fuel_cost,
             fuel_type,
             capacity,
+            capacity_factor,
             efficiency,
             default_power_units,
             default_time_units,
@@ -516,6 +531,7 @@ class ThermalTechnology(RampingTechnology):
             fuel_cost=0,
             fuel_type=None,
             capacity=0,
+            capacity_factor=1.0,
             efficiency=1.0,
             default_power_units=MW,
             default_time_units=hr,
@@ -535,6 +551,7 @@ class ThermalTechnology(RampingTechnology):
             fuel_cost,
             fuel_type,
             capacity,
+            capacity_factor,
             efficiency,
             default_power_units,
             default_time_units,
@@ -569,7 +586,8 @@ class RampingStorageTechnology(RampingTechnology, StorageTechnology):
             fuel_cost=0,
             fuel_type=None,
             capacity=0,
-            efficiency=1,
+            capacity_factor=1.0,
+            efficiency=1.0,
             default_power_units=MW,
             default_time_units=hr,
             default_energy_units=None,
@@ -587,6 +605,7 @@ class RampingStorageTechnology(RampingTechnology, StorageTechnology):
             fuel_cost,
             fuel_type,
             capacity,
+            capacity_factor,
             efficiency,
             default_power_units,
             default_time_units,
