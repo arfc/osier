@@ -3,7 +3,7 @@ import numpy as np
 import pyomo.environ as pe
 import pyomo.opt as po
 from pyomo.environ import ConcreteModel
-from unyt import unyt_array, hr
+from unyt import unyt_array, hr, MW
 import itertools as it
 from osier.technology import _validate_quantity
 import warnings
@@ -126,7 +126,7 @@ class DispatchModel():
                  technology_list,
                  net_demand,
                  time_delta=None,
-                 demand_units=None,
+                 demand_units=1*MW*hr,
                  solver='cplex',
                  lower_bound=0.0,
                  oversupply=0.0,
@@ -187,6 +187,10 @@ class DispatchModel():
             self._demand_units = valid_quantity
         else:
             warnings.warn(f"Could not infer demand units. Unit set to MWh.")
+
+    @property
+    def power_units(self):
+        return 1*(self.demand_units / self.time_delta).units
 
     @property
     def n_hours(self):
@@ -447,6 +451,7 @@ class DispatchModel():
         self._write_model_equations()
         solver = po.SolverFactory(self.solver)
         results = solver.solve(self.model, tee=True)
+        self.model.pprint()
         try:
             self.objective = self.model.objective()
         except ValueError:
