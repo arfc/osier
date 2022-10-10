@@ -335,7 +335,7 @@ class DispatchModel():
     def _generation_constraint(self):
         self.model.gen_limit = pe.ConstraintList()
         for u in self.model.U:
-            unit_capacity = self.capacity_dict[u].to_value()
+            unit_capacity = (self.capacity_dict[u]*self.time_delta).to_value()
             for t in self.model.T:
                 unit_generation = self.model.x[u, t]
                 self.model.gen_limit.add(unit_generation <= unit_capacity)
@@ -360,13 +360,16 @@ class DispatchModel():
     def _storage_constraints(self):
         self.model.discharge_limit = pe.ConstraintList()
         self.model.charge_limit = pe.ConstraintList()
+        self.model.charge_rate_limit = pe.ConstraintList()
         self.model.storage_limit = pe.ConstraintList()
         self.model.set_storage = pe.ConstraintList()
         for s in self.model.S:
             efficiency = self.efficiency_dict[s]
             storage_cap = self.model.storage_capacity[s]
+            unit_capacity = (self.capacity_dict[s]*self.time_delta).to_value()
             initial_storage = self.model.initial_storage[s]
             for t in self.model.T:
+                self.model.charge_rate_limit.add(self.model.charge[s,t] <= unit_capacity)
                 if t == self.model.T.first():
                     self.model.set_storage.add(self.model.storage_level[s, t]
                                                == initial_storage)
@@ -428,6 +431,10 @@ class DispatchModel():
         self._write_model_equations()
         solver = po.SolverFactory(self.solver)
         results = solver.solve(self.model, tee=True)
-        self.objective = self.model.objective()
-
+        try:
+            self.objective = self.model.objective()
+        except ValueError:
+            warnings.warn("Infeasible solution. Objective set to 1e40.")
+            self.objective = 1e40
+            
         self.results = self._format_results()
