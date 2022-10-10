@@ -189,6 +189,7 @@ class Technology(object):
 
     However, inverse MWh cannot be converted from a string.
     """
+
     def __init__(self,
                  technology_name,
                  technology_type='production',
@@ -221,9 +222,6 @@ class Technology(object):
         self.om_cost_fixed = om_cost_fixed
         self.om_cost_variable = om_cost_variable
         self.fuel_cost = fuel_cost
-
-    def __repr__(self) -> str:
-        return (f"{self.technology_name}: {self.capacity}")
 
     @property
     def unit_power(self):
