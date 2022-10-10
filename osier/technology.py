@@ -149,6 +149,10 @@ class Technology(object):
     capacity : float or :class:`unyt.array.unyt_quantity`
         Specifies the technology capacity.
         If float, the default unit is MW
+    capacit_factor : Optional, float
+        Specifies the 'usable' fraction of a technology's capacity.
+        Default is 1.0, i.e. all of the technology's capacity is 
+        usable all of the time.
     default_power_units : str or :class:`unyt.unit_object.Unit`
         An optional parameter, specifies the units
         for power. Default is megawatts [MW].
@@ -182,7 +186,6 @@ class Technology(object):
 
     However, inverse MWh cannot be converted from a string.
     """
-
     def __init__(self,
                  technology_name,
                  technology_type='production',
@@ -193,6 +196,7 @@ class Technology(object):
                  om_cost_variable=0.0,
                  fuel_cost=0.0,
                  capacity=0.0,
+                 capacity_factor=1.0,
                  default_power_units=MW,
                  default_time_units=hr,
                  default_energy_units=None) -> None:
@@ -207,10 +211,14 @@ class Technology(object):
         self.unit_energy = default_energy_units
 
         self.capacity = capacity
+        self.capacity_factor = capacity_factor
         self.capital_cost = capital_cost
         self.om_cost_fixed = om_cost_fixed
         self.om_cost_variable = om_cost_variable
         self.fuel_cost = fuel_cost
+
+    def __repr__(self) -> str:
+        return (f"{self.technology_name}: {self.capacity}")
 
     @property
     def unit_power(self):
