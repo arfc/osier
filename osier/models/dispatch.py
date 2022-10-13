@@ -356,6 +356,7 @@ class DispatchModel():
         self.model.gen_limit = pe.ConstraintList()
         for u in self.model.U:
             unit_capacity = (self.capacity_dict[u]*self.time_delta).to_value()
+
             for t in self.model.T:
                 unit_generation = self.model.x[u, t]
                 self.model.gen_limit.add(unit_generation <= unit_capacity)
@@ -451,7 +452,6 @@ class DispatchModel():
         self._write_model_equations()
         solver = po.SolverFactory(self.solver)
         results = solver.solve(self.model, tee=True)
-        self.model.pprint()
         try:
             self.objective = self.model.objective()
         except ValueError:
