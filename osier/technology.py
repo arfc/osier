@@ -1,17 +1,17 @@
 import unyt
-from unyt import MW, kW, hr
+from unyt import MW, hr, MWh
 from unyt import unyt_quantity
-from unyt.exceptions import UnitParseError, UnitConversionError
+from unyt.exceptions import UnitParseError
 
 import numpy as np
 
 
 _dim_opts = {'time': hr,
              'power': MW,
-             'energy': MW * hr,
+             'energy': MWh,
              'spec_time': hr**-1,
              'spec_power': MW**-1,
-             'spec_energy': (MW * hr)**-1}
+             'spec_energy': (MWh)**-1}
 
 
 def _validate_unit(value, dimension):
@@ -88,9 +88,11 @@ def _validate_quantity(value, dimension):
     valid_quantity = None
     if isinstance(value, unyt_quantity):
         try:
-            valid_quantity = value.to(exp_dim)
-        except UnitConversionError:
-            raise TypeError(f"Cannot convert {value.units} to {exp_dim}")
+            assert value.units.same_dimensions_as(exp_dim)
+            valid_quantity = value
+        except AssertionError:
+            raise TypeError(f"{value} has dimensions {value.units.dimensions}. "
+                            f"Expected {exp_dim.dimensions}")
     elif isinstance(value, float):
         valid_quantity = value * exp_dim
     elif isinstance(value, int):
