@@ -19,7 +19,7 @@ N_HOURS = 24
 BASELOAD = 2
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def technology_set_1():
     """
     This fixture uses creates technologies directly from
