@@ -3,9 +3,10 @@ import numpy as np
 import pyomo.environ as pe
 import pyomo.opt as po
 from pyomo.environ import ConcreteModel
-from unyt import unyt_array, hr, MW
+from unyt import unyt_array, hr, MW, MWh
 import itertools as it
-from osier.technology import _validate_quantity
+from osier.technology import _validate_quantity, _validate_unit
+from osier.utils import synchronize_units
 import warnings
 
 _freq_opts = {'D': 'day',
@@ -84,8 +85,8 @@ class DispatchModel():
         >>> time_delta = 30*days
 
         would both work.
-    demand_units : str, :class:`unyt.unyt_quantity`, float, int
-        Specifies the units for the energy demand. The default is :attr:`MWh`.
+    power_units : str, :class:`unyt.unyt_quantity`, float, int
+        Specifies the units for the power demand. The default is :attr:`MW`.
         Can be overridden by specifying a unit with the value.
     solver : str
         Indicates which solver to use. May require separate installation.
@@ -105,6 +106,8 @@ class DispatchModel():
     model : :class:`pyomo.environ.ConcreteModel`
         The :mod:`pyomo` model class that converts python code into a
         set of linear equations.
+    n_timesteps : int
+        The number of timesteps in the model.
     upper_bound : float
         The upper bound for all decision variables. Chosen to be equal
         to the maximum capacity of all technologies in :attr:`tech_set`.
@@ -126,15 +129,14 @@ class DispatchModel():
                  technology_list,
                  net_demand,
                  time_delta=None,
-                 demand_units=1*MW*hr,
+                 power_units=MW,
                  solver='cplex',
                  lower_bound=0.0,
                  oversupply=0.0,
                  undersupply=0.0):
         self.net_demand = net_demand
         self.time_delta = time_delta
-        self.demand_units = demand_units
-        self.technology_list = technology_list
+        self.power_units = power_units
         self.lower_bound = lower_bound
         self.oversupply = oversupply
         self.undersupply = undersupply
@@ -142,6 +144,11 @@ class DispatchModel():
         self.solver = solver
         self.results = None
         self.objective = None
+
+
+        self.technology_list = synchronize_units(technology_list, 
+                                                unit_power=power_units, 
+                                                unit_time=time_delta.units)
 
     @property
     def time_delta(self):
@@ -177,23 +184,19 @@ class DispatchModel():
                 self._time_delta = 1 * hr
 
     @property
-    def demand_units(self):
+    def power_units(self):
         return self._demand_units
     
-    @demand_units.setter
-    def demand_units(self, value):
+    @power_units.setter
+    def power_units(self, value):
         if value:
-            valid_quantity = _validate_quantity(value, dimension='energy')
+            valid_quantity = _validate_unit(value, dimension='power')
             self._demand_units = valid_quantity
         else:
-            warnings.warn(f"Could not infer demand units. Unit set to MWh.")
+            warnings.warn(f"Could not infer demand units. Unit set to MW.")
 
     @property
-    def power_units(self):
-        return 1*(self.demand_units / self.time_delta).units
-
-    @property
-    def n_hours(self):
+    def n_timesteps(self):
         return len(self.net_demand)
 
     @property
@@ -213,7 +216,7 @@ class DispatchModel():
 
     @property
     def time_set(self):
-        return range(self.n_hours)
+        return range(self.n_timesteps)
 
     @property
     def indices(self):
@@ -222,7 +225,7 @@ class DispatchModel():
     @property
     def cost_params(self):
         v_costs = np.array([
-            (t.variable_cost_ts(self.n_hours))
+            (t.variable_cost_ts(self.n_timesteps))
             for t in self.technology_list
         ]).flatten()
         return dict(zip(self.indices, v_costs))
