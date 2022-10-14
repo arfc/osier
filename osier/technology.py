@@ -239,6 +239,14 @@ class Technology(object):
     def __repr__(self) -> str:
         return (f"{self.technology_name}: {self.capacity}")
 
+    def __eq__(self, tech) -> bool:
+        """Test technology equality"""
+        if ((self.technology_name == tech.technology_name)
+            and (self.capacity == tech.capacity)):
+            return True
+        else:
+            return False
+
     @property
     def unit_power(self):
         return self._unit_power
