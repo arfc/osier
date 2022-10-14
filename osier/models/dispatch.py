@@ -148,7 +148,7 @@ class DispatchModel():
 
         self.technology_list = synchronize_units(technology_list, 
                                                 unit_power=power_units, 
-                                                unit_time=time_delta.units)
+                                                unit_time=self.time_delta.units)
 
     @property
     def time_delta(self):
