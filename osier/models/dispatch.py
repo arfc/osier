@@ -111,8 +111,6 @@ class DispatchModel():
     upper_bound : float
         The upper bound for all decision variables. Chosen to be equal
         to the maximum capacity of all technologies in :attr:`tech_set`.
-    storage_upper_bound : float
-        The upper bound for storage decision variables.
 
 
     Notes
@@ -231,33 +229,6 @@ class DispatchModel():
         return dict(zip(self.indices, v_costs))
 
     @property
-    def storage_techs(self):
-        return [t.technology_name
-                for t in self.technology_list
-                if hasattr(t, "storage_capacity")]
-
-    @property
-    def storage_upper_bound(self):
-        caps = unyt_array([t.storage_capacity
-                           for t in self.technology_list
-                           if hasattr(t, "storage_capacity")])
-        return caps.max().to_value()
-
-    @property
-    def max_storage_params(self):
-        storage_dict = {t.technology_name: t.storage_capacity.to_value()
-                        for t in self.technology_list
-                        if hasattr(t, "storage_capacity")}
-        return storage_dict
-
-    @property
-    def initial_storage_params(self):
-        storage_dict = {t.technology_name: t.initial_storage.to_value()
-                        for t in self.technology_list
-                        if hasattr(t, "initial_storage")}
-        return storage_dict
-
-    @property
     def ramping_techs(self):
         return [t.technology_name
                 for t in self.technology_list
@@ -293,10 +264,6 @@ class DispatchModel():
             self.model.R = pe.Set(initialize=self.ramping_techs,
                                   ordered=True,
                                   within=self.model.U)
-        if len(self.storage_techs) > 0:
-            self.model.S = pe.Set(initialize=self.storage_techs,
-                                  ordered=True,
-                                  within=self.model.U)
 
     def _create_demand_param(self):
         self.model.D = pe.Param(self.model.T, initialize=dict(
@@ -314,31 +281,10 @@ class DispatchModel():
         self.model.ramp_down = pe.Param(
             self.model.R, initialize=self.ramp_down_params)
 
-    def _create_max_storage_params(self):
-        self.model.storage_capacity = pe.Param(
-            self.model.S, initialize=self.max_storage_params
-        )
-
-    def _create_init_storage_params(self):
-        self.model.initial_storage = pe.Param(
-            self.model.S, initialize=self.initial_storage_params
-        )
-
     def _create_model_variables(self):
         self.model.x = pe.Var(self.model.U, self.model.T,
                               domain=pe.NonNegativeReals,
                               bounds=(self.lower_bound, self.upper_bound))
-
-        if len(self.storage_techs) > 0:
-            self.model.storage_level = pe.Var(self.model.S, self.model.T,
-                                              domain=pe.NonNegativeReals,
-                                              bounds=(self.lower_bound,
-                                                      self.storage_upper_bound)
-                                              )
-            self.model.charge = pe.Var(self.model.S, self.model.T,
-                                       domain=pe.NonNegativeReals,
-                                       bounds=(self.lower_bound,
-                                               self.upper_bound))
 
     def _objective_function(self):
         expr = sum(self.model.C[u, t] * self.model.x[u, t]
@@ -381,45 +327,6 @@ class DispatchModel():
                     self.model.ramp_up_limit.add(delta_power <= ramp_up)
                     self.model.ramp_down_limit.add(delta_power >= -ramp_down)
 
-    def _storage_constraints(self):
-        self.model.discharge_limit = pe.ConstraintList()
-        self.model.charge_limit = pe.ConstraintList()
-        self.model.charge_rate_limit = pe.ConstraintList()
-        self.model.storage_limit = pe.ConstraintList()
-        self.model.set_storage = pe.ConstraintList()
-        for s in self.model.S:
-            efficiency = self.efficiency_dict[s]
-            storage_cap = self.model.storage_capacity[s]
-            unit_capacity = (self.capacity_dict[s]*self.time_delta).to_value()
-            initial_storage = self.model.initial_storage[s]
-            for t in self.model.T:
-                self.model.charge_rate_limit.add(self.model.charge[s,t] <= unit_capacity)
-                if t == self.model.T.first():
-                    self.model.set_storage.add(self.model.storage_level[s, t]
-                                               == initial_storage)
-                    self.model.discharge_limit.add(
-                        self.model.x[s, t] <= initial_storage)
-                    self.model.charge_limit.add(self.model.charge[s, t]
-                                                <= storage_cap
-                                                - initial_storage)
-                else:
-                    t_prev = self.model.T.prev(t)
-                    previous_storage = self.model.storage_level[s, t_prev]
-                    current_discharge = self.model.x[s, t]
-                    current_charge = self.model.charge[s, t]
-                    self.model.set_storage.add(
-                        self.model.storage_level[s, t]
-                        == previous_storage
-                        + efficiency * current_charge
-                        - current_discharge
-                    )
-                    self.model.charge_limit.add(
-                        efficiency * current_charge
-                        <= storage_cap - previous_storage)
-                    self.model.discharge_limit.add(
-                        current_discharge <= previous_storage)
-                self.model.storage_limit.add(
-                    self.model.storage_level[s, t] <= storage_cap)
 
     def _write_model_equations(self):
 
@@ -433,22 +340,11 @@ class DispatchModel():
         if len(self.ramping_techs) > 0:
             self._create_ramping_params()
             self._ramping_constraints()
-        if len(self.storage_techs) > 0:
-            self._create_init_storage_params()
-            self._create_max_storage_params()
-            self._storage_constraints()
 
     def _format_results(self):
         df = pd.DataFrame(index=self.model.T)
         for u in self.model.U:
             df[u] = [self.model.x[u, t].value for t in self.model.T]
-
-        if len(self.storage_techs) > 0:
-            for s in self.model.S:
-                df[f"{s}_charge"] = [self.model.charge[s, t].value
-                                     for t in self.model.T]
-                df[f"{s}_level"] = [self.model.storage_level[s, t].value
-                                    for t in self.model.T]
         return df
 
     def solve(self):
