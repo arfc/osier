@@ -350,6 +350,8 @@ class DispatchModel():
         self.model.undersupply = pe.ConstraintList()
         for t in self.model.T:
             generation = sum(self.model.x[u, t] for u in self.model.U)
+            if len(self.storage_techs) > 0:
+                generation -= sum(self.model.charge[s, t] for s in self.model.S)
             over_demand = self.model.D[t] * (1 + self.oversupply)
             under_demand = self.model.D[t] * (1 - self.undersupply)
             self.model.oversupply.add(generation <= over_demand)
@@ -410,11 +412,11 @@ class DispatchModel():
                     self.model.set_storage.add(
                         self.model.storage_level[s, t]
                         == previous_storage
-                        + efficiency * current_charge
-                        - current_discharge
+                        + np.sqrt(efficiency) * current_charge
+                        - np.sqrt(efficiency) * current_discharge
                     )
                     self.model.charge_limit.add(
-                        efficiency * current_charge
+                        np.sqrt(efficiency) * current_charge
                         <= storage_cap - previous_storage)
                     self.model.discharge_limit.add(
                         current_discharge <= previous_storage)
