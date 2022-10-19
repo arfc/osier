@@ -1,15 +1,14 @@
-import numpy as np
-import pandas as pd
 from osier import Technology
 from osier.technology import _validate_unit
-from unyt import unyt_quantity, unit_object
+from unyt import unit_object
 import copy
+from typing import Iterable
 
 from osier.technology import Technology
 
-def synchronize_units(tech_list: list[Technology], 
+def synchronize_units(tech_list: Iterable[Technology], 
                     unit_power: unit_object, 
-                    unit_time: unit_object) -> list[Technology]:
+                    unit_time: unit_object) -> Iterable[Technology]:
     """
     This function ensures that all objects in the technology list
     have units consistent with the model's units. An 
