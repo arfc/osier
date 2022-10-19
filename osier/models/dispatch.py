@@ -14,7 +14,6 @@ _freq_opts = {'D': 'day',
               'S': 'second',
               'T': 'minute'}
 
-
 class DispatchModel():
     """
     The :class:`DispatchModel` class creates and solves a basic dispatch
@@ -113,6 +112,10 @@ class DispatchModel():
         to the maximum capacity of all technologies in :attr:`tech_set`.
     storage_upper_bound : float
         The upper bound for storage decision variables.
+    penalty : float
+        The penalty applied to the objective function to eliminate
+        simultaneous charging and discharging. Users may need to tune
+        this parameter. Default is 1.0.
 
 
     Notes
@@ -123,6 +126,12 @@ class DispatchModel():
 
     2. The default value for :attr:`time_delta` in :attr:`__init__` is
     `None`. This is replaced by a setter method in :class:`Dispatch`.
+
+    3. This formulation uses a :attr:`penalty` parameter  to prevent unphysical
+    behavior because it preserves the problem's linearity. Some formulations 
+    may use a binary variable to prevent simultaneous charging and discharing.
+    However, this changes the problem to a mixed-integer linear program which
+    requires a more sophisticated solver such as ``gurobi``.
     """
 
     def __init__(self,
@@ -133,13 +142,15 @@ class DispatchModel():
                  solver='cplex',
                  lower_bound=0.0,
                  oversupply=0.0,
-                 undersupply=0.0):
+                 undersupply=0.0,
+                 penalty=1e-4):
         self.net_demand = net_demand
         self.time_delta = time_delta
         self.power_units = power_units
         self.lower_bound = lower_bound
         self.oversupply = oversupply
         self.undersupply = undersupply
+        self.penalty = penalty
         self.model = ConcreteModel()
         self.solver = solver
         self.results = None
@@ -343,6 +354,9 @@ class DispatchModel():
     def _objective_function(self):
         expr = sum(self.model.C[u, t] * self.model.x[u, t]
                    for u in self.model.U for t in self.model.T)
+        if len(self.storage_techs) > 0:
+            expr += sum(self.model.x[s,t] + self.model.charge[s,t]
+                        for s in self.model.S for t in self.model.T) * self.penalty
         self.model.objective = pe.Objective(sense=pe.minimize, expr=expr)
 
     def _supply_constraints(self):
@@ -389,12 +403,15 @@ class DispatchModel():
         self.model.charge_rate_limit = pe.ConstraintList()
         self.model.storage_limit = pe.ConstraintList()
         self.model.set_storage = pe.ConstraintList()
+        # self.model.binary_charging = pe.ConstraintList(doc="Prevents the battery from charging and discharging simultaneously.")
         for s in self.model.S:
             efficiency = self.efficiency_dict[s]
             storage_cap = self.model.storage_capacity[s]
             unit_capacity = (self.capacity_dict[s]*self.time_delta).to_value()
             initial_storage = self.model.initial_storage[s]
             for t in self.model.T:
+                # state = self.model.x[s,t] * self.model.charge[s,t] < SMALL_NUMBER
+                # self.model.binary_charging.add(state)
                 self.model.charge_rate_limit.add(self.model.charge[s,t] <= unit_capacity)
                 if t == self.model.T.first():
                     self.model.set_storage.add(self.model.storage_level[s, t]
