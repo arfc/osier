@@ -360,13 +360,13 @@ class RampingTechnology(Technology):
     ----------
     ramp_up_rate : float, :class:`unyt_quantity`
         The rate at which a technology can increase its power, expressed as
-        a percentage of its capacity. For example, if `ramp_up` equals 0.5,
+        a percentage of its capacity. For example, if `ramp_up_rate` equals 0.5,
         then the technology may ramp up its power level by 50% per unit time.
         The default is 1.0 (i.e. there is no constraint on ramping up).
 
     ramp_down_rate : float, :class:`unyt_quantity`
         The rate at which a technology can decrease its power, expressed as
-        a percentage of its capacity. For example, if `ramp_down` equals 0.5,
+        a percentage of its capacity. For example, if `ramp_down_rate` equals 0.5,
         then the technology may ramp down its power level by 50% per unit time.
         The default is 1.0 (i.e. there is no constraint on ramping down).
 
