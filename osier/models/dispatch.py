@@ -49,26 +49,26 @@ class DispatchModel():
     .. math::
         x_{u,t} \\leq \\textbf{CAP}_{u} \\ \\forall \\ u,t \\in U,T
 
-    3. Technologies may not exceed their ramp up rate.
+    3. Technologies may not exceed their ramp up rate,
 
     .. math::
         \\frac{x_{r,t} - x_{r,t-1}}{\\Delta t} = \\Delta P_{r,t} \\leq
         (\\text{ramp up})\\textbf{CAP}_u\\Delta t \\ \\forall \\ r,t
         \\in R \\subset U, T
 
-    or ramp down rate
+    or ramp down rate,
 
     .. math::
         \\frac{x_{r,t} - x_{r,t-1}}{\\Delta t} = \\Delta P_{r,t} \\leq
         -(\\text{ramp down})\\textbf{CAP}_u\\Delta t \\ \\forall \\ r,t
-        \\in R \\subset U, T
+        \\in R \\subset U, T .
 
     Parameters
     ----------
     technology_list : list of :class:`osier.Technology`
         The list of :class:`Technology` objects to dispatch -- i.e. decide
         how much energy each technology should produce.
-    net_demand : list, :class:`numpy.ndarray`, :class:`unyt.array.unyt_array`, :class:`pandas.DataFrame`.
+    net_demand : list, :class:`numpy.ndarray`, :class:`unyt.array.unyt_array`, :class:`pandas.DataFrame`
         The remaining energy demand to be fulfilled by the technologies in
         :attr:`technology_list`. The `values` of an object passed as
         `net_demand` are used to create a supply constraint. See
@@ -86,7 +86,7 @@ class DispatchModel():
         >>> time_delta = 30*days
 
         would both work.
-    power_units : str, :class:`unyt.unyt_quantity`, float, int
+    power_units : str, :class:`unyt.unit_object`
         Specifies the units for the power demand. The default is :attr:`MW`.
         Can be overridden by specifying a unit with the value.
     solver : str
@@ -217,15 +217,16 @@ class DispatchModel():
 
     @property
     def power_units(self):
-        return self._demand_units
+        return self._power_units
 
     @power_units.setter
     def power_units(self, value):
         if value:
             valid_quantity = _validate_unit(value, dimension='power')
-            self._demand_units = valid_quantity
+            self._power_units = valid_quantity
         else:
-            warnings.warn(f"Could not infer demand units. Unit set to MW.")
+            warnings.warn(f"Could not infer power units. Unit set to MW.")
+            self._power_units = MW
 
     @property
     def n_timesteps(self):
