@@ -354,7 +354,7 @@ class RampingTechnology(Technology):
     """
     The :class:`RampingTechnology` class extends the :class:`Technology`
     class by adding ramping attributes that correspond to a technology's
-    ability to increase or decrease its power level a specified rate.
+    ability to increase or decrease its power level at a specified rate.
 
     Parameters
     ----------
