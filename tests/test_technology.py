@@ -73,6 +73,7 @@ def test_validate_quantity():
 def test_initialize(advanced_tech):
     assert advanced_tech.technology_name == TECH_NAME
     assert advanced_tech.technology_type == 'production'
+    assert advanced_tech.technology_category == 'base'
     assert advanced_tech.capacity == 0.0
     assert advanced_tech.capital_cost == 0.0
     assert advanced_tech.om_cost_fixed == 0.0
@@ -83,6 +84,7 @@ def test_initialize(advanced_tech):
     assert advanced_tech.unit_energy == MW * hr
     assert advanced_tech.annual_fixed_cost == 0.0
     assert advanced_tech.total_capital_cost == 0.0
+    assert advanced_tech.efficiency == 1.0
 
 
 def test_total_capital_cost(advanced_tech):

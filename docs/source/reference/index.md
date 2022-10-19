@@ -7,6 +7,9 @@
    :template: my_class.rst
 
     osier.Technology
-    osier.DispatchModel 
-    
+    osier.RampingTechnology
+    osier.StorageTechnology
+    osier.ThermalTechnology
+    osier.DispatchModel
+    osier.utils.synchronize_units
 ```
