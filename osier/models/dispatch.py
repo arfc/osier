@@ -13,7 +13,7 @@ _freq_opts = {'D': 'day',
               'H': 'hour',
               'S': 'second',
               'T': 'minute'}
-
+LARGE_NUMBER = 1e40
 
 class DispatchModel():
     """
@@ -106,12 +106,41 @@ class DispatchModel():
     model : :class:`pyomo.environ.ConcreteModel`
         The :mod:`pyomo` model class that converts python code into a
         set of linear equations.
+    objective : float
+        The result of the model's objective function. Only instantiated
+        after :meth:`DispatchModel.solve()` is called.
     n_timesteps : int
         The number of timesteps in the model.
     upper_bound : float
         The upper bound for all decision variables. Chosen to be equal
         to the maximum capacity of all technologies in :attr:`tech_set`.
-
+    model_initialized : boolean
+        Indicates whether :attr:`DispatchModel.model` has been populated
+        with equations yet. This is set to ``True`` after 
+        :meth:`DispatchModel._write_model_equations()` has been called.
+    indices : List of tuples
+        The list of tuples representing the product of the
+        :attr:`tech_set` and :attr:`time_set` attributes.
+    tech_set : list of str
+        A list of the unique technology names in the simulation.
+    capacity_dict : dict
+        A dictionary of {name : capacity} pairs.
+    efficiency_dict : dict
+        A dictionary of {name : efficiency} pairs.
+    time_set : iterable
+        The result of ``range(self.n_timesteps)``.
+    cost_params : list
+        The set of cost parameters for each technology. Corresponds to
+        a list of values. Size is equal to the product of the number of 
+        timesteps and the number of technologies in the model.
+    ramp_up_params : list
+        The set of ramp_up parameters. Only initialized if there is a
+        ramping technology.
+    ramp_down_params : list
+        The set of ramp_down parameters. Only initialized if there is a
+        ramping technology.
+    ramping_techs : list
+        The subset of :attr:`tech_set` containing ramping technologies.
 
     Notes
     -----
@@ -121,6 +150,9 @@ class DispatchModel():
 
     2. The default value for :attr:`time_delta` in :attr:`__init__` is
     `None`. This is replaced by a setter method in :class:`Dispatch`.
+
+    3. :meth:`_write_model_equations` may be called before :meth:`solve` if
+    users wish to add their own constraints or parameters to the problem.
     """
 
     def __init__(self,
@@ -142,7 +174,7 @@ class DispatchModel():
         self.solver = solver
         self.results = None
         self.objective = None
-
+        self.model_initialized = False
 
         self.technology_list = synchronize_units(technology_list, 
                                                 unit_power=power_units, 
@@ -340,6 +372,7 @@ class DispatchModel():
         if len(self.ramping_techs) > 0:
             self._create_ramping_params()
             self._ramping_constraints()
+        self.model_initialized = True
 
     def _format_results(self):
         df = pd.DataFrame(index=self.model.T)
@@ -347,14 +380,31 @@ class DispatchModel():
             df[u] = [self.model.x[u, t].value for t in self.model.T]
         return df
 
-    def solve(self):
-        self._write_model_equations()
-        solver = po.SolverFactory(self.solver)
-        results = solver.solve(self.model, tee=True)
+    def solve(self, solver=None):
+        """
+        Executes the model solve. Model equations are written at the
+        time the method is called.
+
+        Parameters
+        ----------
+        solver : str
+            Indicates which solver to use. If no solver is specified, 
+            the default :attr:`DispatchModel.solver` attribute is used.
+            Default is ['cplex'].
+        """
+        if not self.model_initialized:
+            self._write_model_equations()
+        
+        if solver:
+            optimizer = po.SolverFactory(solver)
+        else:
+            optimizer = po.SolverFactory(self.solver)
+
+        results = optimizer.solve(self.model, tee=True)
         try:
             self.objective = self.model.objective()
         except ValueError:
-            warnings.warn("Infeasible solution. Objective set to 1e40.")
-            self.objective = 1e40
+            warnings.warn(f"Infeasible or no solution. Objective set to {LARGE_NUMBER}")
+            self.objective = LARGE_NUMBER
             
         self.results = self._format_results()
