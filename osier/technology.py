@@ -160,7 +160,7 @@ class Technology(object):
         If float, the default unit is MW
     capacity_factor : Optional, float
         Specifies the 'usable' fraction of a technology's capacity.
-        Default is 1.0, i.e. all of the technology's capacity is 
+        Default is 1.0, i.e. all of the technology's capacity is
         usable all of the time.
     efficiency : float
         The technology's energy conversion efficiency expressed as
@@ -242,7 +242,7 @@ class Technology(object):
     def __eq__(self, tech) -> bool:
         """Test technology equality"""
         if ((self.technology_name == tech.technology_name)
-            and (self.capacity == tech.capacity)):
+                and (self.capacity == tech.capacity)):
             return True
         else:
             return False
@@ -440,6 +440,7 @@ class RampingTechnology(Technology):
             self.unit_power *
             self.unit_time**-1
         )
+
 
 class ThermalTechnology(RampingTechnology):
     """

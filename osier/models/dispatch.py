@@ -15,6 +15,7 @@ _freq_opts = {'D': 'day',
               'T': 'minute'}
 LARGE_NUMBER = 1e40
 
+
 class DispatchModel():
     """
     The :class:`DispatchModel` class creates and solves a basic dispatch
@@ -116,7 +117,7 @@ class DispatchModel():
         to the maximum capacity of all technologies in :attr:`tech_set`.
     model_initialized : boolean
         Indicates whether :attr:`DispatchModel.model` has been populated
-        with equations yet. This is set to ``True`` after 
+        with equations yet. This is set to ``True`` after
         :meth:`DispatchModel._write_model_equations()` has been called.
     indices : List of tuples
         The list of tuples representing the product of the
@@ -131,7 +132,7 @@ class DispatchModel():
         The result of ``range(self.n_timesteps)``.
     cost_params : list
         The set of cost parameters for each technology. Corresponds to
-        a list of values. Size is equal to the product of the number of 
+        a list of values. Size is equal to the product of the number of
         timesteps and the number of technologies in the model.
     ramp_up_params : list
         The set of ramp_up parameters. Only initialized if there is a
@@ -176,9 +177,10 @@ class DispatchModel():
         self.objective = None
         self.model_initialized = False
 
-        self.technology_list = synchronize_units(technology_list, 
-                                                unit_power=power_units, 
-                                                unit_time=self.time_delta.units)
+        self.technology_list = synchronize_units(
+            technology_list,
+            unit_power=power_units,
+            unit_time=self.time_delta.units)
 
     @property
     def time_delta(self):
@@ -216,7 +218,7 @@ class DispatchModel():
     @property
     def power_units(self):
         return self._demand_units
-    
+
     @power_units.setter
     def power_units(self, value):
         if value:
@@ -336,7 +338,7 @@ class DispatchModel():
     def _generation_constraint(self):
         self.model.gen_limit = pe.ConstraintList()
         for u in self.model.U:
-            unit_capacity = (self.capacity_dict[u]*self.time_delta).to_value()
+            unit_capacity = (self.capacity_dict[u] * self.time_delta).to_value()
 
             for t in self.model.T:
                 unit_generation = self.model.x[u, t]
@@ -358,7 +360,6 @@ class DispatchModel():
                         self.time_delta.to_value()
                     self.model.ramp_up_limit.add(delta_power <= ramp_up)
                     self.model.ramp_down_limit.add(delta_power >= -ramp_down)
-
 
     def _write_model_equations(self):
 
@@ -388,13 +389,13 @@ class DispatchModel():
         Parameters
         ----------
         solver : str
-            Indicates which solver to use. If no solver is specified, 
+            Indicates which solver to use. If no solver is specified,
             the default :attr:`DispatchModel.solver` attribute is used.
             Default is ['cplex'].
         """
         if not self.model_initialized:
             self._write_model_equations()
-        
+
         if solver:
             optimizer = po.SolverFactory(solver)
         else:
@@ -404,7 +405,8 @@ class DispatchModel():
         try:
             self.objective = self.model.objective()
         except ValueError:
-            warnings.warn(f"Infeasible or no solution. Objective set to {LARGE_NUMBER}")
+            warnings.warn(
+                f"Infeasible or no solution. Objective set to {LARGE_NUMBER}")
             self.objective = LARGE_NUMBER
-            
+
         self.results = self._format_results()
