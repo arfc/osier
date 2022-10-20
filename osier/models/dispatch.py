@@ -45,7 +45,7 @@ class DispatchModel():
     generate at any time, :math:`t`.
 
     .. math::
-        x_{u,t} \\leq \\textbf{CAP}_{u} \\ \\forall \\ u,t \\in U,T
+        x_{u,t} \\leq \\textbf{CAP}_{u}\Delta t \\ \\forall \\ u,t \\in U,T
 
     3. Technologies may not exceed their ramp up rate.
 
@@ -403,15 +403,12 @@ class DispatchModel():
         self.model.charge_rate_limit = pe.ConstraintList()
         self.model.storage_limit = pe.ConstraintList()
         self.model.set_storage = pe.ConstraintList()
-        # self.model.binary_charging = pe.ConstraintList(doc="Prevents the battery from charging and discharging simultaneously.")
         for s in self.model.S:
             efficiency = self.efficiency_dict[s]
             storage_cap = self.model.storage_capacity[s]
             unit_capacity = (self.capacity_dict[s]*self.time_delta).to_value()
             initial_storage = self.model.initial_storage[s]
             for t in self.model.T:
-                # state = self.model.x[s,t] * self.model.charge[s,t] < SMALL_NUMBER
-                # self.model.binary_charging.add(state)
                 self.model.charge_rate_limit.add(self.model.charge[s,t] <= unit_capacity)
                 if t == self.model.T.first():
                     self.model.set_storage.add(self.model.storage_level[s, t]
