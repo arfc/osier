@@ -3,7 +3,7 @@ import numpy as np
 import pyomo.environ as pe
 import pyomo.opt as po
 from pyomo.environ import ConcreteModel
-from unyt import unyt_array, hr, MW, MWh
+from unyt import unyt_array, hr, MW
 import itertools as it
 from osier.technology import _validate_quantity, _validate_unit
 from osier.utils import synchronize_units

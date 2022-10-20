@@ -1,5 +1,5 @@
 import unyt
-from unyt import MW, hr, MWh
+from unyt import MW, hr
 from unyt import unyt_quantity
 from unyt.exceptions import UnitParseError
 
@@ -8,10 +8,10 @@ import numpy as np
 
 _dim_opts = {'time': hr,
              'power': MW,
-             'energy': MWh,
+             'energy': MW*hr,
              'spec_time': hr**-1,
              'spec_power': MW**-1,
-             'spec_energy': (MWh)**-1}
+             'spec_energy': (MW*hr)**-1}
 
 
 def _validate_unit(value, dimension):
