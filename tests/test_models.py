@@ -100,6 +100,35 @@ def technology_set_3():
 
     return [nuclear, natural_gas]
 
+@pytest.fixture
+def technology_set_4():
+    """
+    This fixture uses creates technologies from
+    the :class:`ThermalTechnology` and :class`StorageTechnology`
+    subclasses.
+    """
+    nuclear = ThermalTechnology(technology_name='Nuclear',
+                        capacity=2,
+                        capital_cost=6,
+                        om_cost_variable=20,
+                        om_cost_fixed=50,
+                        fuel_cost=5,
+                        ramp_up_rate=0.0,
+                        ramp_down_rate=0.0,
+                        )
+    battery = StorageTechnology(technology_name='Battery',
+                            capacity=5,
+                            capital_cost=1,
+                            om_cost_variable=0,
+                            om_cost_fixed=15,
+                            fuel_cost=0,
+                            storage_capacity=65,
+                            efficiency=1.0,
+                            initial_storage=24
+                            )
+
+    return [nuclear, battery]
+
 
 @pytest.fixture
 def net_demand():
@@ -200,7 +229,8 @@ def test_dispatch_model_solve_case2(technology_set_2, net_demand):
 
 def test_dispatch_model_solve_case3(technology_set_3, net_demand):
     """
-    Tests that the dispatch model produces expected results.
+    Tests that a dispatch model with ramping constraints behaves
+    as expected.
     """
     nuclear, natgas = technology_set_3
     model = DispatchModel(technology_set_3,
@@ -213,3 +243,22 @@ def test_dispatch_model_solve_case3(technology_set_3, net_demand):
                        / nuclear.capacity.to_value()).min()
     assert max_power_delta == pytest.approx(nuclear.ramp_up_rate.to_value(), TOL)
     assert min_power_delta == pytest.approx(-nuclear.ramp_down_rate.to_value(), TOL)
+
+
+def test_dispatch_model_solve_case4(technology_set_4, net_demand):
+    """
+    Tests that storage constraints behave as expected.
+    """
+
+    model = DispatchModel(technology_set_4,
+                        net_demand=net_demand,
+                        solver=solver)
+    model.solve()
+    total_gen = model.results[['Nuclear', 
+                                'Battery', 
+                                'Battery_charge']].sum().sum()                                
+    binary_charging = np.dot(model.results.Battery, 
+                            model.results.Battery_charge)
+    assert (total_gen - net_demand.sum()) == pytest.approx(0, TOL)
+    assert binary_charging == pytest.approx(0, TOL)
+    

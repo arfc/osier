@@ -45,7 +45,7 @@ class DispatchModel():
     generate at any time, :math:`t`.
 
     .. math::
-        x_{u,t} \\leq \\textbf{CAP}_{u}\Delta t \\ \\forall \\ u,t \\in U,T
+        x_{u,t} \\leq \\textbf{CAP}_{u}\\Delta t \\ \\forall \\ u,t \\in U,T
 
     3. Technologies may not exceed their ramp up rate.
 
@@ -305,7 +305,7 @@ class DispatchModel():
                                   ordered=True,
                                   within=self.model.U)
         if len(self.storage_techs) > 0:
-            self.model.S = pe.Set(initialize=self.storage_techs,
+            self.model.StorageTech = pe.Set(initialize=self.storage_techs,
                                   ordered=True,
                                   within=self.model.U)
 
@@ -327,12 +327,12 @@ class DispatchModel():
 
     def _create_max_storage_params(self):
         self.model.storage_capacity = pe.Param(
-            self.model.S, initialize=self.max_storage_params
+            self.model.StorageTech, initialize=self.max_storage_params
         )
 
     def _create_init_storage_params(self):
         self.model.initial_storage = pe.Param(
-            self.model.S, initialize=self.initial_storage_params
+            self.model.StorageTech, initialize=self.initial_storage_params
         )
 
     def _create_model_variables(self):
@@ -341,12 +341,12 @@ class DispatchModel():
                               bounds=(self.lower_bound, self.upper_bound))
 
         if len(self.storage_techs) > 0:
-            self.model.storage_level = pe.Var(self.model.S, self.model.T,
+            self.model.storage_level = pe.Var(self.model.StorageTech, self.model.T,
                                               domain=pe.NonNegativeReals,
                                               bounds=(self.lower_bound,
                                                       self.storage_upper_bound)
                                               )
-            self.model.charge = pe.Var(self.model.S, self.model.T,
+            self.model.charge = pe.Var(self.model.StorageTech, self.model.T,
                                        domain=pe.NonNegativeReals,
                                        bounds=(self.lower_bound,
                                                self.upper_bound))
@@ -356,7 +356,7 @@ class DispatchModel():
                    for u in self.model.U for t in self.model.T)
         if len(self.storage_techs) > 0:
             expr += sum(self.model.x[s,t] + self.model.charge[s,t]
-                        for s in self.model.S for t in self.model.T) * self.penalty
+                        for s in self.model.StorageTech for t in self.model.T) * self.penalty
         self.model.objective = pe.Objective(sense=pe.minimize, expr=expr)
 
     def _supply_constraints(self):
@@ -365,7 +365,7 @@ class DispatchModel():
         for t in self.model.T:
             generation = sum(self.model.x[u, t] for u in self.model.U)
             if len(self.storage_techs) > 0:
-                generation -= sum(self.model.charge[s, t] for s in self.model.S)
+                generation -= sum(self.model.charge[s, t] for s in self.model.StorageTech)
             over_demand = self.model.D[t] * (1 + self.oversupply)
             under_demand = self.model.D[t] * (1 - self.undersupply)
             self.model.oversupply.add(generation <= over_demand)
@@ -403,7 +403,7 @@ class DispatchModel():
         self.model.charge_rate_limit = pe.ConstraintList()
         self.model.storage_limit = pe.ConstraintList()
         self.model.set_storage = pe.ConstraintList()
-        for s in self.model.S:
+        for s in self.model.StorageTech:
             efficiency = self.efficiency_dict[s]
             storage_cap = self.model.storage_capacity[s]
             unit_capacity = (self.capacity_dict[s]*self.time_delta).to_value()
@@ -459,9 +459,10 @@ class DispatchModel():
         for u in self.model.U:
             df[u] = [self.model.x[u, t].value for t in self.model.T]
 
+
         if len(self.storage_techs) > 0:
-            for s in self.model.S:
-                df[f"{s}_charge"] = [self.model.charge[s, t].value
+            for s in self.model.StorageTech:
+                df[f"{s}_charge"] = [-1*self.model.charge[s, t].value
                                      for t in self.model.T]
                 df[f"{s}_level"] = [self.model.storage_level[s, t].value
                                     for t in self.model.T]
@@ -476,5 +477,4 @@ class DispatchModel():
         except ValueError:
             warnings.warn("Infeasible solution. Objective set to 1e40.")
             self.objective = 1e40
-            
         self.results = self._format_results()
