@@ -441,6 +441,60 @@ class RampingTechnology(Technology):
             self.unit_time**-1
         )
 
+class ThermalTechnology(RampingTechnology):
+    """
+    The :class:`ThermalTechnology` class extends the :class:`RampingTechnology`
+    class by adding a heat rate.
+
+    Parameters
+    ----------
+    heat_rate : int, float
+        The heat rate of a given technology.
+    """
+
+    def __init__(
+            self,
+            technology_name,
+            technology_type='production',
+            technology_category='thermal',
+            dispatchable=True,
+            renewable=False,
+            capital_cost=0,
+            om_cost_fixed=0,
+            om_cost_variable=0,
+            fuel_cost=0,
+            fuel_type=None,
+            capacity=0,
+            capacity_factor=1.0,
+            efficiency=1.0,
+            default_power_units=MW,
+            default_time_units=hr,
+            default_energy_units=None,
+            heat_rate=None,
+            ramp_up_rate=1.0 * hr**-1,
+            ramp_down_rate=1.0 * hr**-1) -> None:
+        super().__init__(
+            technology_name,
+            technology_type,
+            technology_category,
+            dispatchable,
+            renewable,
+            capital_cost,
+            om_cost_fixed,
+            om_cost_variable,
+            fuel_cost,
+            fuel_type,
+            capacity,
+            capacity_factor,
+            efficiency,
+            default_power_units,
+            default_time_units,
+            default_energy_units,
+            ramp_up_rate,
+            ramp_down_rate)
+
+        self.heat_rate = heat_rate
+
 
 class StorageTechnology(Technology):
     """
@@ -518,61 +572,6 @@ class StorageTechnology(Technology):
             raise AssertionError("Initial storage exceeds storage capacity.")
             
         self._initial_storage = valid_quantity
-
-
-class ThermalTechnology(RampingTechnology):
-    """
-    The :class:`ThermalTechnology` class extends the :class:`RampingTechnology`
-    class by adding a heat rate.
-
-    Parameters
-    ----------
-    heat_rate : int, float
-        The heat rate of a given technology.
-    """
-
-    def __init__(
-            self,
-            technology_name,
-            technology_type='production',
-            technology_category='thermal',
-            dispatchable=True,
-            renewable=False,
-            capital_cost=0,
-            om_cost_fixed=0,
-            om_cost_variable=0,
-            fuel_cost=0,
-            fuel_type=None,
-            capacity=0,
-            capacity_factor=1.0,
-            efficiency=1.0,
-            default_power_units=MW,
-            default_time_units=hr,
-            default_energy_units=None,
-            heat_rate=None,
-            ramp_up_rate=1.0 * hr**-1,
-            ramp_down_rate=1.0 * hr**-1) -> None:
-        super().__init__(
-            technology_name,
-            technology_type,
-            technology_category,
-            dispatchable,
-            renewable,
-            capital_cost,
-            om_cost_fixed,
-            om_cost_variable,
-            fuel_cost,
-            fuel_type,
-            capacity,
-            capacity_factor,
-            efficiency,
-            default_power_units,
-            default_time_units,
-            default_energy_units,
-            ramp_up_rate,
-            ramp_down_rate)
-
-        self.heat_rate = heat_rate
 
 
 class RampingStorageTechnology(RampingTechnology, StorageTechnology):
