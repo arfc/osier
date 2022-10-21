@@ -22,7 +22,7 @@ N = N_HOURS*N_DAYS
 @pytest.fixture(scope="session")
 def technology_set_1():
     """
-    This fixture uses creates technologies directly from
+    This fixture creates technologies directly from
     the :class:`Technology` class.
     """
     nuclear = Technology(technology_name='Nuclear',
@@ -48,7 +48,7 @@ def technology_set_1():
 @pytest.fixture
 def technology_set_2():
     """
-    This fixture uses creates technologies from
+    This fixture creates technologies from
     the :class:`ThermalTechnology` subclass.
     """
     nuclear = ThermalTechnology(technology_name='Nuclear',
@@ -76,7 +76,7 @@ def technology_set_2():
 @pytest.fixture
 def technology_set_3():
     """
-    This fixture uses creates technologies from
+    This fixture creates technologies from
     the :class:`ThermalTechnology` subclass.
     """
     nuclear = ThermalTechnology(technology_name='Nuclear',

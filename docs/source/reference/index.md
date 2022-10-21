@@ -8,7 +8,6 @@
 
     osier.Technology
     osier.RampingTechnology
-    osier.StorageTechnology
     osier.ThermalTechnology
     osier.DispatchModel
     osier.utils.synchronize_units

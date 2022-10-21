@@ -1,25 +1,25 @@
-import numpy as np
-import pandas as pd
 from osier import Technology
 from osier.technology import _validate_unit
-from unyt import unyt_quantity, unit_object
+from unyt import unit_object
 import copy
+from typing import Iterable
 
 from osier.technology import Technology
 
-def synchronize_units(tech_list: list[Technology], 
-                    unit_power: unit_object, 
-                    unit_time: unit_object) -> list[Technology]:
+
+def synchronize_units(tech_list: Iterable[Technology],
+                      unit_power: unit_object,
+                      unit_time: unit_object) -> Iterable[Technology]:
     """
     This function ensures that all objects in the technology list
-    have units consistent with the model's units. An 
-    :class:`osier.Technology` object (or sub-classes) have three 
+    have units consistent with the model's units. An
+    :class:`osier.Technology` object (or sub-classes) have three
     unit settings.
 
         * :attr:`unit_power`
         * :attr:`unit_time`
         * :attr:`unit_energy`
-        
+
     Only the :attr:`unit_power` and :attr:`unit_time` attributes can
     be specified with this function to prevent inconsistent units.
     E.g. Setting the :attr:`unit_energy` to ``MWh`` even though time
@@ -32,7 +32,7 @@ def synchronize_units(tech_list: list[Technology],
     Parameters
     ----------
     tech_list : list of :class:`osier.Technology` objects
-        The list of technology objects whose units need to be 
+        The list of technology objects whose units need to be
         synchronized.
 
     Returns
