@@ -8,10 +8,10 @@ import numpy as np
 
 _dim_opts = {'time': hr,
              'power': MW,
-             'energy': MW*hr,
+             'energy': MW * hr,
              'spec_time': hr**-1,
              'spec_power': MW**-1,
-             'spec_energy': (MW*hr)**-1}
+             'spec_energy': (MW * hr)**-1}
 
 
 def _validate_unit(value, dimension):
@@ -441,6 +441,7 @@ class RampingTechnology(Technology):
             self.unit_time**-1
         )
 
+
 class ThermalTechnology(RampingTechnology):
     """
     The :class:`ThermalTechnology` class extends the :class:`RampingTechnology`
@@ -570,7 +571,7 @@ class StorageTechnology(Technology):
             assert valid_quantity <= self._storage_capacity
         except AssertionError:
             raise AssertionError("Initial storage exceeds storage capacity.")
-            
+
         self._initial_storage = valid_quantity
 
 

@@ -17,7 +17,8 @@ else:
 TOL = 1e-5
 N_HOURS = 24
 N_DAYS = 2
-N = N_HOURS*N_DAYS
+N = N_HOURS * N_DAYS
+
 
 @pytest.fixture(scope="session")
 def technology_set_1():
@@ -100,6 +101,7 @@ def technology_set_3():
 
     return [nuclear, natural_gas]
 
+
 @pytest.fixture
 def technology_set_4():
     """
@@ -108,24 +110,24 @@ def technology_set_4():
     subclasses.
     """
     nuclear = ThermalTechnology(technology_name='Nuclear',
-                        capacity=2,
-                        capital_cost=6,
-                        om_cost_variable=20,
-                        om_cost_fixed=50,
-                        fuel_cost=5,
-                        ramp_up_rate=0.0,
-                        ramp_down_rate=0.0,
-                        )
+                                capacity=2,
+                                capital_cost=6,
+                                om_cost_variable=20,
+                                om_cost_fixed=50,
+                                fuel_cost=5,
+                                ramp_up_rate=0.0,
+                                ramp_down_rate=0.0,
+                                )
     battery = StorageTechnology(technology_name='Battery',
-                            capacity=5,
-                            capital_cost=1,
-                            om_cost_variable=0,
-                            om_cost_fixed=15,
-                            fuel_cost=0,
-                            storage_capacity=65,
-                            efficiency=1.0,
-                            initial_storage=24
-                            )
+                                capacity=5,
+                                capital_cost=1,
+                                om_cost_variable=0,
+                                om_cost_fixed=15,
+                                fuel_cost=0,
+                                storage_capacity=65,
+                                efficiency=1.0,
+                                initial_storage=24
+                                )
 
     return [nuclear, battery]
 
@@ -135,9 +137,9 @@ def net_demand():
 
     phase_shift = 0
     base_load = 1.5
-    hours = np.linspace(0,N,N)
-    demand = (np.sin((hours*np.pi/N_HOURS*2+phase_shift))\
-                *-1+np.ones(N)*(base_load+1))
+    hours = np.linspace(0, N, N)
+    demand = (np.sin((hours * np.pi / N_HOURS * 2 + phase_shift))
+              * -1 + np.ones(N) * (base_load + 1))
 
     print(len(demand))
 
@@ -241,8 +243,10 @@ def test_dispatch_model_solve_case3(technology_set_3, net_demand):
                        / nuclear.capacity.to_value()).max()
     min_power_delta = ((model.results.Nuclear.diff())
                        / nuclear.capacity.to_value()).min()
-    assert max_power_delta == pytest.approx(nuclear.ramp_up_rate.to_value(), TOL)
-    assert min_power_delta == pytest.approx(-nuclear.ramp_down_rate.to_value(), TOL)
+    assert max_power_delta == pytest.approx(
+        nuclear.ramp_up_rate.to_value(), TOL)
+    assert min_power_delta == pytest.approx(
+        -nuclear.ramp_down_rate.to_value(), TOL)
 
 
 def test_dispatch_model_solve_case4(technology_set_4, net_demand):
@@ -251,14 +255,13 @@ def test_dispatch_model_solve_case4(technology_set_4, net_demand):
     """
 
     model = DispatchModel(technology_set_4,
-                        net_demand=net_demand,
-                        solver=solver)
+                          net_demand=net_demand,
+                          solver=solver)
     model.solve()
-    total_gen = model.results[['Nuclear', 
-                                'Battery', 
-                                'Battery_charge']].sum().sum()                                
-    binary_charging = np.dot(model.results.Battery, 
-                            model.results.Battery_charge)
+    total_gen = model.results[['Nuclear',
+                               'Battery',
+                               'Battery_charge']].sum().sum()
+    binary_charging = np.dot(model.results.Battery,
+                             model.results.Battery_charge)
     assert (total_gen - net_demand.sum()) == pytest.approx(0, TOL)
     assert binary_charging == pytest.approx(0, TOL)
-    
