@@ -276,7 +276,34 @@ class DispatchModel():
             for t in self.technology_list
         ]).flatten()
         return dict(zip(self.indices, v_costs))
+    
+    @property
+    def storage_techs(self):
+        return [t.technology_name
+                for t in self.technology_list
+                if hasattr(t, "storage_capacity")]
 
+    @property
+    def storage_upper_bound(self):
+        caps = unyt_array([t.storage_capacity
+                           for t in self.technology_list
+                           if hasattr(t, "storage_capacity")])
+        return caps.max().to_value()
+
+    @property
+    def max_storage_params(self):
+        storage_dict = {t.technology_name: t.storage_capacity.to_value()
+                        for t in self.technology_list
+                        if hasattr(t, "storage_capacity")}
+        return storage_dict
+
+    @property
+    def initial_storage_params(self):
+        storage_dict = {t.technology_name: t.initial_storage.to_value()
+                        for t in self.technology_list
+                        if hasattr(t, "initial_storage")}
+        return storage_dict
+        
     @property
     def ramping_techs(self):
         return [t.technology_name
@@ -417,9 +444,9 @@ class DispatchModel():
             storage_cap = self.model.storage_capacity[s]
             unit_capacity = (self.capacity_dict[s]*self.time_delta).to_value()
             initial_storage = self.model.initial_storage[s]
-            for t in self.model.T:
+            for t in self.model.Time:
                 self.model.charge_rate_limit.add(self.model.charge[s,t] <= unit_capacity)
-                if t == self.model.T.first():
+                if t == self.model.Time.first():
                     self.model.set_storage.add(self.model.storage_level[s, t]
                                                == initial_storage)
                     self.model.discharge_limit.add(
@@ -428,7 +455,7 @@ class DispatchModel():
                                                 <= storage_cap
                                                 - initial_storage)
                 else:
-                    t_prev = self.model.T.prev(t)
+                    t_prev = self.model.Time.prev(t)
                     previous_storage = self.model.storage_level[s, t_prev]
                     current_discharge = self.model.x[s, t]
                     current_charge = self.model.charge[s, t]
@@ -469,9 +496,9 @@ class DispatchModel():
         if len(self.storage_techs) > 0:
             for s in self.model.StorageTech:
                 df[f"{s}_charge"] = [-1*self.model.charge[s, t].value
-                                     for t in self.model.T]
+                                     for t in self.model.Time]
                 df[f"{s}_level"] = [self.model.storage_level[s, t].value
-                                    for t in self.model.T]
+                                    for t in self.model.Time]
         return df
 
     def solve(self, solver=None):
