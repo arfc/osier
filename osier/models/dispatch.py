@@ -293,68 +293,68 @@ class DispatchModel():
         return caps.max().to_value()
 
     def _create_model_indices(self):
-        self.model.U = pe.Set(initialize=self.tech_set, ordered=True)
-        self.model.T = pe.Set(initialize=self.time_set, ordered=True)
+        self.model.Generators = pe.Set(initialize=self.tech_set, ordered=True)
+        self.model.Time = pe.Set(initialize=self.time_set, ordered=True)
         if len(self.ramping_techs) > 0:
-            self.model.R = pe.Set(initialize=self.ramping_techs,
+            self.model.RampingTechs = pe.Set(initialize=self.ramping_techs,
                                   ordered=True,
-                                  within=self.model.U)
+                                  within=self.model.Generators)
 
     def _create_demand_param(self):
-        self.model.D = pe.Param(self.model.T, initialize=dict(
-            zip(self.model.T, np.array(self.net_demand))))
+        self.model.Demand = pe.Param(self.model.Time, initialize=dict(
+            zip(self.model.Time, np.array(self.net_demand))))
 
     def _create_cost_param(self):
-        self.model.C = pe.Param(
-            self.model.U,
-            self.model.T,
+        self.model.VariableCost = pe.Param(
+            self.model.Generators,
+            self.model.Time,
             initialize=self.cost_params)
 
     def _create_ramping_params(self):
         self.model.ramp_up = pe.Param(
-            self.model.R, initialize=self.ramp_up_params)
+            self.model.RampingTechs, initialize=self.ramp_up_params)
         self.model.ramp_down = pe.Param(
-            self.model.R, initialize=self.ramp_down_params)
+            self.model.RampingTechs, initialize=self.ramp_down_params)
 
     def _create_model_variables(self):
-        self.model.x = pe.Var(self.model.U, self.model.T,
+        self.model.x = pe.Var(self.model.Generators, self.model.Time,
                               domain=pe.NonNegativeReals,
                               bounds=(self.lower_bound, self.upper_bound))
 
     def _objective_function(self):
-        expr = sum(self.model.C[u, t] * self.model.x[u, t]
-                   for u in self.model.U for t in self.model.T)
+        expr = sum(self.model.VariableCost[g, t] * self.model.x[g, t]
+                   for g in self.model.Generators for t in self.model.Time)
         self.model.objective = pe.Objective(sense=pe.minimize, expr=expr)
 
     def _supply_constraints(self):
         self.model.oversupply = pe.ConstraintList()
         self.model.undersupply = pe.ConstraintList()
-        for t in self.model.T:
-            generation = sum(self.model.x[u, t] for u in self.model.U)
-            over_demand = self.model.D[t] * (1 + self.oversupply)
-            under_demand = self.model.D[t] * (1 - self.undersupply)
+        for t in self.model.Time:
+            generation = sum(self.model.x[g, t] for g in self.model.Generators)
+            over_demand = self.model.Demand[t] * (1 + self.oversupply)
+            under_demand = self.model.Demand[t] * (1 - self.undersupply)
             self.model.oversupply.add(generation <= over_demand)
             self.model.undersupply.add(generation >= under_demand)
 
     def _generation_constraint(self):
         self.model.gen_limit = pe.ConstraintList()
-        for u in self.model.U:
-            unit_capacity = (self.capacity_dict[u] * self.time_delta).to_value()
+        for g in self.model.Generators:
+            unit_capacity = (self.capacity_dict[g] * self.time_delta).to_value()
 
-            for t in self.model.T:
-                unit_generation = self.model.x[u, t]
+            for t in self.model.Time:
+                unit_generation = self.model.x[g, t]
                 self.model.gen_limit.add(unit_generation <= unit_capacity)
 
     def _ramping_constraints(self):
         self.model.ramp_up_limit = pe.ConstraintList()
         self.model.ramp_down_limit = pe.ConstraintList()
 
-        for r in self.model.R:
+        for r in self.model.RampingTechs:
             ramp_up = self.model.ramp_up[r]
             ramp_down = self.model.ramp_down[r]
-            for t in self.model.T:
-                if t != self.model.T.first():
-                    t_prev = self.model.T.prev(t)
+            for t in self.model.Time:
+                if t != self.model.Time.first():
+                    t_prev = self.model.Time.prev(t)
                     previous_gen = self.model.x[r, t_prev]
                     current_gen = self.model.x[r, t]
                     delta_power = (current_gen - previous_gen) / \
@@ -377,9 +377,9 @@ class DispatchModel():
         self.model_initialized = True
 
     def _format_results(self):
-        df = pd.DataFrame(index=self.model.T)
-        for u in self.model.U:
-            df[u] = [self.model.x[u, t].value for t in self.model.T]
+        df = pd.DataFrame(index=self.model.Time)
+        for g in self.model.Generators:
+            df[g] = [self.model.x[g, t].value for t in self.model.Time]
         return df
 
     def solve(self, solver=None):
