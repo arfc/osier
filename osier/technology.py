@@ -1,16 +1,17 @@
 import unyt
 from unyt import MW, hr
 from unyt import unyt_quantity
-from unyt.exceptions import UnitParseError, UnitConversionError
+from unyt.exceptions import UnitParseError
 
 import numpy as np
 
 
 _dim_opts = {'time': hr,
              'power': MW,
-             'energy': MW * hr,
+             'energy': MW*hr,
+             'spec_time': hr**-1,
              'spec_power': MW**-1,
-             'spec_energy': (MW * hr)**-1}
+             'spec_energy': (MW*hr)**-1}
 
 
 def _validate_unit(value, dimension):
@@ -87,9 +88,11 @@ def _validate_quantity(value, dimension):
     valid_quantity = None
     if isinstance(value, unyt_quantity):
         try:
-            valid_quantity = value.to(exp_dim)
-        except UnitConversionError:
-            raise TypeError(f"Cannot convert {value.units} to {exp_dim}")
+            assert value.units.same_dimensions_as(exp_dim)
+            valid_quantity = value
+        except AssertionError:
+            raise TypeError(f"{value} has dimensions {value.units.dimensions}. "
+                            f"Expected {exp_dim.dimensions}")
     elif isinstance(value, float):
         valid_quantity = value * exp_dim
     elif isinstance(value, int):
@@ -134,6 +137,10 @@ class Technology(object):
         For example, solar panels and wind turbines are not
         dispatchable, but nuclear and biopower are dispatchable.
         Default value is true.
+    renewable : bool
+        Indicates whether the technology is considered "renewable."
+        Useful for determining if a technology will contribute to
+        a renewable portfolio standard (RPS).
     capital_cost : float or :class:`unyt.array.unyt_quantity`
         Specifies the capital cost. If float,
         the default unit is $/MW.
@@ -146,13 +153,18 @@ class Technology(object):
     fuel_cost : float or :class:`unyt.array.unyt_quantity`
         Specifies the fuel costs.
         If float, the default unit is $/MWh.
+    fuel_type : str
+        Specifies the type of fuel consumed by the technology.
     capacity : float or :class:`unyt.array.unyt_quantity`
         Specifies the technology capacity.
         If float, the default unit is MW
-    capacit_factor : Optional, float
+    capacity_factor : Optional, float
         Specifies the 'usable' fraction of a technology's capacity.
-        Default is 1.0, i.e. all of the technology's capacity is 
+        Default is 1.0, i.e. all of the technology's capacity is
         usable all of the time.
+    efficiency : float
+        The technology's energy conversion efficiency expressed as
+        a fraction. Default is 1.0.
     default_power_units : str or :class:`unyt.unit_object.Unit`
         An optional parameter, specifies the units
         for power. Default is megawatts [MW].
@@ -186,17 +198,21 @@ class Technology(object):
 
     However, inverse MWh cannot be converted from a string.
     """
+
     def __init__(self,
                  technology_name,
                  technology_type='production',
                  technology_category='base',
                  dispatchable=True,
+                 renewable=False,
                  capital_cost=0.0,
                  om_cost_fixed=0.0,
                  om_cost_variable=0.0,
                  fuel_cost=0.0,
+                 fuel_type=None,
                  capacity=0.0,
                  capacity_factor=1.0,
+                 efficiency=1.0,
                  default_power_units=MW,
                  default_time_units=hr,
                  default_energy_units=None) -> None:
@@ -205,6 +221,8 @@ class Technology(object):
         self.technology_type = technology_type
         self.technology_category = technology_category
         self.dispatchable = dispatchable
+        self.renewable = renewable
+        self.fuel_type = fuel_type
 
         self.unit_power = default_power_units
         self.unit_time = default_time_units
@@ -212,6 +230,7 @@ class Technology(object):
 
         self.capacity = capacity
         self.capacity_factor = capacity_factor
+        self.efficiency = efficiency
         self.capital_cost = capital_cost
         self.om_cost_fixed = om_cost_fixed
         self.om_cost_variable = om_cost_variable
@@ -219,6 +238,14 @@ class Technology(object):
 
     def __repr__(self) -> str:
         return (f"{self.technology_name}: {self.capacity}")
+
+    def __eq__(self, tech) -> bool:
+        """Test technology equality"""
+        if ((self.technology_name == tech.technology_name)
+                and (self.capacity == tech.capacity)):
+            return True
+        else:
+            return False
 
     @property
     def unit_power(self):
@@ -319,7 +346,152 @@ class Technology(object):
         var_cost_ts : :class:`numpy.ndarray`
             The variable cost time series.
         """
-
-        # assumes single cost
         var_cost_ts = np.ones(size) * self.variable_cost
         return var_cost_ts
+
+
+class RampingTechnology(Technology):
+    """
+    The :class:`RampingTechnology` class extends the :class:`Technology`
+    class by adding ramping attributes that correspond to a technology's
+    ability to increase or decrease its power level at a specified rate.
+
+    Parameters
+    ----------
+    ramp_up_rate : float, :class:`unyt_quantity`
+        The rate at which a technology can increase its power, expressed as
+        a percentage of its capacity. For example, if `ramp_up_rate` equals 0.5,
+        then the technology may ramp up its power level by 50% per unit time.
+        The default is 1.0 (i.e. there is no constraint on ramping up).
+
+    ramp_down_rate : float, :class:`unyt_quantity`
+        The rate at which a technology can decrease its power, expressed as
+        a percentage of its capacity. For example, if `ramp_down_rate` equals 0.5,
+        then the technology may ramp down its power level by 50% per unit time.
+        The default is 1.0 (i.e. there is no constraint on ramping down).
+
+
+    Notes
+    -----
+    It is common for a ramping technology to have different ramp up and ramp
+    down rates. Consider a light-water nuclear reactor that can quickly reduce
+    its power level by inserting control rods, but must wait much longer to
+    increase its power by the same amount due to a build up of neutron
+    absorbing isotopes.
+    """
+
+    def __init__(
+            self,
+            technology_name,
+            technology_type='production',
+            technology_category='ramping',
+            dispatchable=True,
+            renewable=False,
+            capital_cost=0,
+            om_cost_fixed=0,
+            om_cost_variable=0,
+            fuel_cost=0,
+            fuel_type=None,
+            capacity=0,
+            capacity_factor=1.0,
+            efficiency=1.0,
+            default_power_units=MW,
+            default_time_units=hr,
+            default_energy_units=None,
+            ramp_up_rate=1.0 * hr**-1,
+            ramp_down_rate=1.0 * hr**-1) -> None:
+        super().__init__(
+            technology_name,
+            technology_type,
+            technology_category,
+            dispatchable,
+            renewable,
+            capital_cost,
+            om_cost_fixed,
+            om_cost_variable,
+            fuel_cost,
+            fuel_type,
+            capacity,
+            capacity_factor,
+            efficiency,
+            default_power_units,
+            default_time_units,
+            default_energy_units)
+
+        self.ramp_up_rate = _validate_quantity(ramp_up_rate,
+                                               dimension='spec_time')
+        self.ramp_down_rate = _validate_quantity(ramp_down_rate,
+                                                 dimension='spec_time')
+
+    @property
+    def ramp_up(self):
+        return (
+            self.capacity *
+            self.ramp_up_rate).to(
+            self.unit_power *
+            self.unit_time**-1
+        )
+
+    @property
+    def ramp_down(self):
+        return (
+            self.capacity *
+            self.ramp_down_rate).to(
+            self.unit_power *
+            self.unit_time**-1
+        )
+
+
+class ThermalTechnology(RampingTechnology):
+    """
+    The :class:`ThermalTechnology` class extends the :class:`RampingTechnology`
+    class by adding a heat rate.
+
+    Parameters
+    ----------
+    heat_rate : int, float
+        The heat rate of a given technology.
+    """
+
+    def __init__(
+            self,
+            technology_name,
+            technology_type='production',
+            technology_category='thermal',
+            dispatchable=True,
+            renewable=False,
+            capital_cost=0,
+            om_cost_fixed=0,
+            om_cost_variable=0,
+            fuel_cost=0,
+            fuel_type=None,
+            capacity=0,
+            capacity_factor=1.0,
+            efficiency=1.0,
+            default_power_units=MW,
+            default_time_units=hr,
+            default_energy_units=None,
+            heat_rate=None,
+            ramp_up_rate=1.0 * hr**-1,
+            ramp_down_rate=1.0 * hr**-1) -> None:
+        super().__init__(
+            technology_name,
+            technology_type,
+            technology_category,
+            dispatchable,
+            renewable,
+            capital_cost,
+            om_cost_fixed,
+            om_cost_variable,
+            fuel_cost,
+            fuel_type,
+            capacity,
+            capacity_factor,
+            efficiency,
+            default_power_units,
+            default_time_units,
+            default_energy_units,
+            ramp_up_rate,
+            ramp_down_rate)
+
+        self.heat_rate = heat_rate
