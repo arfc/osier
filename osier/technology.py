@@ -8,10 +8,10 @@ import numpy as np
 
 _dim_opts = {'time': hr,
              'power': MW,
-             'energy': MW*hr,
-             'spec_time': hr**-1,
-             'spec_power': MW**-1,
-             'spec_energy': (MW*hr)**-1}
+             'energy': MW * hr,
+             'specific_time': hr**-1,
+             'specific_power': MW**-1,
+             'specific_energy': (MW * hr)**-1}
 
 
 def _validate_unit(value, dimension):
@@ -26,7 +26,7 @@ def _validate_unit(value, dimension):
         The value being tested. Should be a unit symbol.
     dimension : string
         The expected dimensions of `value`.
-        Currently accepts: ['time', 'energy', 'power', 'spec_power', 'spec_energy'].
+        Currently accepts: ['time', 'energy', 'power', 'specific_power', 'specific_energy'].
 
     Returns
     -------
@@ -73,7 +73,7 @@ def _validate_quantity(value, dimension):
 
     dimension : string
         The expected dimensions of `value`.
-        Currently accepts: ['time', 'energy', 'power', 'spec_power', 'spec_energy'].
+        Currently accepts: ['time', 'energy', 'power', 'specific_power', 'specific_energy'].
 
     Returns
     -------
@@ -286,7 +286,7 @@ class Technology(object):
 
     @capital_cost.setter
     def capital_cost(self, value):
-        self._capital_cost = _validate_quantity(value, dimension="spec_power")
+        self._capital_cost = _validate_quantity(value, dimension="specific_power")
 
     @property
     def om_cost_fixed(self):
@@ -294,7 +294,7 @@ class Technology(object):
 
     @om_cost_fixed.setter
     def om_cost_fixed(self, value):
-        self._om_cost_fixed = _validate_quantity(value, dimension="spec_power")
+        self._om_cost_fixed = _validate_quantity(value, dimension="specific_power")
 
     @property
     def om_cost_variable(self):
@@ -303,7 +303,7 @@ class Technology(object):
     @om_cost_variable.setter
     def om_cost_variable(self, value):
         self._om_cost_variable = _validate_quantity(
-            value, dimension="spec_energy")
+            value, dimension="specific_energy")
 
     @property
     def fuel_cost(self):
@@ -311,7 +311,7 @@ class Technology(object):
 
     @fuel_cost.setter
     def fuel_cost(self, value):
-        self._fuel_cost = _validate_quantity(value, dimension="spec_energy")
+        self._fuel_cost = _validate_quantity(value, dimension="specific_energy")
 
     @property
     def total_capital_cost(self):
@@ -358,13 +358,13 @@ class RampingTechnology(Technology):
 
     Parameters
     ----------
-    ramp_up_rate : float, :class:`unyt_quantity`
+    ramp_up_rate : float or :class:`unyt_quantity`
         The rate at which a technology can increase its power, expressed as
         a percentage of its capacity. For example, if `ramp_up_rate` equals 0.5,
         then the technology may ramp up its power level by 50% per unit time.
         The default is 1.0 (i.e. there is no constraint on ramping up).
 
-    ramp_down_rate : float, :class:`unyt_quantity`
+    ramp_down_rate : float or :class:`unyt_quantity`
         The rate at which a technology can decrease its power, expressed as
         a percentage of its capacity. For example, if `ramp_down_rate` equals 0.5,
         then the technology may ramp down its power level by 50% per unit time.
@@ -419,9 +419,9 @@ class RampingTechnology(Technology):
             default_energy_units)
 
         self.ramp_up_rate = _validate_quantity(ramp_up_rate,
-                                               dimension='spec_time')
+                                               dimension='specific_time')
         self.ramp_down_rate = _validate_quantity(ramp_down_rate,
-                                                 dimension='spec_time')
+                                                 dimension='specific_time')
 
     @property
     def ramp_up(self):
@@ -449,7 +449,7 @@ class ThermalTechnology(RampingTechnology):
 
     Parameters
     ----------
-    heat_rate : int, float
+    heat_rate : int or float
         The heat rate of a given technology.
     """
 
@@ -495,3 +495,82 @@ class ThermalTechnology(RampingTechnology):
             ramp_down_rate)
 
         self.heat_rate = heat_rate
+
+
+class StorageTechnology(Technology):
+    """
+    The :class:`StorageTechnology` extends the :class:`Technology` by
+    adding storage parameters.
+
+    Parameters
+    ----------
+    storage_capacity : float or :class:`unyt.array.unyt_quantity`
+        The maximum amount of energy storable by the technology.
+    initial_storage : float or :class:`unyt.array.unyt_quantity`
+        The initial stored energy. Cannot exceed :attr:`storage_capacity`.
+    """
+
+    def __init__(
+            self,
+            technology_name,
+            technology_type='storage',
+            technology_category='base',
+            dispatchable=True,
+            renewable=False,
+            capital_cost=0,
+            om_cost_fixed=0,
+            om_cost_variable=0,
+            fuel_cost=0,
+            fuel_type=None,
+            capacity=0,
+            efficiency=1.0,
+            capacity_factor=1.0,
+            storage_capacity=0,
+            initial_storage=0,
+            default_power_units=MW,
+            default_time_units=hr,
+            default_energy_units=None) -> None:
+        super().__init__(
+            technology_name,
+            technology_type,
+            technology_category,
+            dispatchable,
+            renewable,
+            capital_cost,
+            om_cost_fixed,
+            om_cost_variable,
+            fuel_cost,
+            fuel_type,
+            capacity,
+            capacity_factor,
+            efficiency,
+            default_power_units,
+            default_time_units,
+            default_energy_units)
+
+        self.storage_capacity = storage_capacity
+        self.initial_storage = initial_storage
+
+    @property
+    def storage_capacity(self):
+        return self._storage_capacity
+
+    @storage_capacity.setter
+    def storage_capacity(self, value):
+        valid_quantity = _validate_quantity(value, dimension='energy')
+        self._storage_capacity = valid_quantity
+
+    @property
+    def initial_storage(self):
+        return self._initial_storage
+
+    @initial_storage.setter
+    def initial_storage(self, value):
+        valid_quantity = _validate_quantity(value, dimension='energy')
+        try:
+            assert valid_quantity <= self._storage_capacity
+        except AssertionError:
+            raise AssertionError("Initial storage exceeds storage capacity.")
+
+        self._initial_storage = valid_quantity
+

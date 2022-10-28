@@ -38,11 +38,11 @@ def test_validate_unit():
     assert _validate_unit("day", 'time').same_dimensions_as(hr)
     assert _validate_unit(
         "Horsepower**-1",
-        'spec_power').same_dimensions_as(
+        'specific_power').same_dimensions_as(
         MW**-1)
     assert _validate_unit(
         (Horsepower * day)**-1,
-        'spec_energy').same_dimensions_as(
+        'specific_energy').same_dimensions_as(
         (MW * hr)**-1)
 
     with pytest.raises(UnitParseError) as e:
@@ -57,9 +57,9 @@ def test_validate_quantity():
     assert _validate_quantity(energy_unyt, 'energy') == 10 * (MW * hr)
     assert _validate_quantity(time_unyt, 'time') == 1 * (hr)
     assert _validate_quantity("10 Horsepower**-1",
-                              'spec_power') == 10 * (Horsepower**-1)
+                              'specific_power') == 10 * (Horsepower**-1)
     assert _validate_quantity(10 * (Horsepower * day)**-1,
-                              'spec_energy') == 10 * ((Horsepower * day)**-1)
+                              'specific_energy') == 10 * ((Horsepower * day)**-1)
 
     with pytest.raises(TypeError) as e:
         _validate_quantity(10 * MW, "energy")

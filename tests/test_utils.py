@@ -2,6 +2,7 @@ from osier.utils import *
 from unyt import kW, MW, minute, hour
 import pytest
 
+
 @pytest.fixture
 def technology_set_1():
     """
@@ -36,7 +37,7 @@ def test_synchronize_units(technology_set_1):
     """
     u_p = kW
     u_t = minute
-    u_e = u_p*u_t
+    u_e = u_p * u_t
 
     synced = synchronize_units(technology_set_1, unit_power=u_p, unit_time=u_t)
     assert synced == technology_set_1

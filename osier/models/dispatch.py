@@ -47,7 +47,7 @@ class DispatchModel():
     generate at any time, :math:`t`.
 
     .. math::
-        x_{u,t} \\leq \\textbf{CAP}_{u} \\ \\forall \\ u,t \\in U,T
+        x_{u,t} \\leq \\textbf{CAP}_{u}\\Delta t \\ \\forall \\ u,t \\in U,T
 
     3. Technologies may not exceed their ramp up rate,
 
@@ -115,11 +115,18 @@ class DispatchModel():
     upper_bound : float
         The upper bound for all decision variables. Chosen to be equal
         to the maximum capacity of all technologies in :attr:`tech_set`.
-    model_initialized : boolean
+    storage_upper_bound : float
+        The upper bound for storage decision variables.
+    penalty : float
+        The penalty applied to the objective function to eliminate
+        simultaneous charging and discharging. Users may need to tune
+        this parameter. Default is 1.0.
+
+    model_initialized : bool
         Indicates whether :attr:`DispatchModel.model` has been populated
         with equations yet. This is set to ``True`` after
         :meth:`DispatchModel._write_model_equations()` has been called.
-    indices : List of tuples
+    indices : list of tuples
         The list of tuples representing the product of the
         :attr:`tech_set` and :attr:`time_set` attributes.
     tech_set : list of str
@@ -152,7 +159,13 @@ class DispatchModel():
     2. The default value for :attr:`time_delta` in :attr:`__init__` is
     `None`. This is replaced by a setter method in :class:`Dispatch`.
 
-    3. :meth:`_write_model_equations` may be called before :meth:`solve` if
+    3. This formulation uses a :attr:`penalty` parameter  to prevent unphysical
+    behavior because it preserves the problem's linearity. Some formulations
+    may use a binary variable to prevent simultaneous charging and discharing.
+    However, this changes the problem to a mixed-integer linear program which
+    requires a more sophisticated solver such as ``gurobi``.
+
+    4. :meth:`_write_model_equations` may be called before :meth:`solve` if
     users wish to add their own constraints or parameters to the problem.
     """
 
@@ -164,13 +177,15 @@ class DispatchModel():
                  solver='cplex',
                  lower_bound=0.0,
                  oversupply=0.0,
-                 undersupply=0.0):
+                 undersupply=0.0,
+                 penalty=1e-4):
         self.net_demand = net_demand
         self.time_delta = time_delta
         self.power_units = power_units
         self.lower_bound = lower_bound
         self.oversupply = oversupply
         self.undersupply = undersupply
+        self.penalty = penalty
         self.model = ConcreteModel()
         self.solver = solver
         self.results = None
@@ -264,6 +279,33 @@ class DispatchModel():
         return dict(zip(self.indices, v_costs))
 
     @property
+    def storage_techs(self):
+        return [t.technology_name
+                for t in self.technology_list
+                if hasattr(t, "storage_capacity")]
+
+    @property
+    def storage_upper_bound(self):
+        caps = unyt_array([t.storage_capacity
+                           for t in self.technology_list
+                           if hasattr(t, "storage_capacity")])
+        return caps.max().to_value()
+
+    @property
+    def max_storage_params(self):
+        storage_dict = {t.technology_name: t.storage_capacity.to_value()
+                        for t in self.technology_list
+                        if hasattr(t, "storage_capacity")}
+        return storage_dict
+
+    @property
+    def initial_storage_params(self):
+        storage_dict = {t.technology_name: t.initial_storage.to_value()
+                        for t in self.technology_list
+                        if hasattr(t, "initial_storage")}
+        return storage_dict
+
+    @property
     def ramping_techs(self):
         return [t.technology_name
                 for t in self.technology_list
@@ -297,8 +339,12 @@ class DispatchModel():
         self.model.Time = pe.Set(initialize=self.time_set, ordered=True)
         if len(self.ramping_techs) > 0:
             self.model.RampingTechs = pe.Set(initialize=self.ramping_techs,
-                                  ordered=True,
-                                  within=self.model.Generators)
+                                             ordered=True,
+                                             within=self.model.Generators)
+        if len(self.storage_techs) > 0:
+            self.model.StorageTech = pe.Set(initialize=self.storage_techs,
+                                            ordered=True,
+                                            within=self.model.Generators)
 
     def _create_demand_param(self):
         self.model.Demand = pe.Param(self.model.Time, initialize=dict(
@@ -316,14 +362,40 @@ class DispatchModel():
         self.model.ramp_down = pe.Param(
             self.model.RampingTechs, initialize=self.ramp_down_params)
 
+    def _create_max_storage_params(self):
+        self.model.storage_capacity = pe.Param(
+            self.model.StorageTech, initialize=self.max_storage_params
+        )
+
+    def _create_init_storage_params(self):
+        self.model.initial_storage = pe.Param(
+            self.model.StorageTech, initialize=self.initial_storage_params
+        )
+
     def _create_model_variables(self):
         self.model.x = pe.Var(self.model.Generators, self.model.Time,
                               domain=pe.NonNegativeReals,
                               bounds=(self.lower_bound, self.upper_bound))
 
+        if len(self.storage_techs) > 0:
+            self.model.storage_level = pe.Var(
+                self.model.StorageTech,
+                self.model.Time,
+                domain=pe.NonNegativeReals,
+                bounds=(
+                    self.lower_bound,
+                    self.storage_upper_bound))
+            self.model.charge = pe.Var(self.model.StorageTech, self.model.Time,
+                                       domain=pe.NonNegativeReals,
+                                       bounds=(self.lower_bound,
+                                               self.upper_bound))
+
     def _objective_function(self):
         expr = sum(self.model.VariableCost[g, t] * self.model.x[g, t]
                    for g in self.model.Generators for t in self.model.Time)
+        if len(self.storage_techs) > 0:
+            expr += sum(self.model.x[s, t] + self.model.charge[s, t]
+                        for s in self.model.StorageTech for t in self.model.Time) * self.penalty
         self.model.objective = pe.Objective(sense=pe.minimize, expr=expr)
 
     def _supply_constraints(self):
@@ -331,6 +403,9 @@ class DispatchModel():
         self.model.undersupply = pe.ConstraintList()
         for t in self.model.Time:
             generation = sum(self.model.x[g, t] for g in self.model.Generators)
+            if len(self.storage_techs) > 0:
+                generation -= sum(self.model.charge[s, t]
+                                  for s in self.model.StorageTech)
             over_demand = self.model.Demand[t] * (1 + self.oversupply)
             under_demand = self.model.Demand[t] * (1 - self.undersupply)
             self.model.oversupply.add(generation <= over_demand)
@@ -362,6 +437,47 @@ class DispatchModel():
                     self.model.ramp_up_limit.add(delta_power <= ramp_up)
                     self.model.ramp_down_limit.add(delta_power >= -ramp_down)
 
+    def _storage_constraints(self):
+        self.model.discharge_limit = pe.ConstraintList()
+        self.model.charge_limit = pe.ConstraintList()
+        self.model.charge_rate_limit = pe.ConstraintList()
+        self.model.storage_limit = pe.ConstraintList()
+        self.model.set_storage = pe.ConstraintList()
+        for s in self.model.StorageTech:
+            efficiency = self.efficiency_dict[s]
+            storage_cap = self.model.storage_capacity[s]
+            unit_capacity = (self.capacity_dict[s] * self.time_delta).to_value()
+            initial_storage = self.model.initial_storage[s]
+            for t in self.model.Time:
+                self.model.charge_rate_limit.add(
+                    self.model.charge[s, t] <= unit_capacity)
+                if t == self.model.Time.first():
+                    self.model.set_storage.add(self.model.storage_level[s, t]
+                                               == initial_storage)
+                    self.model.discharge_limit.add(
+                        self.model.x[s, t] <= initial_storage)
+                    self.model.charge_limit.add(self.model.charge[s, t]
+                                                <= storage_cap
+                                                - initial_storage)
+                else:
+                    t_prev = self.model.Time.prev(t)
+                    previous_storage = self.model.storage_level[s, t_prev]
+                    current_discharge = self.model.x[s, t]
+                    current_charge = self.model.charge[s, t]
+                    self.model.set_storage.add(
+                        self.model.storage_level[s, t]
+                        == previous_storage
+                        + np.sqrt(efficiency) * current_charge
+                        - np.sqrt(efficiency) * current_discharge
+                    )
+                    self.model.charge_limit.add(
+                        np.sqrt(efficiency) * current_charge
+                        <= storage_cap - previous_storage)
+                    self.model.discharge_limit.add(
+                        current_discharge <= previous_storage)
+                self.model.storage_limit.add(
+                    self.model.storage_level[s, t] <= storage_cap)
+
     def _write_model_equations(self):
 
         self._create_model_indices()
@@ -380,6 +496,13 @@ class DispatchModel():
         df = pd.DataFrame(index=self.model.Time)
         for g in self.model.Generators:
             df[g] = [self.model.x[g, t].value for t in self.model.Time]
+
+        if len(self.storage_techs) > 0:
+            for s in self.model.StorageTech:
+                df[f"{s}_charge"] = [-1 * self.model.charge[s, t].value
+                                     for t in self.model.Time]
+                df[f"{s}_level"] = [self.model.storage_level[s, t].value
+                                    for t in self.model.Time]
         return df
 
     def solve(self, solver=None):
