@@ -1,5 +1,5 @@
 from osier import DispatchModel
-from osier import Technology, ThermalTechnology, StorageTechnology
+from osier import Technology, ThermalTechnology, StorageTechnology, RampingTechnology
 from unyt import unyt_array
 import unyt
 import numpy as np
@@ -61,7 +61,7 @@ def technology_set_2():
                                 ramp_up_rate=0.0,
                                 ramp_down_rate=0.0,
                                 )
-    natural_gas = ThermalTechnology(technology_name='NaturalGas',
+    natural_gas = RampingTechnology(technology_name='NaturalGas',
                                     capacity=5,
                                     capital_cost=1,
                                     om_cost_variable=12,
