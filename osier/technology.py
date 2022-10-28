@@ -9,9 +9,9 @@ import numpy as np
 _dim_opts = {'time': hr,
              'power': MW,
              'energy': MW * hr,
-             'spec_time': hr**-1,
-             'spec_power': MW**-1,
-             'spec_energy': (MW * hr)**-1}
+             'specific_time': hr**-1,
+             'specific_power': MW**-1,
+             'specific_energy': (MW * hr)**-1}
 
 
 def _validate_unit(value, dimension):
@@ -26,7 +26,7 @@ def _validate_unit(value, dimension):
         The value being tested. Should be a unit symbol.
     dimension : string
         The expected dimensions of `value`.
-        Currently accepts: ['time', 'energy', 'power', 'spec_power', 'spec_energy'].
+        Currently accepts: ['time', 'energy', 'power', 'specific_power', 'specific_energy'].
 
     Returns
     -------
@@ -73,7 +73,7 @@ def _validate_quantity(value, dimension):
 
     dimension : string
         The expected dimensions of `value`.
-        Currently accepts: ['time', 'energy', 'power', 'spec_power', 'spec_energy'].
+        Currently accepts: ['time', 'energy', 'power', 'specific_power', 'specific_energy'].
 
     Returns
     -------
@@ -286,7 +286,7 @@ class Technology(object):
 
     @capital_cost.setter
     def capital_cost(self, value):
-        self._capital_cost = _validate_quantity(value, dimension="spec_power")
+        self._capital_cost = _validate_quantity(value, dimension="specific_power")
 
     @property
     def om_cost_fixed(self):
@@ -294,7 +294,7 @@ class Technology(object):
 
     @om_cost_fixed.setter
     def om_cost_fixed(self, value):
-        self._om_cost_fixed = _validate_quantity(value, dimension="spec_power")
+        self._om_cost_fixed = _validate_quantity(value, dimension="specific_power")
 
     @property
     def om_cost_variable(self):
@@ -303,7 +303,7 @@ class Technology(object):
     @om_cost_variable.setter
     def om_cost_variable(self, value):
         self._om_cost_variable = _validate_quantity(
-            value, dimension="spec_energy")
+            value, dimension="specific_energy")
 
     @property
     def fuel_cost(self):
@@ -311,7 +311,7 @@ class Technology(object):
 
     @fuel_cost.setter
     def fuel_cost(self, value):
-        self._fuel_cost = _validate_quantity(value, dimension="spec_energy")
+        self._fuel_cost = _validate_quantity(value, dimension="specific_energy")
 
     @property
     def total_capital_cost(self):
@@ -419,9 +419,9 @@ class RampingTechnology(Technology):
             default_energy_units)
 
         self.ramp_up_rate = _validate_quantity(ramp_up_rate,
-                                               dimension='spec_time')
+                                               dimension='specific_time')
         self.ramp_down_rate = _validate_quantity(ramp_down_rate,
-                                                 dimension='spec_time')
+                                                 dimension='specific_time')
 
     @property
     def ramp_up(self):
