@@ -358,13 +358,13 @@ class RampingTechnology(Technology):
 
     Parameters
     ----------
-    ramp_up_rate : float, :class:`unyt_quantity`
+    ramp_up_rate : float or :class:`unyt_quantity`
         The rate at which a technology can increase its power, expressed as
         a percentage of its capacity. For example, if `ramp_up_rate` equals 0.5,
         then the technology may ramp up its power level by 50% per unit time.
         The default is 1.0 (i.e. there is no constraint on ramping up).
 
-    ramp_down_rate : float, :class:`unyt_quantity`
+    ramp_down_rate : float or :class:`unyt_quantity`
         The rate at which a technology can decrease its power, expressed as
         a percentage of its capacity. For example, if `ramp_down_rate` equals 0.5,
         then the technology may ramp down its power level by 50% per unit time.
@@ -449,7 +449,7 @@ class ThermalTechnology(RampingTechnology):
 
     Parameters
     ----------
-    heat_rate : int, float
+    heat_rate : int or float
         The heat rate of a given technology.
     """
 
@@ -504,9 +504,9 @@ class StorageTechnology(Technology):
 
     Parameters
     ----------
-    storage_capacity : float, :class:`unyt.array.unyt_quantity`
+    storage_capacity : float or :class:`unyt.array.unyt_quantity`
         The maximum amount of energy storable by the technology.
-    initial_storage : float, :class:`unyt.array.unyt_quantity`
+    initial_storage : float or :class:`unyt.array.unyt_quantity`
         The initial stored energy. Cannot exceed :attr:`storage_capacity`.
     """
 

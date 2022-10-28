@@ -122,11 +122,11 @@ class DispatchModel():
         simultaneous charging and discharging. Users may need to tune
         this parameter. Default is 1.0.
 
-    model_initialized : boolean
+    model_initialized : bool
         Indicates whether :attr:`DispatchModel.model` has been populated
         with equations yet. This is set to ``True`` after
         :meth:`DispatchModel._write_model_equations()` has been called.
-    indices : List of tuples
+    indices : list of tuples
         The list of tuples representing the product of the
         :attr:`tech_set` and :attr:`time_set` attributes.
     tech_set : list of str
