@@ -203,10 +203,10 @@ def test_dispatch_model_solve_case1(technology_set_1, net_demand):
         [t.variable_cost for t in technology_set_1]).min()
     expected_result = cheapest_tech * net_demand.sum()
 
-    assert model.objective == pytest.approx(expected_result, abs=TOL)
+    assert model.objective == pytest.approx(expected_result, rel=TOL)
     assert model.results['Nuclear'].sum(
     ) == pytest.approx(net_demand.sum(), TOL)
-    assert model.results['NaturalGas'].sum() == pytest.approx(0.0, abs=TOL)
+    assert model.results['NaturalGas'].sum() == pytest.approx(0.0, rel=TOL)
 
 
 def test_dispatch_model_solve_case2(technology_set_2, net_demand):
@@ -226,7 +226,7 @@ def test_dispatch_model_solve_case2(technology_set_2, net_demand):
     expected_natgas = net_demand - expected_nuclear
     expected_result = (expected_nuclear * nuclear.variable_cost
                        + expected_natgas * natgas.variable_cost).sum()
-    assert model.objective == pytest.approx(expected_result, abs=TOL)
+    assert model.objective == pytest.approx(expected_result, rel=TOL)
 
 
 def test_dispatch_model_solve_case3(technology_set_3, net_demand):
