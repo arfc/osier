@@ -490,6 +490,10 @@ class DispatchModel():
         if len(self.ramping_techs) > 0:
             self._create_ramping_params()
             self._ramping_constraints()
+        if len(self.storage_techs) > 0:
+            self._create_init_storage_params()
+            self._create_max_storage_params()
+            self._storage_constraints()
         self.model_initialized = True
 
     def _format_results(self):
