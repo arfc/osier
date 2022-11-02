@@ -1,3 +1,4 @@
+from typing import Type
 import pandas as pd
 import numpy as np
 import pyomo.environ as pe
@@ -537,4 +538,7 @@ class DispatchModel():
                 f"Infeasible or no solution. Objective set to {LARGE_NUMBER}")
             self.objective = LARGE_NUMBER
 
-        self.results = self._format_results()
+        try:
+            self.results = self._format_results()
+        except TypeError:
+            self.results = None
