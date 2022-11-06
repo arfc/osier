@@ -124,7 +124,7 @@ def technology_set_4():
                                 om_cost_variable=0,
                                 om_cost_fixed=15,
                                 fuel_cost=0,
-                                storage_capacity=65,
+                                storage_duration=13,
                                 efficiency=1.0,
                                 initial_storage=24
                                 )

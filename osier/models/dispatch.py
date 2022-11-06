@@ -9,6 +9,7 @@ import itertools as it
 from osier.technology import _validate_quantity, _validate_unit
 from osier.utils import synchronize_units
 import warnings
+import logging
 
 _freq_opts = {'D': 'day',
               'H': 'hour',
@@ -102,6 +103,8 @@ class DispatchModel():
     undersupply : float
         The amount of allowed undersupply as a percentage of demand.
         Default is 0.0 (no undersupply allowed).
+    verbose : boolean
+        Indicates if the solver should display log output. Default is False.
 
     Attributes
     ----------
@@ -179,7 +182,8 @@ class DispatchModel():
                  lower_bound=0.0,
                  oversupply=0.0,
                  undersupply=0.0,
-                 penalty=1e-4):
+                 penalty=1e-4,
+                 verbose=False):
         self.net_demand = net_demand
         self.time_delta = time_delta
         self.power_units = power_units
@@ -192,11 +196,16 @@ class DispatchModel():
         self.results = None
         self.objective = None
         self.model_initialized = False
+        self.verbose = verbose
 
         self.technology_list = synchronize_units(
             technology_list,
             unit_power=power_units,
             unit_time=self.time_delta.units)
+        
+        if not verbose:
+            logging.getLogger('pyomo.core').setLevel(logging.CRITICAL)
+
 
     @property
     def time_delta(self):
@@ -530,12 +539,13 @@ class DispatchModel():
         else:
             optimizer = po.SolverFactory(self.solver)
 
-        results = optimizer.solve(self.model, tee=True)
+        results = optimizer.solve(self.model, tee=self.verbose)
         try:
             self.objective = self.model.objective()
         except ValueError:
-            warnings.warn(
-                f"Infeasible or no solution. Objective set to {LARGE_NUMBER}")
+            if self.verbose:
+                warnings.warn(
+                    f"Infeasible or no solution. Objective set to {LARGE_NUMBER}")
             self.objective = LARGE_NUMBER
 
         try:
