@@ -504,8 +504,9 @@ class StorageTechnology(Technology):
 
     Parameters
     ----------
-    storage_capacity : float or :class:`unyt.array.unyt_quantity`
-        The maximum amount of energy storable by the technology.
+    storage_duration : float or :class:`unyt.array.unyt_quantity`
+        The amount of time the battery could discharge continuously when full.
+        Used to calculate the storage capacity.
     initial_storage : float or :class:`unyt.array.unyt_quantity`
         The initial stored energy. Cannot exceed :attr:`storage_capacity`.
     """
@@ -525,7 +526,7 @@ class StorageTechnology(Technology):
             capacity=0,
             efficiency=1.0,
             capacity_factor=1.0,
-            storage_capacity=0,
+            storage_duration=0,
             initial_storage=0,
             default_power_units=MW,
             default_time_units=hr,
@@ -548,17 +549,21 @@ class StorageTechnology(Technology):
             default_time_units,
             default_energy_units)
 
-        self.storage_capacity = storage_capacity
+        self.storage_duration = storage_duration
         self.initial_storage = initial_storage
 
     @property
-    def storage_capacity(self):
-        return self._storage_capacity
+    def storage_duration(self):
+        return self._storage_duration
 
-    @storage_capacity.setter
-    def storage_capacity(self, value):
-        valid_quantity = _validate_quantity(value, dimension='energy')
-        self._storage_capacity = valid_quantity
+    @storage_duration.setter
+    def storage_duration(self, value):
+        valid_quantity = _validate_quantity(value, dimension='time')
+        self._storage_duration = valid_quantity
+
+    @property
+    def storage_capacity(self):
+        return self._storage_duration * self._capacity
 
     @property
     def initial_storage(self):
@@ -568,7 +573,7 @@ class StorageTechnology(Technology):
     def initial_storage(self, value):
         valid_quantity = _validate_quantity(value, dimension='energy')
         try:
-            assert valid_quantity <= self._storage_capacity
+            assert valid_quantity <= self.storage_capacity
         except AssertionError:
             raise AssertionError("Initial storage exceeds storage capacity.")
 

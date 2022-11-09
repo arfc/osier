@@ -110,7 +110,7 @@ def technology_set_4():
     subclasses.
     """
     nuclear = ThermalTechnology(technology_name='Nuclear',
-                                capacity=2,
+                                capacity=5,
                                 capital_cost=6,
                                 om_cost_variable=20,
                                 om_cost_fixed=50,
@@ -124,7 +124,7 @@ def technology_set_4():
                                 om_cost_variable=0,
                                 om_cost_fixed=15,
                                 fuel_cost=0,
-                                storage_capacity=65,
+                                storage_duration=13,
                                 efficiency=1.0,
                                 initial_storage=24
                                 )
@@ -141,8 +141,6 @@ def net_demand():
     demand = (np.sin((hours * np.pi / N_HOURS * 2 + phase_shift))
               * -1 + np.ones(N) * (base_load + 1))
 
-    print(len(demand))
-
     return demand
 
 
@@ -152,7 +150,8 @@ def test_dispatch_model_initialize(technology_set_1, net_demand):
     """
     model = DispatchModel(technology_set_1,
                           net_demand=net_demand,
-                          solver=solver)
+                          solver=solver,
+                          curtailment=False)
     assert model.technology_list == technology_set_1
     assert model.tech_set == [t.technology_name for t in technology_set_1]
     assert model.solver == solver
@@ -197,7 +196,8 @@ def test_dispatch_model_solve_case1(technology_set_1, net_demand):
     """
     model = DispatchModel(technology_set_1,
                           net_demand=net_demand,
-                          solver=solver)
+                          solver=solver,
+                          curtailment=False)
     model.solve()
     cheapest_tech = unyt_array(
         [t.variable_cost for t in technology_set_1]).min()
@@ -220,7 +220,8 @@ def test_dispatch_model_solve_case2(technology_set_2, net_demand):
     nuclear, natgas = technology_set_2
     model = DispatchModel(technology_set_2,
                           net_demand=net_demand,
-                          solver=solver)
+                          solver=solver,
+                          curtailment=False)
     model.solve()
     expected_nuclear = net_demand.min() * np.ones(N)
     expected_natgas = net_demand - expected_nuclear
@@ -237,7 +238,8 @@ def test_dispatch_model_solve_case3(technology_set_3, net_demand):
     nuclear, natgas = technology_set_3
     model = DispatchModel(technology_set_3,
                           net_demand=net_demand,
-                          solver=solver)
+                          solver=solver,
+                          curtailment=False)
     model.solve()
     max_power_delta = ((model.results.Nuclear.diff())
                        / nuclear.capacity.to_value()).max()
@@ -256,7 +258,8 @@ def test_dispatch_model_solve_case4(technology_set_4, net_demand):
 
     model = DispatchModel(technology_set_4,
                           net_demand=net_demand,
-                          solver=solver)
+                          solver=solver,
+                          curtailment=False)
     model.solve()
     total_gen = model.results[['Nuclear',
                                'Battery',
@@ -265,3 +268,17 @@ def test_dispatch_model_solve_case4(technology_set_4, net_demand):
                              model.results.Battery_charge)
     assert (total_gen - net_demand.sum()) == pytest.approx(0, abs=TOL)
     assert binary_charging == pytest.approx(0, abs=TOL)
+
+def test_dispatch_model_solve_case5(technology_set_4, net_demand):
+    """
+    Tests that the curtailment technology behaves as expected.
+    """
+
+    nuclear, battery = technology_set_4
+    model = DispatchModel([nuclear],
+                          net_demand=net_demand,
+                          solver=solver)
+    model.solve()
+    total_gen = model.results[['Nuclear',
+                               'Curtailment']].sum().sum()
+    assert (total_gen - net_demand.sum()) == pytest.approx(0, abs=TOL)

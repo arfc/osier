@@ -6,15 +6,24 @@ import pyomo.opt as po
 from pyomo.environ import ConcreteModel
 from unyt import unyt_array, hr, MW
 import itertools as it
+from osier import Technology
 from osier.technology import _validate_quantity, _validate_unit
 from osier.utils import synchronize_units
 import warnings
+import logging
 
 _freq_opts = {'D': 'day',
               'H': 'hour',
               'S': 'second',
               'T': 'minute'}
 LARGE_NUMBER = 1e40
+MEDIUM_NUMBER = 1e10
+
+
+curtailment_tech = Technology(technology_name='Curtailment',
+                         technology_type='removal',
+                         dispatchable=True,
+                         capacity=MEDIUM_NUMBER)
 
 
 class DispatchModel():
@@ -102,6 +111,10 @@ class DispatchModel():
     undersupply : float
         The amount of allowed undersupply as a percentage of demand.
         Default is 0.0 (no undersupply allowed).
+    verbose : boolean
+        Indicates if the solver should display log output. Default is False.
+    curtailment : boolean
+        Indicates if the model should enable a curtailment option.
 
     Attributes
     ----------
@@ -179,7 +192,9 @@ class DispatchModel():
                  lower_bound=0.0,
                  oversupply=0.0,
                  undersupply=0.0,
-                 penalty=1e-4):
+                 penalty=1e-4,
+                 verbose=False,
+                 curtailment=True):
         self.net_demand = net_demand
         self.time_delta = time_delta
         self.power_units = power_units
@@ -192,11 +207,21 @@ class DispatchModel():
         self.results = None
         self.objective = None
         self.model_initialized = False
+        self.verbose = verbose
+        self.curtailment = curtailment
 
-        self.technology_list = synchronize_units(
-            technology_list,
+        if self.curtailment:
+            sync_list = technology_list + [curtailment_tech]
+        else:
+            sync_list = technology_list
+
+        self.technology_list = synchronize_units(sync_list,
             unit_power=power_units,
             unit_time=self.time_delta.units)
+        
+        if not verbose:
+            logging.getLogger('pyomo.core').setLevel(logging.CRITICAL)
+
 
     @property
     def time_delta(self):
@@ -403,7 +428,10 @@ class DispatchModel():
         self.model.oversupply = pe.ConstraintList()
         self.model.undersupply = pe.ConstraintList()
         for t in self.model.Time:
-            generation = sum(self.model.x[g, t] for g in self.model.Generators)
+            generation = sum(self.model.x[g, t] for g in self.model.Generators 
+                            if g != 'Curtailment')
+            if self.curtailment:
+                generation -= self.model.x['Curtailment',t]
             if len(self.storage_techs) > 0:
                 generation -= sum(self.model.charge[s, t]
                                   for s in self.model.StorageTech)
@@ -500,7 +528,10 @@ class DispatchModel():
     def _format_results(self):
         df = pd.DataFrame(index=self.model.Time)
         for g in self.model.Generators:
-            df[g] = [self.model.x[g, t].value for t in self.model.Time]
+            if g == 'Curtailment':
+                df[g] = [-1*self.model.x[g, t].value for t in self.model.Time]
+            else:   
+                df[g] = [self.model.x[g, t].value for t in self.model.Time]
 
         if len(self.storage_techs) > 0:
             for s in self.model.StorageTech:
@@ -530,12 +561,13 @@ class DispatchModel():
         else:
             optimizer = po.SolverFactory(self.solver)
 
-        results = optimizer.solve(self.model, tee=True)
+        results = optimizer.solve(self.model, tee=self.verbose)
         try:
             self.objective = self.model.objective()
         except ValueError:
-            warnings.warn(
-                f"Infeasible or no solution. Objective set to {LARGE_NUMBER}")
+            if self.verbose:
+                warnings.warn(
+                    f"Infeasible or no solution. Objective set to {LARGE_NUMBER}")
             self.objective = LARGE_NUMBER
 
         try:
