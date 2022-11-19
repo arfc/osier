@@ -6,10 +6,10 @@ from setuptools import setup, find_packages
 
 # Format expected by setup.py and doc/source/conf.py: string of form "X.Y.Z"
 _version_major = 0
-_version_minor = 1
-_version_micro = ''  # use '' for first of series, number for 1 and above
-_version_extra = 'dev'
-# _version_extra = ''  # Uncomment this for full releases
+_version_minor = 2
+_version_micro = 1  # use '' for first of series, number for 1 and above
+# _version_extra = 'dev'
+_version_extra = ''  # Uncomment this for full releases
 
 # Construct full version string from these.
 _ver = [_version_major, _version_minor]
@@ -39,8 +39,8 @@ DESCRIPTION = description
 with open("README.md", encoding="utf-8") as f:
     LONG_DESCRIPTION = f.read()
 LONG_DESCRIPTION_CONTENT_TYPE = 'text/markdown'
-URL = "http://github.com/arfc/osier"
-DOWNLOAD_URL = ""
+URL = "https://osier.readthedocs.io/en/latest/"
+DOWNLOAD_URL = "http://github.com/arfc/osier"
 LICENSE = "BSD-3"
 AUTHOR = "Samuel Dotson"
 AUTHOR_EMAIL = "sgd2@illinois.edu"
@@ -58,16 +58,17 @@ REQUIRES = [
     'dill',
     'openpyxl',
     'nrelpy',
-    'pymoo']
+    'unyt',
+    'pyomo']
 EXTRAS_REQUIRE = {
     'doc': [
-        'sphinx',
+        'sphinx>=5.1',
         'myst-parser',
-        'sphinxcontrib-napoleon',
         "sphinx_design",
         "sphinx-autodoc-typehints",
         'numpydoc',
-        'pydata_sphinx_theme', ]}
+        'pydata_sphinx_theme'
+        ]}
 PYTHON_REQUIRES = ">= 3.6"
 
 PACKAGES = find_packages()

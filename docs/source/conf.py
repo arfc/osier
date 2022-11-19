@@ -10,9 +10,9 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-# import os
-# import sys
-# sys.path.insert(0, os.path.abspath('.'))
+import os
+import sys
+sys.path.insert(0, os.path.abspath('../..'))
 
 
 # -- Project information -----------------------------------------------------
@@ -22,7 +22,7 @@ copyright = '2022, Samuel Dotson'
 author = 'Samuel Dotson'
 
 # The full version, including alpha/beta/rc tags
-release = '0.1.0'
+release = '0.2.1'
 
 
 # -- General configuration ---------------------------------------------------
@@ -32,14 +32,15 @@ release = '0.1.0'
 # ones.
 extensions = [
     "myst_parser",
-    "numpydoc",
-    "sphinxcontrib.napoleon",
+    "sphinx.ext.napoleon",
     "sphinx.ext.autodoc",
     "sphinx.ext.autosummary",
     "sphinx.ext.intersphinx",
     "sphinx.ext.viewcode",
     "sphinx_autodoc_typehints",
-    "sphinx_design"
+    "sphinx_design",
+    "sphinx.ext.mathjax", 
+    "sphinx.ext.coverage",
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -50,6 +51,14 @@ templates_path = ['_templates']
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = []
 
+intersphinx_mapping = {
+    'python': ('https://docs.python.org/3', None),
+    # 'pandas':('https://pandas.pydata.org/docs/', None),
+    'numpy': ('https://numpy.org/doc/stable/', None),
+    'astropy': ('https://docs.astropy.org/en/stable/', None),
+    'jinja2': ('https://jinja.palletsprojects.com/en/3.0.x/', None),
+    'unyt': ('https://unyt.readthedocs.io/en/stable/', None),
+}
 
 # -- Options for HTML output -------------------------------------------------
 
