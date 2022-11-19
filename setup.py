@@ -60,7 +60,7 @@ REQUIRES = [
     'nrelpy',
     'unyt',
     'pyomo',
-    'pymoo']
+    'pymoo >= 0.6.0']
 EXTRAS_REQUIRE = {
     'doc': [
         'sphinx>=5.1',
