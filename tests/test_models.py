@@ -151,7 +151,8 @@ def test_dispatch_model_initialize(technology_set_1, net_demand):
     model = DispatchModel(technology_set_1,
                           net_demand=net_demand,
                           solver=solver,
-                          curtailment=False)
+                          curtailment=False,
+                          allow_blackout=False)
     assert model.technology_list == technology_set_1
     assert model.tech_set == [t.technology_name for t in technology_set_1]
     assert model.solver == solver
@@ -281,4 +282,21 @@ def test_dispatch_model_solve_case5(technology_set_4, net_demand):
     model.solve()
     total_gen = model.results[['Nuclear',
                                'Curtailment']].sum().sum()
+    assert (total_gen - net_demand.sum()) == pytest.approx(0, abs=TOL)
+
+
+def test_dispatch_model_solve_case6(technology_set_4, net_demand):
+    """
+    Tests that the reliability technology behaves as expected.
+    """
+
+    nuclear, battery = technology_set_4
+    nuclear.capacity = 2
+    model = DispatchModel([nuclear],
+                          net_demand=net_demand,
+                          solver=solver)
+    model.solve()
+    total_gen = model.results[['Nuclear',
+                               'Curtailment',
+                               'LoadLoss']].sum().sum()
     assert (total_gen - net_demand.sum()) == pytest.approx(0, abs=TOL)
