@@ -103,30 +103,15 @@ class CapacityExpansion(ElementwiseProblem):
                          xu=1.0,  
                          **kwargs)
 
-        
-    @property
-    def capital_cost(self):
-        return np.array([t.capital_cost for t in self.technology_list])
-    
     @property
     def capacity_credit(self):
         return np.array([t.cap_credit for t in self.technology_list])
-    
-    @property
-    def om_cost_fixed(self):
-        return np.array([t.om_cost_fixed for t in self.technology_list])
 
-    @property
-    def dispatchable_names(self):
-        return [t.technology_name for t in self.technology_list 
-                if t.dispatchable]
     @property
     def dispatchable_techs(self):
         return [t for t in self.technology_list if t.dispatchable]
 
-    def _evaluate(self, x, out, *args, **kwargs):
-        # x represents the fraction of the necessary portfolio
-        # check that there is enough capacity before executing the model. 
+    def _evaluate(self, x, out, *args, **kwargs): 
         capacities = self.capacity_requirement * x
 
         solar_capacity = 0
@@ -142,8 +127,11 @@ class CapacityExpansion(ElementwiseProblem):
             elif ((tech.dispatchable) and (tech.technology_name != 'Battery')):
                 firm_capacity += capacity
 
-            solar_gen = self.solar_ts*solar_capacity
-            wind_gen = self.wind_ts*wind_capacity
+        solar_gen = self.solar_ts*solar_capacity
+        wind_gen = self.wind_ts*wind_capacity
+
+        renewable_df = pd.DataFrame({'SolarPanel':solar_gen,
+                                     'WindTurbine':wind_gen})
 
         net_demand = self.demand \
                     - wind_gen \
@@ -155,26 +143,24 @@ class CapacityExpansion(ElementwiseProblem):
 
         if model.results is not None:
 
-            if solar_capacity > 0:
-                model.results['Solar'] = solar_gen
-            if wind_capacity > 0:
-                model.results['Wind'] = wind_gen
+            model.results = pd.concat([model.results, renewable_df], axis=1)
 
-            for obj in self.objectives:
-                pass
+            out_obj = []
+            for obj_func in self.objectives:
+                out_obj.append(obj_func(self.technology_list, model))
+            
+            if self.n_constr > 0:
+                out_constr = []
+                for constr_func in self.constraints:
+                    out_constr.append(constr_func(self.technology_list, model))
 
-            capital = np.dot(capacities, self.capital_cost) / self.avg_lifetime
-            fixed = np.dot(capacities, self.om_cost_fixed)
-            co2ls = np.array([t.co2 
-                              for t 
-                              in self.technology_list 
-                              if t.dispatchable])
-
-            carbon_total = np.dot(co2ls, model.results[self.dispatchable_techs].values.T).sum()
-            # carbon_total += wind_gen.sum()*wind.co2 + solar_gen.sum()*solar.co2
-        
-            cost = model.objective + capital + fixed
-        else: 
+        else:
             out_obj = np.ones(self.n_obj) * self.penalty
-                
-        out["F"] = [cost, carbon_total]
+            if self.n_constr > 0:
+                out_constr = np.ones(self.n_constr) * self.penalty
+        
+        out["F"] = out_obj
+
+        if self.n_constr > 0:
+            out["G"] = out_constr
+            
