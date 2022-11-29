@@ -198,7 +198,8 @@ def test_dispatch_model_solve_case1(technology_set_1, net_demand):
     model = DispatchModel(technology_set_1,
                           net_demand=net_demand,
                           solver=solver,
-                          curtailment=False)
+                          curtailment=False,
+                          allow_blackout=False)
     model.solve()
     cheapest_tech = unyt_array(
         [t.variable_cost for t in technology_set_1]).min()
