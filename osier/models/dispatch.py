@@ -1,4 +1,3 @@
-from typing import Type
 import pandas as pd
 import numpy as np
 import pyomo.environ as pe
@@ -18,12 +17,18 @@ _freq_opts = {'D': 'day',
               'T': 'minute'}
 LARGE_NUMBER = 1e40
 MEDIUM_NUMBER = 1e10
+BLACKOUT_COST = 1e4
 
 
 curtailment_tech = Technology(technology_name='Curtailment',
                          technology_type='removal',
                          dispatchable=True,
                          capacity=MEDIUM_NUMBER)
+reliability_tech = Technology(technology_name='LoadLoss',
+                         technology_type='matching',
+                         dispatchable=True,
+                         om_cost_variable=BLACKOUT_COST,
+                         capacity=MEDIUM_NUMBER)                         
 
 
 class DispatchModel():
@@ -115,6 +120,12 @@ class DispatchModel():
         Indicates if the solver should display log output. Default is False.
     curtailment : boolean
         Indicates if the model should enable a curtailment option.
+    allow_blackout : boolean
+        If True, a "reliability" technology is added to the model that will
+        fulfill the mismatch in supply and demand. This reliability technology
+        has a variable cost of 1e4 $/MWh. The value must be higher than the 
+        variable cost of any other technology to prevent a pathological 
+        preference for blackouts. Default is True.
 
     Attributes
     ----------
@@ -134,8 +145,7 @@ class DispatchModel():
     penalty : float
         The penalty applied to the objective function to eliminate
         simultaneous charging and discharging. Users may need to tune
-        this parameter. Default is 1.0.
-
+        this parameter. Default is 1e-4.
     model_initialized : bool
         Indicates whether :attr:`DispatchModel.model` has been populated
         with equations yet. This is set to ``True`` after
@@ -194,7 +204,8 @@ class DispatchModel():
                  undersupply=0.0,
                  penalty=1e-4,
                  verbose=False,
-                 curtailment=True):
+                 curtailment=True,
+                 allow_blackout=True):
         self.net_demand = net_demand
         self.time_delta = time_delta
         self.power_units = power_units
@@ -209,9 +220,14 @@ class DispatchModel():
         self.model_initialized = False
         self.verbose = verbose
         self.curtailment = curtailment
+        self.allow_blackout = allow_blackout
 
-        if self.curtailment:
+        if ((self.curtailment) and (self.allow_blackout)):
+            sync_list = technology_list + [curtailment_tech, reliability_tech]
+        elif self.curtailment:
             sync_list = technology_list + [curtailment_tech]
+        elif self.allow_blackout:
+            sync_list = technology_list + [reliability_tech]
         else:
             sync_list = technology_list
 
@@ -421,7 +437,8 @@ class DispatchModel():
                    for g in self.model.Generators for t in self.model.Time)
         if len(self.storage_techs) > 0:
             expr += sum(self.model.x[s, t] + self.model.charge[s, t]
-                        for s in self.model.StorageTech for t in self.model.Time) * self.penalty
+                        for s in self.model.StorageTech 
+                        for t in self.model.Time) * self.penalty
         self.model.objective = pe.Objective(sense=pe.minimize, expr=expr)
 
     def _supply_constraints(self):
@@ -434,7 +451,7 @@ class DispatchModel():
                 generation -= self.model.x['Curtailment',t]
             if len(self.storage_techs) > 0:
                 generation -= sum(self.model.charge[s, t]
-                                  for s in self.model.StorageTech)
+                                for s in self.model.StorageTech)
             over_demand = self.model.Demand[t] * (1 + self.oversupply)
             under_demand = self.model.Demand[t] * (1 - self.undersupply)
             self.model.oversupply.add(generation <= over_demand)
