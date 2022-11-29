@@ -132,7 +132,7 @@ def annual_emissions(technology_list, dispatch_model, emission='co2'):
     return emissions_total
 
 
-def calculate_total_cost(technology_list, dispatch_model):
+def total_cost(technology_list, dispatch_model):
     """
     This function calculates the total system cost for a given 
     set of technologies and their corresponding dispatch.

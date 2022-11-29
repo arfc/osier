@@ -11,5 +11,6 @@
     osier.ThermalTechnology
     osier.StorageTechnology
     osier.DispatchModel
+    osier.CapacityExpansion
     osier.utils.synchronize_units
 ```

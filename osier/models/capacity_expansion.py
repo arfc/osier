@@ -27,7 +27,7 @@ LARGE_NUMBER = 1e40
 class CapacityExpansion(ElementwiseProblem):
     """
     The :class:`CapacityExpansion` class inherits from the 
-    :class:`pymoo.ElementwiseProblem` class. This problem
+    :class:`pymoo.core.problem.ElementwiseProblem` class. This problem
     determines the technology mix that _minimizes_ the provided
     objectives.
 
@@ -43,11 +43,12 @@ class CapacityExpansion(ElementwiseProblem):
         must correspond to preset objective functions. Users may optionally
         write their own functions and pass them to `osier` as items in the
         list.
-    constraints : list of str or functions
-        Specifies the number and type of constraints. A list of strings
+    constraints : dictionary of string : float or function : float
+        Specifies the number and type of constraints. String key names
         must correspond to preset constraints functions. Users may optionally
-        write their own functions and pass them to `osier` as items in the
-        list.
+        write their own functions and pass them to `osier` as keys in the
+        list. The values must be numerical and represent the value that the function
+        should not exceed. See notes for more information about constraints.
     prm : Optional, float
         The "planning reserve margin" (`prm`) specifies the amount
         of excess capacity needed to meet reliability standards.
@@ -64,13 +65,22 @@ class CapacityExpansion(ElementwiseProblem):
         The penalty for infeasible solutions. If a particular set
         produces an infeasible solution for the :class:`osier.DispatchModel`,
         the corresponding objectives take on this value.
+
+
+    Notes
+    -----
+    **Constraints**:
+
+    `Pymoo` constraints are not strict in the sense that `Pymoo` prefers 
+    feasibility over respecting constraints. However, all `Pymoo` algorithms 
+    will minimize the "constraint violation (CV)."
     """
 
     def __init__(self, 
                 technology_list, 
                 demand,
                 objectives,
-                constraints=[],
+                constraints={},
                 solar=None, 
                 wind=None, 
                 prm=0.0,
@@ -87,11 +97,11 @@ class CapacityExpansion(ElementwiseProblem):
         self.constraints = constraints
         self.penalty = penalty
 
-        if solar:
+        if solar is not None:
             self.solar_ts = solar / solar.max()
         else:
             self.solar_ts = np.zeros(len(self.demand))
-        if wind:
+        if wind is not None:
             self.wind_ts = wind / wind.max()
         else:
             self.wind_ts = np.zeros(len(self.demand))
@@ -151,8 +161,8 @@ class CapacityExpansion(ElementwiseProblem):
             
             if self.n_constr > 0:
                 out_constr = []
-                for constr_func in self.constraints:
-                    out_constr.append(constr_func(self.technology_list, model))
+                for constr_func, val in self.constraints.items():
+                    out_constr.append(constr_func(self.technology_list, model) - val)
 
         else:
             out_obj = np.ones(self.n_obj) * self.penalty

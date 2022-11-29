@@ -53,11 +53,12 @@ exclude_patterns = []
 
 intersphinx_mapping = {
     'python': ('https://docs.python.org/3', None),
-    # 'pandas':('https://pandas.pydata.org/docs/', None),
+    'pandas':('https://pandas.pydata.org/docs/', None),
     'numpy': ('https://numpy.org/doc/stable/', None),
     'astropy': ('https://docs.astropy.org/en/stable/', None),
     'jinja2': ('https://jinja.palletsprojects.com/en/3.0.x/', None),
     'unyt': ('https://unyt.readthedocs.io/en/stable/', None),
+    'pymoo': ('https://pymoo.org/', None),
 }
 
 # -- Options for HTML output -------------------------------------------------
