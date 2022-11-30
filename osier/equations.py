@@ -63,13 +63,13 @@ def get_dispatchable_names(technology_list):
     return dispatchable_techs
 
 
-def annualized_capital_cost(technology_list, dispatch_model=None):
+def annualized_capital_cost(technology_list, solved_dispatch_model=None):
     """
     Parameters
     ----------
     technology_list : list of :class:`osier.Technology` objects
         The list of technologies.
-    dispatch_model : :class:`osier.DispatchModel`
+    solved_dispatch_model : :class:`osier.DispatchModel`
         A _solved_ dispatch model (i.e. with model results and objective
         attributes).
     """
@@ -79,13 +79,13 @@ def annualized_capital_cost(technology_list, dispatch_model=None):
     return capital_cost
 
 
-def annualized_fixed_cost(technology_list, dispatch_model=None):
+def annualized_fixed_cost(technology_list, solved_dispatch_model=None):
     """
     Parameters
     ----------
     technology_list : list of :class:`osier.Technology` objects
         The list of technologies.
-    dispatch_model : :class:`osier.DispatchModel`
+    solved_dispatch_model : :class:`osier.DispatchModel`
         A _solved_ dispatch model (i.e. with model results and objective
         attributes).
     """
