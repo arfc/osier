@@ -59,7 +59,7 @@ def net_demand():
 
 def test_annualized_capital_cost(technology_set_1):
     """
-    Tests the annualized cost is calculated correctly.
+    Tests the annualized capital cost is calculated correctly.
     """
     nuclear, natural_gas = technology_set_1
 
@@ -72,7 +72,7 @@ def test_annualized_capital_cost(technology_set_1):
 
 def test_annualized_fixed_cost(technology_set_1):
     """
-    Tests the annualized cost is calculated correctly.
+    Tests the annualized fixed cost is calculated correctly.
     """
     nuclear, natural_gas = technology_set_1
 
@@ -84,8 +84,7 @@ def test_annualized_fixed_cost(technology_set_1):
 
 def test_total_cost(technology_set_1, net_demand):
     """
-    Tests that the :func:`total_cost` produces expected results. Where all
-    the technologies are simply :class:`Technology` objects.
+    Tests that :func:`total_cost` produces expected results.
     """
     model = DispatchModel(technology_set_1,
                           net_demand=net_demand,
@@ -104,8 +103,7 @@ def test_total_cost(technology_set_1, net_demand):
 
 def test_annual_co2(technology_set_1, net_demand):
     """
-    Tests that the :func:`annual_co2` produces expected results. Where all
-    the technologies are simply :class:`Technology` objects.
+    Tests that :func:`annual_co2` produces expected results.
     """
     nuclear, natural_gas = technology_set_1
     model = DispatchModel(technology_set_1,

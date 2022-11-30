@@ -1,15 +1,11 @@
-# Standard imports
 import numpy as np
 import pandas as pd
 from copy import deepcopy
 import dill
 
-# Osier imports
 from osier import DispatchModel
 
-# Pymoo imports
-from pymoo.core.problem import Problem
-from pymoo.core.problem import ElementwiseProblem
+from pymoo.core.problem import Problem, ElementwiseProblem
 from pymoo.algorithms.moo.nsga2 import NSGA2
 from pymoo.termination import get_termination
 from pymoo.optimize import minimize

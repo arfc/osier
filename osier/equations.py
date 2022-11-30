@@ -17,9 +17,6 @@ def get_tech_names(technology_list):
     ----------
     technology_list : list of :class:`osier.Technology` objects
         The list of technologies.
-    dispatch_results : :class:`pandas.DataFrame`
-        The results dispatch results for each technology in 
-        :attr:`technology_list` from a :class:`osier.DispatchModel` run.
     """
 
     tech_names = [t.technology_name for t in technology_list]
@@ -33,9 +30,6 @@ def get_dispatchable_techs(technology_list):
     ----------
     technology_list : list of :class:`osier.Technology` objects
         The list of technologies.
-    dispatch_results : :class:`pandas.DataFrame`
-        The results dispatch results for each technology in 
-        :attr:`technology_list` from a :class:`osier.DispatchModel` run.
     """
 
     dispatchable_techs = [t for t in technology_list if t.dispatchable]
@@ -49,9 +43,6 @@ def get_nondispatchable_techs(technology_list):
     ----------
     technology_list : list of :class:`osier.Technology` objects
         The list of technologies.
-    dispatch_results : :class:`pandas.DataFrame`
-        The results dispatch results for each technology in 
-        :attr:`technology_list` from a :class:`osier.DispatchModel` run.
     """
 
     dispatchable_techs = [t for t in technology_list if not t.dispatchable]
@@ -65,9 +56,6 @@ def get_dispatchable_names(technology_list):
     ----------
     technology_list : list of :class:`osier.Technology` objects
         The list of technologies.
-    dispatch_results : :class:`pandas.DataFrame`
-        The results dispatch results for each technology in 
-        :attr:`technology_list` from a :class:`osier.DispatchModel` run.
     """
 
     dispatchable_techs = [t.technology_name for t in technology_list if t.dispatchable]
@@ -107,13 +95,13 @@ def annualized_fixed_cost(technology_list, dispatch_model=None):
     return fixed_cost
 
 
-def annual_co2(technology_list, dispatch_model, emission='co2'):
+def annual_co2(technology_list, solved_dispatch_model, emission='co2'):
     """
     Parameters
     ----------
     technology_list : list of :class:`osier.Technology` objects
         The list of technologies.
-    dispatch_model : :class:`osier.DispatchModel`
+    solved_dispatch_model : :class:`osier.DispatchModel`
         A _solved_ dispatch model (i.e. with model results and objective
         attributes).
     """
@@ -121,7 +109,7 @@ def annual_co2(technology_list, dispatch_model, emission='co2'):
     dispatch_techs = get_dispatchable_techs(technology_list)
     non_dispatch_techs = get_nondispatchable_techs(technology_list)
     column_names = get_tech_names(technology_list)
-    dispatch_results = dispatch_model.results
+    dispatch_results = solved_dispatch_model.results
 
     emissions = np.array([getattr(t, emission) 
                          for t in dispatch_techs+non_dispatch_techs 
@@ -132,7 +120,7 @@ def annual_co2(technology_list, dispatch_model, emission='co2'):
     return emissions_total
 
 
-def total_cost(technology_list, dispatch_model):
+def total_cost(technology_list, solved_dispatch_model):
     """
     This function calculates the total system cost for a given 
     set of technologies and their corresponding dispatch.
@@ -141,7 +129,7 @@ def total_cost(technology_list, dispatch_model):
     ----------
     technology_list : list of :class:`osier.Technology` objects
         The list of technologies.
-    dispatch_model : :class:`osier.DispatchModel`
+    solved_dispatch_model : :class:`osier.DispatchModel`
         A _solved_ dispatch model (i.e. with model results and objective
         attributes).
 
@@ -153,7 +141,7 @@ def total_cost(technology_list, dispatch_model):
 
     capital_cost = annualized_capital_cost(technology_list)
     fixed_cost = annualized_fixed_cost(technology_list)
-    variable_cost = dispatch_model.objective
+    variable_cost = solved_dispatch_model.objective
     total_cost = capital_cost + fixed_cost + variable_cost
 
     return total_cost
