@@ -55,4 +55,4 @@ jobs:
         python3 -m pip install -e git+https://github.com/yt-project/unyt.git#egg=unyt
     - name: Test with pytest
       run: |
-        pytest osier/tests
+        pytest tests/
