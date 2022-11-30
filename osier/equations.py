@@ -107,7 +107,7 @@ def annualized_fixed_cost(technology_list, dispatch_model=None):
     return fixed_cost
 
 
-def annual_emissions(technology_list, dispatch_model, emission='co2'):
+def annual_co2(technology_list, dispatch_model, emission='co2'):
     """
     Parameters
     ----------
