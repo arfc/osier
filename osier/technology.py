@@ -165,6 +165,8 @@ class Technology(object):
     efficiency : float
         The technology's energy conversion efficiency expressed as
         a fraction. Default is 1.0.
+    lifetime : float
+        The technology's operational lifetime in years. Default is 25 years.
     default_power_units : str or :class:`unyt.unit_object.Unit`
         An optional parameter, specifies the units
         for power. Default is megawatts [MW].
@@ -213,6 +215,7 @@ class Technology(object):
                  capacity=0.0,
                  capacity_factor=1.0,
                  efficiency=1.0,
+                 lifetime=25.0,
                  default_power_units=MW,
                  default_time_units=hr,
                  default_energy_units=None) -> None:
@@ -223,6 +226,7 @@ class Technology(object):
         self.dispatchable = dispatchable
         self.renewable = renewable
         self.fuel_type = fuel_type
+        self.lifetime = lifetime
 
         self.unit_power = default_power_units
         self.unit_time = default_time_units
@@ -395,6 +399,7 @@ class RampingTechnology(Technology):
             capacity=0,
             capacity_factor=1.0,
             efficiency=1.0,
+            lifetime=25.0,
             default_power_units=MW,
             default_time_units=hr,
             default_energy_units=None,
@@ -414,6 +419,7 @@ class RampingTechnology(Technology):
             capacity,
             capacity_factor,
             efficiency,
+            lifetime,
             default_power_units,
             default_time_units,
             default_energy_units)
@@ -468,6 +474,7 @@ class ThermalTechnology(RampingTechnology):
             capacity=0,
             capacity_factor=1.0,
             efficiency=1.0,
+            lifetime=25.0,
             default_power_units=MW,
             default_time_units=hr,
             default_energy_units=None,
@@ -488,6 +495,7 @@ class ThermalTechnology(RampingTechnology):
             capacity,
             capacity_factor,
             efficiency,
+            lifetime,
             default_power_units,
             default_time_units,
             default_energy_units,
@@ -525,6 +533,7 @@ class StorageTechnology(Technology):
             fuel_type=None,
             capacity=0,
             efficiency=1.0,
+            lifetime=25.0,
             capacity_factor=1.0,
             storage_duration=0,
             initial_storage=0,
@@ -545,6 +554,7 @@ class StorageTechnology(Technology):
             capacity,
             capacity_factor,
             efficiency,
+            lifetime,
             default_power_units,
             default_time_units,
             default_energy_units)
