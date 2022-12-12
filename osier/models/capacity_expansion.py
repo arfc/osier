@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 from copy import deepcopy
 import dill
+import unyt as u
 
 from osier import DispatchModel
 
@@ -80,7 +81,9 @@ class CapacityExpansion(ElementwiseProblem):
                 solar=None, 
                 wind=None, 
                 prm=0.0,
-                penalty=LARGE_NUMBER, 
+                penalty=LARGE_NUMBER,
+                power_units=u.MW, 
+                allow_blackout=True,
                 **kwargs):
         self.technology_list = deepcopy(technology_list)
         self.demand = demand
@@ -92,6 +95,8 @@ class CapacityExpansion(ElementwiseProblem):
         self.objectives = objectives
         self.constraints = constraints
         self.penalty = penalty
+        self.power_units = power_units
+        self.allow_blackout = allow_blackout
 
         if solar is not None:
             self.solar_ts = solar / solar.max()
@@ -144,7 +149,9 @@ class CapacityExpansion(ElementwiseProblem):
                     - solar_gen
         
         model = DispatchModel(technology_list=self.dispatchable_techs,
-                              net_demand=net_demand)
+                              net_demand=net_demand,
+                              power_units=self.power_units,
+                              allow_blackout=self.allow_blackout)
         model.solve()
 
         if model.results is not None:
