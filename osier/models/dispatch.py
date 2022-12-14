@@ -208,7 +208,6 @@ class DispatchModel():
                  allow_blackout=True):
         self.net_demand = net_demand
         self.time_delta = time_delta
-        self.power_units = power_units
         self.lower_bound = lower_bound
         self.oversupply = oversupply
         self.undersupply = undersupply
@@ -222,6 +221,11 @@ class DispatchModel():
         self.curtailment = curtailment
         self.allow_blackout = allow_blackout
 
+        if isinstance(net_demand, unyt_array):
+            self.power_units = net_demand.units
+        else:
+            self.power_units = power_units
+
         if ((self.curtailment) and (self.allow_blackout)):
             sync_list = technology_list + [curtailment_tech, reliability_tech]
         elif self.curtailment:
@@ -232,7 +236,7 @@ class DispatchModel():
             sync_list = technology_list
 
         self.technology_list = synchronize_units(sync_list,
-            unit_power=power_units,
+            unit_power=self.power_units,
             unit_time=self.time_delta.units)
         
         if not verbose:
