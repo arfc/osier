@@ -250,6 +250,28 @@ class Technology(object):
             return True
         else:
             return False
+    
+    def __ge__(self, tech) -> bool:
+        """Tests greater or equal to."""
+        if self.variable_cost >= tech.variable_cost:
+            return True
+        else:
+            return False
+
+    def __le__(self, tech) -> bool:
+        """Tests greater or equal to."""
+        if self.variable_cost <= tech.variable_cost:
+            return True
+        else:
+            return False
+
+    def __lt__(self, tech) -> bool:
+        """Tests greater or equal to."""
+        if self.variable_cost < tech.variable_cost:
+            return True
+        else:
+            return False
+
 
     @property
     def unit_power(self):
