@@ -320,3 +320,18 @@ def test_unit_energy(advanced_tech):
     assert advanced_tech.unit_energy == MW * hr
     advanced_tech.unit_energy = "Horsepower*day"
     assert advanced_tech.unit_energy == MW * hr
+
+
+def test_comparison_operators(advanced_tech):
+
+    NIMBUS = Technology(technology_name="The Nimbus",
+                        om_cost_variable=1.0)
+
+    assert advanced_tech < NIMBUS
+    assert advanced_tech <= NIMBUS
+    assert NIMBUS >= advanced_tech
+
+    ships = [NIMBUS, advanced_tech]
+    ships.sort()
+
+    assert ships == [advanced_tech, NIMBUS]
