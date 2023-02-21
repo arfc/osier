@@ -3,7 +3,7 @@ import numpy as np
 import pyomo.environ as pe
 import pyomo.opt as po
 from pyomo.environ import ConcreteModel
-from unyt import unyt_array, hr, MW, kW
+from unyt import unyt_array, hr, MW, kW, GW
 import itertools as it
 from osier import Technology
 from osier.technology import _validate_quantity, _validate_unit
@@ -17,7 +17,7 @@ _freq_opts = {'D': 'day',
               'T': 'minute'}
 LARGE_NUMBER = 1e40
 MEDIUM_NUMBER = 1e10
-BLACKOUT_COST = 10*(1/(kW*hr))*1e-6  # M$/kWh
+BLACKOUT_COST = 10*(1/(kW*hr))  # M$/kWh
 
 
 curtailment_tech = Technology(technology_name='Curtailment',
@@ -205,7 +205,7 @@ class DispatchModel():
                  penalty=1e-4,
                  verbose=False,
                  curtailment=True,
-                 allow_blackout=True):
+                 allow_blackout=False):
         self.net_demand = net_demand
         self.time_delta = time_delta
         self.lower_bound = lower_bound

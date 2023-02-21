@@ -295,7 +295,8 @@ def test_dispatch_model_solve_case6(technology_set_4, net_demand):
     nuclear.capacity = 2
     model = DispatchModel([nuclear],
                           net_demand=net_demand,
-                          solver=solver)
+                          solver=solver,
+                          allow_blackout=True)
     model.solve()
     total_gen = model.results[['Nuclear',
                                'Curtailment',
