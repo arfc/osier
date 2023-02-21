@@ -548,6 +548,8 @@ class DispatchModel():
 
     def _format_results(self):
         df = pd.DataFrame(index=self.model.Time)
+        expr = np.array(sum(self.model.VariableCost[g, t] * self.model.x[g, t].value
+                   for g in self.model.Generators) for t in self.model.Time)
         for g in self.model.Generators:
             if g == 'Curtailment':
                 df[g] = [-1*self.model.x[g, t].value for t in self.model.Time]
@@ -560,6 +562,9 @@ class DispatchModel():
                                      for t in self.model.Time]
                 df[f"{s}_level"] = [self.model.storage_level[s, t].value
                                     for t in self.model.Time]
+                
+        df["Cost"] = expr
+
         return df
 
     def solve(self, solver=None):

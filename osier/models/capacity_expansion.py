@@ -3,6 +3,7 @@ import pandas as pd
 from copy import deepcopy
 import dill
 import unyt as u
+from unyt import unyt_array
 
 from osier import DispatchModel
 
@@ -83,12 +84,13 @@ class CapacityExpansion(ElementwiseProblem):
                 prm=0.0,
                 penalty=LARGE_NUMBER,
                 power_units=u.MW, 
-                allow_blackout=True,
+                curtailment=True,
+                allow_blackout=False,
                 **kwargs):
         self.technology_list = deepcopy(technology_list)
         self.demand = demand
         self.prm = prm
-        self.max_demand = demand.max()
+        self.max_demand = float(demand.max())*power_units
         self.avg_lifetime = 25
         self.capacity_requirement = self.max_demand * (1+self.prm)
 
@@ -96,7 +98,13 @@ class CapacityExpansion(ElementwiseProblem):
         self.constraints = constraints
         self.penalty = penalty
         self.power_units = power_units
+        self.curtailment = curtailment
         self.allow_blackout = allow_blackout
+
+        if isinstance(demand, unyt_array):
+            self.power_units = demand.units
+        else:
+            self.power_units = power_units
 
         if solar is not None:
             self.solar_ts = solar / solar.max()
@@ -151,6 +159,7 @@ class CapacityExpansion(ElementwiseProblem):
         model = DispatchModel(technology_list=self.dispatchable_techs,
                               net_demand=net_demand,
                               power_units=self.power_units,
+                              curtailment=self.curtailment,
                               allow_blackout=self.allow_blackout)
         model.solve()
 
