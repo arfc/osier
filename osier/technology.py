@@ -239,6 +239,7 @@ class Technology(object):
         self.om_cost_fixed = om_cost_fixed
         self.om_cost_variable = om_cost_variable
         self.fuel_cost = fuel_cost
+        self.power_level = self.capacity
 
     def __repr__(self) -> str:
         return (f"{self.technology_name}: {self.capacity}")
@@ -271,7 +272,6 @@ class Technology(object):
             return True
         else:
             return False
-
 
     @property
     def unit_power(self):
@@ -374,6 +374,25 @@ class Technology(object):
         """
         var_cost_ts = np.ones(size) * self.variable_cost
         return var_cost_ts
+
+
+    def power_output(self, demand):
+        """
+        Raise or lower the power level to meet demand.
+        """
+        if self.power_level > demand:
+            self.power_level = demand
+            return self.power_level
+        elif (self.power_level <= demand) and \
+             (self.capacity >= demand):
+            self.power_level = demand
+            return self.power_level
+        elif (self.power_level <= demand) and \
+             (self.capacity <= demand):
+            self.power_level = self.capacity
+            return self.power_level
+
+        return
 
 
 class RampingTechnology(Technology):
@@ -525,6 +544,8 @@ class ThermalTechnology(RampingTechnology):
             ramp_down_rate)
 
         self.heat_rate = heat_rate
+        self.power_level = self.capacity
+    
 
 
 class StorageTechnology(Technology):
@@ -583,6 +604,30 @@ class StorageTechnology(Technology):
 
         self.storage_duration = storage_duration
         self.initial_storage = initial_storage
+        self.storage_level = self.initial_storage
+        self.charging = False
+        self.discharging = False
+
+    def __ge__(self, tech) -> bool:
+        """Tests greater or equal to."""
+        if self.efficiency >= tech.efficiency:
+            return True
+        else:
+            return False
+
+    def __le__(self, tech) -> bool:
+        """Tests greater or equal to."""
+        if self.efficiency <= tech.efficiency:
+            return True
+        else:
+            return False
+
+    def __lt__(self, tech) -> bool:
+        """Tests greater or equal to."""
+        if self.efficiency < tech.efficiency:
+            return True
+        else:
+            return False
 
     @property
     def storage_duration(self):
@@ -610,4 +655,74 @@ class StorageTechnology(Technology):
             raise AssertionError("Initial storage exceeds storage capacity.")
 
         self._initial_storage = valid_quantity
+
+    @property
+    def max_rate(self):
+        return self.capacity*self.unit_time
+    
+
+    def reset_mode(self):
+        self.charging = False
+        self.discharging = False
+
+
+    def discharge(self, deficit):
+        if not self.charging:
+            self.discharging = True
+            if self.storage_level == 0:
+    #             print('battery has no stored energy')
+                self.discharging = False
+                return 0
+            elif ((self.capacity - deficit) > 0):
+    #             print("battery has enough capacity")
+                if self.storage_level >= self.capacity:
+    #                 print('battery has enough stored energy to discharge total deficit')
+                    discharge = deficit
+                    self.storage_level = self.storage_level - deficit
+                    return discharge
+                elif self.storage_level < self.capacity:
+    #                 print('battery does not have enough stored energy to discharge total deficit')
+                    discharge = self.storage_level
+                    self.storage_level = 0
+                    return discharge
+            elif ((self.capacity - deficit) < 0):
+    #             print('battery does _not_ have enough capacity')
+                if self.storage_level >= self.capacity:
+    #                 print('battery has enough stored energy to discharge at max capacity')
+                    discharge = self.capacity
+                    self.storage_level = self.storage_level - self.capacity
+                    return discharge
+                elif self.storage_level < self.capacity:
+    #                 print('battery does not have enough stored energy to discharge at max capacity')
+                    discharge = self.storage_level
+                    self.storage_level = 0
+                    return discharge
+        else: 
+            return 0.0
+
+
+    def charge(self, surplus):
+        if not self.discharging:
+            self.charging = True
+            if self.storage_level == self.storage_capacity:
+                self.charging = False
+                return 0
+            elif self.capacity > surplus:
+                if (self.storage_level+surplus) <= self.storage_capacity:
+                    self.storage_level = self.storage_level + surplus
+                    return surplus
+                elif (self.storage_level+surplus) > self.storage_capacity:
+                    charge = self.storage_capacity - self.storage_level
+                    self.storage_level = self.storage_capacity
+                    return charge
+            elif self.capacity*self.unit_time < surplus:
+                if (self.storage_level+self.capacity) <= self.storage_capacity:
+                    self.storage_level = self.storage_level + self.capacity
+                    return self.capacity
+                elif (self.storage_level+self.capacity) > self.storage_capacity:
+                    charge = self.storage_capacity - self.capacity
+                    self.storage_level = self.storage_capacity
+                    return charge
+        else:
+            return 0.0
 
