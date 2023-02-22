@@ -1,5 +1,5 @@
 import unyt
-from unyt import MW, hr, kg, km
+from unyt import MW, hr, kg, km, m
 from unyt import unyt_quantity, unyt_array
 from unyt.exceptions import UnitParseError
 
@@ -13,7 +13,7 @@ _dim_opts = {'time': hr,
              'mass': kg,
              'length': km,
              'area': km**2,
-             'volume': km**3,
+             'volume': m**3,
              'specific_time': hr**-1,
              'specific_mass': kg**-1,
              'specific_power': MW**-1,
@@ -141,7 +141,8 @@ def _validate_quantity(value, dimension):
 class Technology(object):
     """
     The :class:`Technology` base class contains the minimum required
-    data to solve an energy systems problem. All other technologies in
+    data to solve an energy systems problem. Many optional data are
+    included here as well. All other technologies in
     :mod:`osier` inherit from this class.
 
     Parameters
@@ -253,6 +254,8 @@ class Technology(object):
                  default_power_units=MW,
                  default_time_units=hr,
                  default_energy_units=None,
+                 default_length_units=km,
+                 default_volume_units=m**3,
                  default_mass_units=kg) -> None:
 
         self.technology_name = technology_name
@@ -266,6 +269,8 @@ class Technology(object):
         self.unit_power = default_power_units
         self.unit_time = default_time_units
         self.unit_energy = default_energy_units
+        self.unit_length = default_length_units
+        self.unit_volume = default_volume_units
         self.unit_mass = default_mass_units
 
         self.capacity = capacity
@@ -312,6 +317,30 @@ class Technology(object):
     @unit_mass.setter
     def unit_mass(self, value):
         self._unit_mass = _validate_unit(value, dimension="mass")
+
+    @property
+    def unit_length(self):
+        return self._unit_length
+
+    @unit_length.setter
+    def unit_length(self, value):
+        self._unit_length = _validate_unit(value, dimension="length")
+
+    @property
+    def unit_area(self):
+        return self._unit_length**2
+
+    @unit_area.setter
+    def unit_area(self, value):
+        self._unit_area = self._unit_length**2
+
+    @property
+    def unit_volume(self):
+        return self._unit_volume
+
+    @unit_volume.setter
+    def unit_volume(self, value):
+        self._unit_volume = _validate_unit(value, dimension="volume")
 
     @property
     def unit_energy(self):
@@ -503,7 +532,9 @@ class RampingTechnology(Technology):
             lifetime=25.0,
             default_power_units=MW,
             default_time_units=hr,
-            default_energy_units=None,
+            default_energy_units=None,            
+            default_length_units = km,
+            default_volume_units = m**3,
             default_mass_units = kg,
             ramp_up_rate=1.0 * hr**-1,
             ramp_down_rate=1.0 * hr**-1) -> None:
@@ -526,6 +557,8 @@ class RampingTechnology(Technology):
             default_power_units,
             default_time_units,
             default_energy_units,
+            default_length_units,
+            default_volume_units,
             default_mass_units,)
 
         self.ramp_up_rate = _validate_quantity(ramp_up_rate,
@@ -583,6 +616,8 @@ class ThermalTechnology(RampingTechnology):
             default_power_units=MW,
             default_time_units=hr,
             default_energy_units=None,
+            default_length_units=km,
+            default_volume_units=m**3,
             default_mass_units = kg,
             heat_rate=None,
             ramp_up_rate=1.0 * hr**-1,
@@ -606,6 +641,8 @@ class ThermalTechnology(RampingTechnology):
             default_power_units,
             default_time_units,
             default_energy_units,
+            default_length_units,
+            default_volume_units,
             default_mass_units,
             ramp_up_rate,
             ramp_down_rate)
@@ -649,6 +686,8 @@ class StorageTechnology(Technology):
             default_power_units=MW,
             default_time_units=hr,
             default_energy_units=None,
+            default_length_units=km,
+            default_volume_units=m**3,
             default_mass_units=kg,) -> None:
         super().__init__(
             technology_name,
@@ -669,6 +708,8 @@ class StorageTechnology(Technology):
             default_power_units,
             default_time_units,
             default_energy_units,
+            default_length_units,
+            default_volume_units,
             default_mass_units,)
 
         self.storage_duration = storage_duration
