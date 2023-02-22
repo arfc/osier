@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from pyentrp.entropy import weighted_permutation_entropy
 import numpy as np
 
 class OsierEquation(ABC):
@@ -131,7 +132,7 @@ def annualized_fixed_cost(technology_list, solved_dispatch_model=None):
     return fixed_cost
 
 
-def annual_co2(technology_list, solved_dispatch_model, emission='co2_rate'):
+def annual_emission(technology_list, solved_dispatch_model, emission='co2_rate'):
     """
     This function calculates the total system co2 emissions for a given 
     set of technologies and their corresponding dispatch.
@@ -189,4 +190,44 @@ def total_cost(technology_list, solved_dispatch_model):
     total_cost = capital_cost + fixed_cost + variable_cost
 
     return total_cost
+
+
+def volatility(technology_list, 
+               solved_dispatch_model, 
+               m=3, 
+               tau=60, 
+               normalize=True):
+    """
+    This function calculates the volatility the electricity cost for
+    a dispatch model with weighted permutation entropy.
+
+    Parameters
+    ----------
+    technology_list : list of :class:`osier.Technology` objects
+        The list of technologies.
+    solved_dispatch_model : :class:`osier.DispatchModel`
+        A _solved_ dispatch model (i.e. with model results and objective
+        attributes).
+    m : int
+        The embedding dimension for the cost time series. Typically
+        determined using a false nearest neighbors algorithm. 
+        The default value is 3. 
+    tau : int
+        The time delay for the cost time series. Typically determined
+        by selecting the index of the first or second minimum of the
+        time series' delayed mutual information.
+
+    Returns
+    -------
+    wpe : float
+        The weighted permutation entropy of the cost time series.
+    """
+
+    cost_ts = solved_dispatch_model.results.Cost.values
+    wpe = weighted_permutation_entropy(cost_ts, 
+                                       order=m, 
+                                       delay=tau, 
+                                       normalize=normalize)
+
+    return wpe
 

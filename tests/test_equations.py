@@ -1,4 +1,4 @@
-from osier.equations import annualized_capital_cost, annualized_fixed_cost, total_cost, annual_co2
+from osier.equations import annualized_capital_cost, annualized_fixed_cost, total_cost, annual_emission
 from osier import Technology, DispatchModel
 import numpy as np
 import pytest
@@ -115,6 +115,6 @@ def test_annual_co2(technology_set_1, net_demand):
 
     expected = (model.results["Nuclear"].sum() * nuclear.co2_rate) \
                 + (model.results["NaturalGas"].sum() * natural_gas.co2_rate)
-    actual = annual_co2(technology_set_1, model)
+    actual = annual_emission(technology_set_1, model, emission='co2_rate')
 
     assert expected == pytest.approx(actual)
