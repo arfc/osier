@@ -1,17 +1,28 @@
 import unyt
-from unyt import MW, hr
-from unyt import unyt_quantity
+from unyt import MW, hr, kg, km
+from unyt import unyt_quantity, unyt_array
 from unyt.exceptions import UnitParseError
 
 import numpy as np
+import pandas as pd
 
 
 _dim_opts = {'time': hr,
              'power': MW,
              'energy': MW * hr,
+             'mass': kg,
+             'length': km,
+             'area': km**2,
+             'volume': km**3,
              'specific_time': hr**-1,
+             'specific_mass': kg**-1,
              'specific_power': MW**-1,
-             'specific_energy': (MW * hr)**-1}
+             'specific_energy': (MW * hr)**-1,
+             'mass_per_energy':kg*(MW*hr)**-1,
+             'power_per_area': MW*km**-2}
+
+_constant_types = (int, float, unyt_quantity)
+_array_types = (unyt.unyt_array, pd.core.series.Series, np.ndarray, list)
 
 
 def _validate_unit(value, dimension):
@@ -26,7 +37,7 @@ def _validate_unit(value, dimension):
         The value being tested. Should be a unit symbol.
     dimension : string
         The expected dimensions of `value`.
-        Currently accepts: ['time', 'energy', 'power', 'specific_power', 'specific_energy'].
+        Accepted values listed in `_dim_opts`.
 
     Returns
     -------
@@ -73,7 +84,7 @@ def _validate_quantity(value, dimension):
 
     dimension : string
         The expected dimensions of `value`.
-        Currently accepts: ['time', 'energy', 'power', 'specific_power', 'specific_energy'].
+        Accepted values listed in `_dim_opts`.
 
     Returns
     -------
@@ -93,6 +104,19 @@ def _validate_quantity(value, dimension):
         except AssertionError:
             raise TypeError(f"{value} has dimensions {value.units.dimensions}. "
                             f"Expected {exp_dim.dimensions}")
+    elif isinstance(value, unyt_array):
+        try:
+            assert value.units.same_dimensions_as(exp_dim)
+            valid_quantity = value
+        except AssertionError:
+            raise TypeError(f"{value} has dimensions {value.units.dimensions}. "
+                            f"Expected {exp_dim.dimensions}")
+    elif isinstance(value, np.ndarray):
+        valid_quantity = value * exp_dim
+    elif isinstance(value, pd.core.series.Series):
+        valid_quantity = value.values * exp_dim
+    elif isinstance(value, list):
+        valid_quantity = np.array(value) * exp_dim
     elif isinstance(value, float):
         valid_quantity = value * exp_dim
     elif isinstance(value, int):
@@ -147,11 +171,13 @@ class Technology(object):
     om_cost_fixed : float or :class:`unyt.array.unyt_quantity`
         Specifies the fixed operating costs.
         If float, the default unit is $/MW.
-    om_cost_variable : float or :class:`unyt.array.unyt_quantity`
-        Specifies the variable operating costs.
+    om_cost_variable : float, :class:`unyt.array.unyt_quantity`, or array-like
+        Specifies the variable operating costs. Users may pass timeseries data.
+        However, :class:`pandas.DataFrame` is not supported by this feature.
         If float, the default unit is $/MWh.
-    fuel_cost : float or :class:`unyt.array.unyt_quantity`
-        Specifies the fuel costs.
+    fuel_cost : float, :class:`unyt.array.unyt_quantity`, or array-like
+        Specifies the fuel costs. Users may pass timeseries data.
+        However, :class:`pandas.DataFrame` is not supported by this feature.
         If float, the default unit is $/MWh.
     fuel_type : str
         Specifies the type of fuel consumed by the technology.
@@ -162,6 +188,10 @@ class Technology(object):
         Specifies the 'usable' fraction of a technology's capacity.
         Default is 1.0, i.e. all of the technology's capacity is
         usable all of the time.
+    co2_rate : float or :class:`unyt.array.unyt_quantity`
+        Specifies the rate at carbon is emitted. May be either lifecycle
+        emissions or from direct use. However, consistency between 
+        technologies is incumbent on the user.
     efficiency : float
         The technology's energy conversion efficiency expressed as
         a fraction. Default is 1.0.
@@ -173,6 +203,9 @@ class Technology(object):
     default_time_units : str or :class:`unyt.unit_object.Unit`
         An optional parameter, specifies the units
         for time. Default is hours [hr].
+    default_mass_units : str or :class:`unyt.unit_object.Unit`
+        An optional parameter, specifies the units
+        for mass. Default is hours [kg].
     default_energy_units : str or :class:`unyt.unit_object.Unit`
         An optional parameter, specifies the units
         for energy. Default is megawatt-hours [MWh]
@@ -214,11 +247,13 @@ class Technology(object):
                  fuel_type=None,
                  capacity=0.0,
                  capacity_factor=1.0,
+                 co2_rate=0.0,
                  efficiency=1.0,
                  lifetime=25.0,
                  default_power_units=MW,
                  default_time_units=hr,
-                 default_energy_units=None) -> None:
+                 default_energy_units=None,
+                 default_mass_units=kg) -> None:
 
         self.technology_name = technology_name
         self.technology_type = technology_type
@@ -231,6 +266,7 @@ class Technology(object):
         self.unit_power = default_power_units
         self.unit_time = default_time_units
         self.unit_energy = default_energy_units
+        self.unit_mass = default_mass_units
 
         self.capacity = capacity
         self.capacity_factor = capacity_factor
@@ -239,6 +275,7 @@ class Technology(object):
         self.om_cost_fixed = om_cost_fixed
         self.om_cost_variable = om_cost_variable
         self.fuel_cost = fuel_cost
+        self.co2_rate = co2_rate
 
     def __repr__(self) -> str:
         return (f"{self.technology_name}: {self.capacity}")
@@ -266,6 +303,14 @@ class Technology(object):
     @unit_time.setter
     def unit_time(self, value):
         self._unit_time = _validate_unit(value, dimension="time")
+
+    @property
+    def unit_mass(self):
+        return self._unit_mass
+
+    @unit_mass.setter
+    def unit_mass(self, value):
+        self._unit_mass = _validate_unit(value, dimension="mass")
 
     @property
     def unit_energy(self):
@@ -302,7 +347,13 @@ class Technology(object):
 
     @property
     def om_cost_variable(self):
-        return self._om_cost_variable.to(self.unit_energy**-1)
+        if isinstance(self._om_cost_variable, _constant_types):
+            return self._om_cost_variable.to(self.unit_energy**-1)
+        elif isinstance(self._om_cost_variable, _array_types):
+            if isinstance(self._om_cost_variable, unyt.unyt_array):
+                return self._om_cost_variable.to(self.unit_energy**-1)
+            else:
+                return np.array(self._om_cost_variable) * (self.unit_energy**-1)
 
     @om_cost_variable.setter
     def om_cost_variable(self, value):
@@ -311,11 +362,25 @@ class Technology(object):
 
     @property
     def fuel_cost(self):
-        return self._fuel_cost.to(self.unit_energy**-1)
+        if isinstance(self._fuel_cost, _constant_types):
+            return self._fuel_cost.to(self.unit_energy**-1)
+        elif isinstance(self._fuel_cost, _array_types):
+            if isinstance(self._fuel_cost, unyt.unyt_array):
+                return self._fuel_cost.to(self.unit_energy**-1)
+            else:
+                return np.array(self._fuel_cost) * (self.unit_energy**-1)
 
     @fuel_cost.setter
     def fuel_cost(self, value):
         self._fuel_cost = _validate_quantity(value, dimension="specific_energy")
+
+    @property
+    def co2_rate(self):
+        return self._co2_rate.to(self.unit_mass*self.unit_energy**-1)
+
+    @co2_rate.setter
+    def co2_rate(self, value):
+        self._co2_rate = _validate_quantity(value, dimension="mass_per_energy")
 
     @property
     def total_capital_cost(self):
@@ -327,11 +392,36 @@ class Technology(object):
 
     @property
     def variable_cost(self):
-        return self.fuel_cost + self.om_cost_variable
+        """
+        Combines the fuel and variable operating costs into a total variable cost
+        associated with technology usage. 
+        
+        Notes
+        -----
+        This function will attempt to merge the two values, even if they have 
+        different sizes and types. Therefore it is recommended that users
+        pass values of the same size and type to prevent unexpected behavior.
+        """
+        if (isinstance(self.fuel_cost, _constant_types) and isinstance(self.om_cost_variable, _constant_types)):
+            return self.fuel_cost + self.om_cost_variable
+        elif (isinstance(self.fuel_cost, _array_types) and isinstance(self.om_cost_variable, _constant_types)):
+            return self.fuel_cost + np.ones(len(self.fuel_cost)) * self.om_cost_variable
+        elif (isinstance(self.fuel_cost, _constant_types) and isinstance(self.om_cost_variable, _array_types)):
+            return self.fuel_cost * np.ones(len(self.om_cost_variable)) + self.om_cost_variable
+        elif (isinstance(self.fuel_cost, _constant_types) and isinstance(self.om_cost_variable, _array_types)):
+            return self.fuel_cost * np.ones(len(self.om_cost_variable)) + self.om_cost_variable
+        elif (isinstance(self.fuel_cost, _array_types) and isinstance(self.om_cost_variable, _array_types)):
+            min_len = min(len(self.fuel_cost), len(self.om_cost_variable))
+            return self.fuel_cost[:min_len] + self.om_cost_variable[:min_len]
+        else:
+            raise TypeError(f"Fuel cost has type <{type(self.fuel_cost)}>.\n"+
+                            f"OM variable cost has type <{type(self.om_cost_variable)}>.\n"
+                            "One or both of these types are unknown.")
+        
 
     def variable_cost_ts(self, size):
         """
-        Returns the total variable cost as a time series of
+        Returns the total variable cost as an array of
         length :attr:`size`.
 
         .. warning::
