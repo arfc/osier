@@ -294,6 +294,7 @@ class Technology(object):
 
     @unit_power.setter
     def unit_power(self, value):
+        # breakpoint()
         self._unit_power = _validate_unit(value, dimension="power")
 
     @property
@@ -425,9 +426,10 @@ class Technology(object):
         length :attr:`size`.
 
         .. warning::
-            The current implementation assumes a single constant cost
-            for the variable cost. In the future, users will be able to
-            pass their own time series data.
+            The current implementation will only select the 
+            first N values, where N = `size`. It is recommended
+            that users only pass the subset of data they wish
+            to use.
 
         Parameters
         ----------
@@ -440,9 +442,17 @@ class Technology(object):
         var_cost_ts : :class:`numpy.ndarray`
             The variable cost time series.
         """
-        var_cost_ts = np.ones(size) * self.variable_cost
-        return var_cost_ts
+        if isinstance(self.variable_cost, _constant_types):
+            var_cost_ts = np.ones(size) * self.variable_cost
+            return var_cost_ts
 
+        elif isinstance(self.variable_cost, _array_types):
+            try:
+                var_cost_ts = self.variable_cost[:size]
+                assert len(var_cost_ts) == size
+            except AssertionError as e:
+                raise AssertionError(f"Variable cost data too short ({len(var_cost_ts)} < {size})")
+            return var_cost_ts
 
 class RampingTechnology(Technology):
     """
@@ -488,11 +498,13 @@ class RampingTechnology(Technology):
             fuel_type=None,
             capacity=0,
             capacity_factor=1.0,
+            co2_rate=0.0,
             efficiency=1.0,
             lifetime=25.0,
             default_power_units=MW,
             default_time_units=hr,
             default_energy_units=None,
+            default_mass_units = kg,
             ramp_up_rate=1.0 * hr**-1,
             ramp_down_rate=1.0 * hr**-1) -> None:
         super().__init__(
@@ -508,11 +520,13 @@ class RampingTechnology(Technology):
             fuel_type,
             capacity,
             capacity_factor,
+            co2_rate,
             efficiency,
             lifetime,
             default_power_units,
             default_time_units,
-            default_energy_units)
+            default_energy_units,
+            default_mass_units,)
 
         self.ramp_up_rate = _validate_quantity(ramp_up_rate,
                                                dimension='specific_time')
@@ -563,11 +577,13 @@ class ThermalTechnology(RampingTechnology):
             fuel_type=None,
             capacity=0,
             capacity_factor=1.0,
+            co2_rate=0.0,
             efficiency=1.0,
             lifetime=25.0,
             default_power_units=MW,
             default_time_units=hr,
             default_energy_units=None,
+            default_mass_units = kg,
             heat_rate=None,
             ramp_up_rate=1.0 * hr**-1,
             ramp_down_rate=1.0 * hr**-1) -> None:
@@ -584,11 +600,13 @@ class ThermalTechnology(RampingTechnology):
             fuel_type,
             capacity,
             capacity_factor,
+            co2_rate,
             efficiency,
             lifetime,
             default_power_units,
             default_time_units,
             default_energy_units,
+            default_mass_units,
             ramp_up_rate,
             ramp_down_rate)
 
@@ -625,11 +643,13 @@ class StorageTechnology(Technology):
             efficiency=1.0,
             lifetime=25.0,
             capacity_factor=1.0,
+            co2_rate=0.0,
             storage_duration=0,
             initial_storage=0,
             default_power_units=MW,
             default_time_units=hr,
-            default_energy_units=None) -> None:
+            default_energy_units=None,
+            default_mass_units=kg,) -> None:
         super().__init__(
             technology_name,
             technology_type,
@@ -643,11 +663,13 @@ class StorageTechnology(Technology):
             fuel_type,
             capacity,
             capacity_factor,
+            co2_rate,
             efficiency,
             lifetime,
             default_power_units,
             default_time_units,
-            default_energy_units)
+            default_energy_units,
+            default_mass_units,)
 
         self.storage_duration = storage_duration
         self.initial_storage = initial_storage
