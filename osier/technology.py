@@ -19,7 +19,7 @@ _dim_opts = {'time': hr,
              'specific_power': MW**-1,
              'specific_energy': (MW * hr)**-1,
              'mass_per_energy':kg*(MW*hr)**-1,
-             'power_per_area': MW*km**-2}
+             'area_per_power': km*MW**-2}
 
 _constant_types = (int, float, unyt_quantity)
 _array_types = (unyt.unyt_array, pd.core.series.Series, np.ndarray, list)
@@ -193,6 +193,10 @@ class Technology(object):
         Specifies the rate at carbon is emitted. May be either lifecycle
         emissions or from direct use. However, consistency between 
         technologies is incumbent on the user.
+    land_intensity : float or :class:`unyt.array.unyt_quantity`
+        The amount of land required per unit capacity. May be either lifecycle
+        land use or from direct use. However, consistency between 
+        technologies is incumbent on the user.
     efficiency : float
         The technology's energy conversion efficiency expressed as
         a fraction. Default is 1.0.
@@ -249,6 +253,7 @@ class Technology(object):
                  capacity=0.0,
                  capacity_factor=1.0,
                  co2_rate=0.0,
+                 land_intensity=0.0,
                  efficiency=1.0,
                  lifetime=25.0,
                  default_power_units=MW,
@@ -281,6 +286,7 @@ class Technology(object):
         self.om_cost_variable = om_cost_variable
         self.fuel_cost = fuel_cost
         self.co2_rate = co2_rate
+        self.land_intensity = land_intensity
 
     def __repr__(self) -> str:
         return (f"{self.technology_name}: {self.capacity}")
@@ -299,7 +305,6 @@ class Technology(object):
 
     @unit_power.setter
     def unit_power(self, value):
-        # breakpoint()
         self._unit_power = _validate_unit(value, dimension="power")
 
     @property
@@ -413,6 +418,14 @@ class Technology(object):
         self._co2_rate = _validate_quantity(value, dimension="mass_per_energy")
 
     @property
+    def land_intensity(self):
+        return self._land_intensity.to(self.unit_area*self.unit_power**-1)
+
+    @land_intensity.setter
+    def land_intensity(self, value):
+        self._land_intensity = _validate_quantity(value, dimension="area_per_power")
+
+    @property
     def total_capital_cost(self):
         return self.capacity * self.capital_cost
 
@@ -515,56 +528,15 @@ class RampingTechnology(Technology):
 
     def __init__(
             self,
-            technology_name,
-            technology_type='production',
-            technology_category='ramping',
-            dispatchable=True,
-            renewable=False,
-            capital_cost=0,
-            om_cost_fixed=0,
-            om_cost_variable=0,
-            fuel_cost=0,
-            fuel_type=None,
-            capacity=0,
-            capacity_factor=1.0,
-            co2_rate=0.0,
-            efficiency=1.0,
-            lifetime=25.0,
-            default_power_units=MW,
-            default_time_units=hr,
-            default_energy_units=None,            
-            default_length_units = km,
-            default_volume_units = m**3,
-            default_mass_units = kg,
             ramp_up_rate=1.0 * hr**-1,
-            ramp_down_rate=1.0 * hr**-1) -> None:
-        super().__init__(
-            technology_name,
-            technology_type,
-            technology_category,
-            dispatchable,
-            renewable,
-            capital_cost,
-            om_cost_fixed,
-            om_cost_variable,
-            fuel_cost,
-            fuel_type,
-            capacity,
-            capacity_factor,
-            co2_rate,
-            efficiency,
-            lifetime,
-            default_power_units,
-            default_time_units,
-            default_energy_units,
-            default_length_units,
-            default_volume_units,
-            default_mass_units,)
-
+            ramp_down_rate=1.0 * hr**-1,
+            *args,
+            **kwargs) -> None:
         self.ramp_up_rate = _validate_quantity(ramp_up_rate,
                                                dimension='specific_time')
         self.ramp_down_rate = _validate_quantity(ramp_down_rate,
                                                  dimension='specific_time')
+        super().__init__(*args, **kwargs)
 
     @property
     def ramp_up(self):
@@ -598,54 +570,10 @@ class ThermalTechnology(RampingTechnology):
 
     def __init__(
             self,
-            technology_name,
-            technology_type='production',
-            technology_category='thermal',
-            dispatchable=True,
-            renewable=False,
-            capital_cost=0,
-            om_cost_fixed=0,
-            om_cost_variable=0,
-            fuel_cost=0,
-            fuel_type=None,
-            capacity=0,
-            capacity_factor=1.0,
-            co2_rate=0.0,
-            efficiency=1.0,
-            lifetime=25.0,
-            default_power_units=MW,
-            default_time_units=hr,
-            default_energy_units=None,
-            default_length_units=km,
-            default_volume_units=m**3,
-            default_mass_units = kg,
             heat_rate=None,
-            ramp_up_rate=1.0 * hr**-1,
-            ramp_down_rate=1.0 * hr**-1) -> None:
-        super().__init__(
-            technology_name,
-            technology_type,
-            technology_category,
-            dispatchable,
-            renewable,
-            capital_cost,
-            om_cost_fixed,
-            om_cost_variable,
-            fuel_cost,
-            fuel_type,
-            capacity,
-            capacity_factor,
-            co2_rate,
-            efficiency,
-            lifetime,
-            default_power_units,
-            default_time_units,
-            default_energy_units,
-            default_length_units,
-            default_volume_units,
-            default_mass_units,
-            ramp_up_rate,
-            ramp_down_rate)
+            *args,
+            **kwargs) -> None:
+        super().__init__(*args, **kwargs)
 
         self.heat_rate = heat_rate
 
@@ -666,51 +594,11 @@ class StorageTechnology(Technology):
 
     def __init__(
             self,
-            technology_name,
-            technology_type='storage',
-            technology_category='base',
-            dispatchable=True,
-            renewable=False,
-            capital_cost=0,
-            om_cost_fixed=0,
-            om_cost_variable=0,
-            fuel_cost=0,
-            fuel_type=None,
-            capacity=0,
-            efficiency=1.0,
-            lifetime=25.0,
-            capacity_factor=1.0,
-            co2_rate=0.0,
             storage_duration=0,
             initial_storage=0,
-            default_power_units=MW,
-            default_time_units=hr,
-            default_energy_units=None,
-            default_length_units=km,
-            default_volume_units=m**3,
-            default_mass_units=kg,) -> None:
-        super().__init__(
-            technology_name,
-            technology_type,
-            technology_category,
-            dispatchable,
-            renewable,
-            capital_cost,
-            om_cost_fixed,
-            om_cost_variable,
-            fuel_cost,
-            fuel_type,
-            capacity,
-            capacity_factor,
-            co2_rate,
-            efficiency,
-            lifetime,
-            default_power_units,
-            default_time_units,
-            default_energy_units,
-            default_length_units,
-            default_volume_units,
-            default_mass_units,)
+            *args,
+            **kwargs) -> None:
+        super().__init__(*args, **kwargs)
 
         self.storage_duration = storage_duration
         self.initial_storage = initial_storage
