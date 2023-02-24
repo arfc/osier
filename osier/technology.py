@@ -528,6 +528,8 @@ class RampingTechnology(Technology):
 
     def __init__(
             self,
+            technology_type='production',
+            technology_category='ramping',
             ramp_up_rate=1.0 * hr**-1,
             ramp_down_rate=1.0 * hr**-1,
             *args,
@@ -536,7 +538,9 @@ class RampingTechnology(Technology):
                                                dimension='specific_time')
         self.ramp_down_rate = _validate_quantity(ramp_down_rate,
                                                  dimension='specific_time')
-        super().__init__(*args, **kwargs)
+        super().__init__(technology_type=technology_type,
+                         technology_category=technology_category,
+                         *args, **kwargs)
 
     @property
     def ramp_up(self):
@@ -571,9 +575,13 @@ class ThermalTechnology(RampingTechnology):
     def __init__(
             self,
             heat_rate=None,
+            technology_type='production',
+            technology_category='thermal',
             *args,
             **kwargs) -> None:
-        super().__init__(*args, **kwargs)
+        super().__init__(technology_type=technology_type,
+                         technology_category=technology_category,
+                         *args, **kwargs)
 
         self.heat_rate = heat_rate
 
@@ -594,11 +602,13 @@ class StorageTechnology(Technology):
 
     def __init__(
             self,
+            technology_type='storage',
             storage_duration=0,
             initial_storage=0,
             *args,
             **kwargs) -> None:
-        super().__init__(*args, **kwargs)
+        super().__init__(technology_type=technology_type,
+                         *args, **kwargs)
 
         self.storage_duration = storage_duration
         self.initial_storage = initial_storage
