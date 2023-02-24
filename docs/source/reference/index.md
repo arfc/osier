@@ -13,4 +13,7 @@
     osier.DispatchModel
     osier.CapacityExpansion
     osier.utils.synchronize_units
+    osier.equations.per_unit_energy
+    osier.equations.per_unit_capacity
+    osier.equations.volatility
 ```

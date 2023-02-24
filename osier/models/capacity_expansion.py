@@ -160,12 +160,14 @@ class CapacityExpansion(ElementwiseProblem):
 
             out_obj = []
             for obj_func in self.objectives:
-                out_obj.append(obj_func(self.technology_list, model))
+                out_obj.append(obj_func(technology_list=self.technology_list, 
+                                        solved_dispatch_model=model))
             
             if self.n_constr > 0:
                 out_constr = []
                 for constr_func, val in self.constraints.items():
-                    out_constr.append(constr_func(self.technology_list, model) - val)
+                    out_constr.append(constr_func(technology_list=self.technology_list, 
+                                                  solved_dispatch_model=model) - val)
 
         else:
             out_obj = np.ones(self.n_obj) * self.penalty

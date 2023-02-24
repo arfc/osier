@@ -84,6 +84,102 @@ def get_dispatchable_names(technology_list):
     return dispatchable_names
 
 
+def per_unit_capacity(technology_list, 
+                      attribute,
+                      solved_dispatch_model=None):
+    """
+    This function calculates a general objective for a given 
+    set of technologies and their corresponding dispatch on a 
+    per-unit-capacity basis.
+
+    .. warning::
+        User-defined attributes are not validated by :class:`osier`.
+        Verify the units are accurate and uniform across all
+        technologies before running a simulation with this function.
+
+    Parameters
+    ----------
+    technology_list : list of :class:`osier.Technology` objects
+        The list of technologies.
+    solved_dispatch_model : :class:`osier.DispatchModel`
+        A _solved_ dispatch model (i.e. with model results and objective
+        attributes).
+    attribute : string
+        The technology attribute to measure.
+
+    Returns
+    -------
+    objective_value : float
+        The objective value for a particular energy mix.
+
+    Examples
+    --------
+    The simplest way to employ this function is with `functools.partial`.
+
+    >>> import functools
+    >>> from osier import per_unit_capacity
+    >>> objectives_list = [functools.partial(per_unit_capacity, attribute='land_use'),
+    ...                    functools.partial(per_unit_capacity, attribute='employment')]
+
+    """
+    objective_value = np.array([getattr(t, attribute) * t.capacity
+                                for t in technology_list
+                                if hasattr(t, attribute)]).sum()
+
+    return objective_value
+
+
+def per_unit_energy(technology_list, attribute, solved_dispatch_model):
+    """
+    This function calculates a general objective for a given 
+    set of technologies and their corresponding dispatch on a 
+    per-unit-energy basis.
+
+    .. warning::
+        User-defined attributes are not validated by :class:`osier`.
+        Verify the units are accurate and uniform across all
+        technologies before running a simulation with this function.
+
+    Parameters
+    ----------
+    technology_list : list of :class:`osier.Technology` objects
+        The list of technologies.
+    solved_dispatch_model : :class:`osier.DispatchModel`
+        A _solved_ dispatch model (i.e. with model results and objective
+        attributes).
+    attribute : string
+        The technology attribute to measure.
+
+    Returns
+    -------
+    objective_value : float
+        The objective value for a particular energy mix.
+
+    Examples
+    --------
+    The simplest way to employ this function is with `functools.partial`.
+
+    >>> import functools
+    >>> from osier import per_unit_capacity
+    >>> objectives_list = [functools.partial(per_unit_energy, attribute='water_use'),
+    ...                    functools.partial(per_unit_energy, attribute='death_rate')]
+
+    """
+    
+    dispatch_techs = get_dispatchable_techs(technology_list)
+    non_dispatch_techs = get_nondispatchable_techs(technology_list)
+    column_names = get_tech_names(technology_list)
+    dispatch_results = solved_dispatch_model.results
+
+    attributes = np.array([getattr(t, attribute) 
+                         for t in dispatch_techs+non_dispatch_techs 
+                         if hasattr(t,attribute)])
+
+    objective_value = np.dot(attributes, dispatch_results[column_names].values.T).sum()
+
+    return objective_value
+
+
 def annualized_capital_cost(technology_list, solved_dispatch_model=None):
     """
     This function calculates the annual capital cost for a given 
@@ -221,6 +317,14 @@ def volatility(technology_list,
     -------
     wpe : float
         The weighted permutation entropy of the cost time series.
+
+    Notes
+    -----
+    Users can modify the parameters for this function using :attr:`functools.partial`.
+
+    >>> import functools
+    >>> from osier import volatility
+    >>> objectives_list = [functools.partial(volatility, m=4, tau=100)]
     """
 
     cost_ts = solved_dispatch_model.results.Cost.values
