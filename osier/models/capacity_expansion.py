@@ -108,7 +108,6 @@ class CapacityExpansion(ElementwiseProblem):
         self.objectives = objectives
         self.constraints = constraints
         self.penalty = penalty
-        self.power_units = power_units
         self.curtailment = curtailment
         self.allow_blackout = allow_blackout
 
