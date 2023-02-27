@@ -1,17 +1,28 @@
 import unyt
-from unyt import MW, hr
-from unyt import unyt_quantity
+from unyt import MW, hr, kg, km, m
+from unyt import unyt_quantity, unyt_array
 from unyt.exceptions import UnitParseError
 
 import numpy as np
+import pandas as pd
 
 
 _dim_opts = {'time': hr,
              'power': MW,
              'energy': MW * hr,
+             'mass': kg,
+             'length': km,
+             'area': km**2,
+             'volume': m**3,
              'specific_time': hr**-1,
+             'specific_mass': kg**-1,
              'specific_power': MW**-1,
-             'specific_energy': (MW * hr)**-1}
+             'specific_energy': (MW * hr)**-1,
+             'mass_per_energy':kg*(MW*hr)**-1,
+             'area_per_power': km*MW**-2}
+
+_constant_types = (int, float, unyt_quantity)
+_array_types = (unyt.unyt_array, pd.core.series.Series, np.ndarray, list)
 
 
 def _validate_unit(value, dimension):
@@ -26,7 +37,7 @@ def _validate_unit(value, dimension):
         The value being tested. Should be a unit symbol.
     dimension : string
         The expected dimensions of `value`.
-        Currently accepts: ['time', 'energy', 'power', 'specific_power', 'specific_energy'].
+        Accepted values listed in `_dim_opts`.
 
     Returns
     -------
@@ -73,7 +84,7 @@ def _validate_quantity(value, dimension):
 
     dimension : string
         The expected dimensions of `value`.
-        Currently accepts: ['time', 'energy', 'power', 'specific_power', 'specific_energy'].
+        Accepted values listed in `_dim_opts`.
 
     Returns
     -------
@@ -93,6 +104,19 @@ def _validate_quantity(value, dimension):
         except AssertionError:
             raise TypeError(f"{value} has dimensions {value.units.dimensions}. "
                             f"Expected {exp_dim.dimensions}")
+    elif isinstance(value, unyt_array):
+        try:
+            assert value.units.same_dimensions_as(exp_dim)
+            valid_quantity = value
+        except AssertionError:
+            raise TypeError(f"{value} has dimensions {value.units.dimensions}. "
+                            f"Expected {exp_dim.dimensions}")
+    elif isinstance(value, np.ndarray):
+        valid_quantity = value * exp_dim
+    elif isinstance(value, pd.core.series.Series):
+        valid_quantity = value.values * exp_dim
+    elif isinstance(value, list):
+        valid_quantity = np.array(value) * exp_dim
     elif isinstance(value, float):
         valid_quantity = value * exp_dim
     elif isinstance(value, int):
@@ -117,7 +141,8 @@ def _validate_quantity(value, dimension):
 class Technology(object):
     """
     The :class:`Technology` base class contains the minimum required
-    data to solve an energy systems problem. All other technologies in
+    data to solve an energy systems problem. Many optional data are
+    included here as well. All other technologies in
     :mod:`osier` inherit from this class.
 
     Parameters
@@ -147,11 +172,13 @@ class Technology(object):
     om_cost_fixed : float or :class:`unyt.array.unyt_quantity`
         Specifies the fixed operating costs.
         If float, the default unit is $/MW.
-    om_cost_variable : float or :class:`unyt.array.unyt_quantity`
-        Specifies the variable operating costs.
+    om_cost_variable : float, :class:`unyt.array.unyt_quantity`, or array-like
+        Specifies the variable operating costs. Users may pass timeseries data.
+        However, :class:`pandas.DataFrame` is not supported by this feature.
         If float, the default unit is $/MWh.
-    fuel_cost : float or :class:`unyt.array.unyt_quantity`
-        Specifies the fuel costs.
+    fuel_cost : float, :class:`unyt.array.unyt_quantity`, or array-like
+        Specifies the fuel costs. Users may pass timeseries data.
+        However, :class:`pandas.DataFrame` is not supported by this feature.
         If float, the default unit is $/MWh.
     fuel_type : str
         Specifies the type of fuel consumed by the technology.
@@ -162,6 +189,14 @@ class Technology(object):
         Specifies the 'usable' fraction of a technology's capacity.
         Default is 1.0, i.e. all of the technology's capacity is
         usable all of the time.
+    co2_rate : float or :class:`unyt.array.unyt_quantity`
+        Specifies the rate at carbon is emitted. May be either lifecycle
+        emissions or from direct use. However, consistency between 
+        technologies is incumbent on the user.
+    land_intensity : float or :class:`unyt.array.unyt_quantity`
+        The amount of land required per unit capacity. May be either lifecycle
+        land use or from direct use. However, consistency between 
+        technologies is incumbent on the user.
     efficiency : float
         The technology's energy conversion efficiency expressed as
         a fraction. Default is 1.0.
@@ -173,6 +208,9 @@ class Technology(object):
     default_time_units : str or :class:`unyt.unit_object.Unit`
         An optional parameter, specifies the units
         for time. Default is hours [hr].
+    default_mass_units : str or :class:`unyt.unit_object.Unit`
+        An optional parameter, specifies the units
+        for mass. Default is hours [kg].
     default_energy_units : str or :class:`unyt.unit_object.Unit`
         An optional parameter, specifies the units
         for energy. Default is megawatt-hours [MWh]
@@ -214,11 +252,16 @@ class Technology(object):
                  fuel_type=None,
                  capacity=0.0,
                  capacity_factor=1.0,
+                 co2_rate=0.0,
+                 land_intensity=0.0,
                  efficiency=1.0,
                  lifetime=25.0,
                  default_power_units=MW,
                  default_time_units=hr,
-                 default_energy_units=None) -> None:
+                 default_energy_units=None,
+                 default_length_units=km,
+                 default_volume_units=m**3,
+                 default_mass_units=kg) -> None:
 
         self.technology_name = technology_name
         self.technology_type = technology_type
@@ -231,6 +274,9 @@ class Technology(object):
         self.unit_power = default_power_units
         self.unit_time = default_time_units
         self.unit_energy = default_energy_units
+        self.unit_length = default_length_units
+        self.unit_volume = default_volume_units
+        self.unit_mass = default_mass_units
 
         self.capacity = capacity
         self.capacity_factor = capacity_factor
@@ -239,6 +285,8 @@ class Technology(object):
         self.om_cost_fixed = om_cost_fixed
         self.om_cost_variable = om_cost_variable
         self.fuel_cost = fuel_cost
+        self.co2_rate = co2_rate
+        self.land_intensity = land_intensity
 
     def __repr__(self) -> str:
         return (f"{self.technology_name}: {self.capacity}")
@@ -266,6 +314,38 @@ class Technology(object):
     @unit_time.setter
     def unit_time(self, value):
         self._unit_time = _validate_unit(value, dimension="time")
+
+    @property
+    def unit_mass(self):
+        return self._unit_mass
+
+    @unit_mass.setter
+    def unit_mass(self, value):
+        self._unit_mass = _validate_unit(value, dimension="mass")
+
+    @property
+    def unit_length(self):
+        return self._unit_length
+
+    @unit_length.setter
+    def unit_length(self, value):
+        self._unit_length = _validate_unit(value, dimension="length")
+
+    @property
+    def unit_area(self):
+        return self._unit_length**2
+
+    @unit_area.setter
+    def unit_area(self, value):
+        self._unit_area = self._unit_length**2
+
+    @property
+    def unit_volume(self):
+        return self._unit_volume
+
+    @unit_volume.setter
+    def unit_volume(self, value):
+        self._unit_volume = _validate_unit(value, dimension="volume")
 
     @property
     def unit_energy(self):
@@ -302,7 +382,13 @@ class Technology(object):
 
     @property
     def om_cost_variable(self):
-        return self._om_cost_variable.to(self.unit_energy**-1)
+        if isinstance(self._om_cost_variable, _constant_types):
+            return self._om_cost_variable.to(self.unit_energy**-1)
+        elif isinstance(self._om_cost_variable, _array_types):
+            if isinstance(self._om_cost_variable, unyt.unyt_array):
+                return self._om_cost_variable.to(self.unit_energy**-1)
+            else:
+                return np.array(self._om_cost_variable) * (self.unit_energy**-1)
 
     @om_cost_variable.setter
     def om_cost_variable(self, value):
@@ -311,11 +397,33 @@ class Technology(object):
 
     @property
     def fuel_cost(self):
-        return self._fuel_cost.to(self.unit_energy**-1)
+        if isinstance(self._fuel_cost, _constant_types):
+            return self._fuel_cost.to(self.unit_energy**-1)
+        elif isinstance(self._fuel_cost, _array_types):
+            if isinstance(self._fuel_cost, unyt.unyt_array):
+                return self._fuel_cost.to(self.unit_energy**-1)
+            else:
+                return np.array(self._fuel_cost) * (self.unit_energy**-1)
 
     @fuel_cost.setter
     def fuel_cost(self, value):
         self._fuel_cost = _validate_quantity(value, dimension="specific_energy")
+
+    @property
+    def co2_rate(self):
+        return self._co2_rate.to(self.unit_mass*self.unit_energy**-1)
+
+    @co2_rate.setter
+    def co2_rate(self, value):
+        self._co2_rate = _validate_quantity(value, dimension="mass_per_energy")
+
+    @property
+    def land_intensity(self):
+        return self._land_intensity.to(self.unit_area*self.unit_power**-1)
+
+    @land_intensity.setter
+    def land_intensity(self, value):
+        self._land_intensity = _validate_quantity(value, dimension="area_per_power")
 
     @property
     def total_capital_cost(self):
@@ -327,17 +435,43 @@ class Technology(object):
 
     @property
     def variable_cost(self):
-        return self.fuel_cost + self.om_cost_variable
+        """
+        Combines the fuel and variable operating costs into a total variable cost
+        associated with technology usage. 
+        
+        Notes
+        -----
+        This function will attempt to merge the two values, even if they have 
+        different sizes and types. Therefore it is recommended that users
+        pass values of the same size and type to prevent unexpected behavior.
+        """
+        if (isinstance(self.fuel_cost, _constant_types) and isinstance(self.om_cost_variable, _constant_types)):
+            return self.fuel_cost + self.om_cost_variable
+        elif (isinstance(self.fuel_cost, _array_types) and isinstance(self.om_cost_variable, _constant_types)):
+            return self.fuel_cost + np.ones(len(self.fuel_cost)) * self.om_cost_variable
+        elif (isinstance(self.fuel_cost, _constant_types) and isinstance(self.om_cost_variable, _array_types)):
+            return self.fuel_cost * np.ones(len(self.om_cost_variable)) + self.om_cost_variable
+        elif (isinstance(self.fuel_cost, _constant_types) and isinstance(self.om_cost_variable, _array_types)):
+            return self.fuel_cost * np.ones(len(self.om_cost_variable)) + self.om_cost_variable
+        elif (isinstance(self.fuel_cost, _array_types) and isinstance(self.om_cost_variable, _array_types)):
+            min_len = min(len(self.fuel_cost), len(self.om_cost_variable))
+            return self.fuel_cost[:min_len] + self.om_cost_variable[:min_len]
+        else:
+            raise TypeError(f"Fuel cost has type <{type(self.fuel_cost)}>.\n"+
+                            f"OM variable cost has type <{type(self.om_cost_variable)}>.\n"
+                            "One or both of these types are unknown.")
+        
 
     def variable_cost_ts(self, size):
         """
-        Returns the total variable cost as a time series of
+        Returns the total variable cost as an array of
         length :attr:`size`.
 
         .. warning::
-            The current implementation assumes a single constant cost
-            for the variable cost. In the future, users will be able to
-            pass their own time series data.
+            The current implementation will only select the 
+            first N values, where N = `size`. It is recommended
+            that users only pass the subset of data they wish
+            to use.
 
         Parameters
         ----------
@@ -350,9 +484,17 @@ class Technology(object):
         var_cost_ts : :class:`numpy.ndarray`
             The variable cost time series.
         """
-        var_cost_ts = np.ones(size) * self.variable_cost
-        return var_cost_ts
+        if isinstance(self.variable_cost, _constant_types):
+            var_cost_ts = np.ones(size) * self.variable_cost
+            return var_cost_ts
 
+        elif isinstance(self.variable_cost, _array_types):
+            try:
+                var_cost_ts = self.variable_cost[:size]
+                assert len(var_cost_ts) == size
+            except AssertionError as e:
+                raise AssertionError(f"Variable cost data too short ({len(var_cost_ts)} < {size})")
+            return var_cost_ts
 
 class RampingTechnology(Technology):
     """
@@ -386,48 +528,19 @@ class RampingTechnology(Technology):
 
     def __init__(
             self,
-            technology_name,
             technology_type='production',
             technology_category='ramping',
-            dispatchable=True,
-            renewable=False,
-            capital_cost=0,
-            om_cost_fixed=0,
-            om_cost_variable=0,
-            fuel_cost=0,
-            fuel_type=None,
-            capacity=0,
-            capacity_factor=1.0,
-            efficiency=1.0,
-            lifetime=25.0,
-            default_power_units=MW,
-            default_time_units=hr,
-            default_energy_units=None,
             ramp_up_rate=1.0 * hr**-1,
-            ramp_down_rate=1.0 * hr**-1) -> None:
-        super().__init__(
-            technology_name,
-            technology_type,
-            technology_category,
-            dispatchable,
-            renewable,
-            capital_cost,
-            om_cost_fixed,
-            om_cost_variable,
-            fuel_cost,
-            fuel_type,
-            capacity,
-            capacity_factor,
-            efficiency,
-            lifetime,
-            default_power_units,
-            default_time_units,
-            default_energy_units)
-
+            ramp_down_rate=1.0 * hr**-1,
+            *args,
+            **kwargs) -> None:
         self.ramp_up_rate = _validate_quantity(ramp_up_rate,
                                                dimension='specific_time')
         self.ramp_down_rate = _validate_quantity(ramp_down_rate,
                                                  dimension='specific_time')
+        super().__init__(technology_type=technology_type,
+                         technology_category=technology_category,
+                         *args, **kwargs)
 
     @property
     def ramp_up(self):
@@ -461,46 +574,14 @@ class ThermalTechnology(RampingTechnology):
 
     def __init__(
             self,
-            technology_name,
+            heat_rate=None,
             technology_type='production',
             technology_category='thermal',
-            dispatchable=True,
-            renewable=False,
-            capital_cost=0,
-            om_cost_fixed=0,
-            om_cost_variable=0,
-            fuel_cost=0,
-            fuel_type=None,
-            capacity=0,
-            capacity_factor=1.0,
-            efficiency=1.0,
-            lifetime=25.0,
-            default_power_units=MW,
-            default_time_units=hr,
-            default_energy_units=None,
-            heat_rate=None,
-            ramp_up_rate=1.0 * hr**-1,
-            ramp_down_rate=1.0 * hr**-1) -> None:
-        super().__init__(
-            technology_name,
-            technology_type,
-            technology_category,
-            dispatchable,
-            renewable,
-            capital_cost,
-            om_cost_fixed,
-            om_cost_variable,
-            fuel_cost,
-            fuel_type,
-            capacity,
-            capacity_factor,
-            efficiency,
-            lifetime,
-            default_power_units,
-            default_time_units,
-            default_energy_units,
-            ramp_up_rate,
-            ramp_down_rate)
+            *args,
+            **kwargs) -> None:
+        super().__init__(technology_type=technology_type,
+                         technology_category=technology_category,
+                         *args, **kwargs)
 
         self.heat_rate = heat_rate
 
@@ -521,43 +602,13 @@ class StorageTechnology(Technology):
 
     def __init__(
             self,
-            technology_name,
             technology_type='storage',
-            technology_category='base',
-            dispatchable=True,
-            renewable=False,
-            capital_cost=0,
-            om_cost_fixed=0,
-            om_cost_variable=0,
-            fuel_cost=0,
-            fuel_type=None,
-            capacity=0,
-            efficiency=1.0,
-            lifetime=25.0,
-            capacity_factor=1.0,
             storage_duration=0,
             initial_storage=0,
-            default_power_units=MW,
-            default_time_units=hr,
-            default_energy_units=None) -> None:
-        super().__init__(
-            technology_name,
-            technology_type,
-            technology_category,
-            dispatchable,
-            renewable,
-            capital_cost,
-            om_cost_fixed,
-            om_cost_variable,
-            fuel_cost,
-            fuel_type,
-            capacity,
-            capacity_factor,
-            efficiency,
-            lifetime,
-            default_power_units,
-            default_time_units,
-            default_energy_units)
+            *args,
+            **kwargs) -> None:
+        super().__init__(technology_type=technology_type,
+                         *args, **kwargs)
 
         self.storage_duration = storage_duration
         self.initial_storage = initial_storage

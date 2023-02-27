@@ -40,8 +40,8 @@ def technology_set_1():
                              fuel_cost=20
                              )
 
-    nuclear.co2 = 1.2e-5
-    natural_gas.co2 = 4.9e-4
+    nuclear.co2_rate = 1.2e-5
+    natural_gas.co2_rate = 4.9e-4
 
     return [nuclear, natural_gas]
 
@@ -113,8 +113,8 @@ def test_annual_co2(technology_set_1, net_demand):
                           allow_blackout=False)
     model.solve()
 
-    expected = (model.results["Nuclear"].sum() * nuclear.co2) \
-                + (model.results["NaturalGas"].sum() * natural_gas.co2)
+    expected = (model.results["Nuclear"].sum() * nuclear.co2_rate) \
+                + (model.results["NaturalGas"].sum() * natural_gas.co2_rate)
     actual = annual_co2(technology_set_1, model)
 
     assert expected == pytest.approx(actual)

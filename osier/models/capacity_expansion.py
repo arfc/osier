@@ -3,6 +3,7 @@ import pandas as pd
 from copy import deepcopy
 import dill
 import unyt as u
+from unyt import unyt_array
 
 from osier import DispatchModel
 
@@ -58,10 +59,21 @@ class CapacityExpansion(ElementwiseProblem):
         The curve that defines the wind power provided at each time
         step. Automatically normalized with the infinity norm 
         (i.e. divided by the maximum value).
+    power_units : str, :class:`unyt.unit_object`
+        Specifies the units for the power demand. The default is :attr:`MW`.
+        Can be overridden by specifying a unit with the value.
     penalty : Optional, float
         The penalty for infeasible solutions. If a particular set
         produces an infeasible solution for the :class:`osier.DispatchModel`,
         the corresponding objectives take on this value.
+    curtailment : boolean
+        Indicates if the model should enable a curtailment option.
+    allow_blackout : boolean
+        If True, a "reliability" technology is added to the dispatch model that will
+        fulfill the mismatch in supply and demand. This reliability technology
+        has a variable cost of 1e4 $/MWh. The value must be higher than the 
+        variable cost of any other technology to prevent a pathological 
+        preference for blackouts. Default is True.
 
 
     Notes
@@ -83,20 +95,26 @@ class CapacityExpansion(ElementwiseProblem):
                 prm=0.0,
                 penalty=LARGE_NUMBER,
                 power_units=u.MW, 
-                allow_blackout=True,
+                curtailment=True,
+                allow_blackout=False,
                 **kwargs):
         self.technology_list = deepcopy(technology_list)
         self.demand = demand
         self.prm = prm
-        self.max_demand = demand.max()
+        self.max_demand = float(demand.max())*power_units
         self.avg_lifetime = 25
         self.capacity_requirement = self.max_demand * (1+self.prm)
 
         self.objectives = objectives
         self.constraints = constraints
         self.penalty = penalty
-        self.power_units = power_units
+        self.curtailment = curtailment
         self.allow_blackout = allow_blackout
+
+        if isinstance(demand, unyt_array):
+            self.power_units = demand.units
+        else:
+            self.power_units = power_units
 
         if solar is not None:
             self.solar_ts = solar / solar.max()
@@ -151,6 +169,7 @@ class CapacityExpansion(ElementwiseProblem):
         model = DispatchModel(technology_list=self.dispatchable_techs,
                               net_demand=net_demand,
                               power_units=self.power_units,
+                              curtailment=self.curtailment,
                               allow_blackout=self.allow_blackout)
         model.solve()
 
