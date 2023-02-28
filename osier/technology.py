@@ -191,6 +191,15 @@ class Technology(object):
         Specifies the 'usable' fraction of a technology's capacity.
         Default is 1.0, i.e. all of the technology's capacity is
         usable all of the time.
+    capacity_credit : Optional, float
+        Specifies the fraction of a technology's capacity that counts
+        towards reliability requirements. Most frequently used for 
+        renewable technologies. For example, a solar farm might have 
+        a capacity credit of 0.2. This means that in order to meet a 
+        capacity requirement of 1 GW, 1.25 GW of solar would need to 
+        be installed.
+        Default is 1.0, i.e. all of the technology's capacity contributes
+        to capacity requirements.
     co2_rate : float or :class:`unyt.array.unyt_quantity`
         Specifies the rate at carbon is emitted. May be either lifecycle
         emissions or from direct use. However, consistency between
@@ -254,6 +263,7 @@ class Technology(object):
                  fuel_type=None,
                  capacity=0.0,
                  capacity_factor=1.0,
+                 capacity_credit=1.0,
                  co2_rate=0.0,
                  land_intensity=0.0,
                  efficiency=1.0,

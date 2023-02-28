@@ -126,7 +126,7 @@ class CapacityExpansion(ElementwiseProblem):
 
     @property
     def capacity_credit(self):
-        return np.array([t.cap_credit for t in self.technology_list])
+        return np.array([t.capacity_credit for t in self.technology_list])
 
     @property
     def dispatchable_techs(self):
