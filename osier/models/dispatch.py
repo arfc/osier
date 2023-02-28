@@ -205,7 +205,8 @@ class DispatchModel():
                  penalty=1e-4,
                  verbose=False,
                  curtailment=True,
-                 allow_blackout=False):
+                 allow_blackout=False,
+                 **kwargs):
         self.net_demand = net_demand
         self.time_delta = time_delta
         self.lower_bound = lower_bound
