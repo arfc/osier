@@ -254,18 +254,9 @@ def annual_emission(
         The total emissions of the technology set.
     """
 
-    dispatch_techs = get_dispatchable_techs(technology_list)
-    non_dispatch_techs = get_nondispatchable_techs(technology_list)
-    column_names = get_tech_names(technology_list)
-    dispatch_results = solved_dispatch_model.results
-
-    emissions = np.array([getattr(t, emission)
-                         for t in dispatch_techs + non_dispatch_techs
-                         if hasattr(t, emission)])
-
-    emissions_total = np.dot(
-        emissions,
-        dispatch_results[column_names].values.T).sum()
+    emissions_total = per_unit_energy(technology_list=technology_list, 
+                                      solved_dispatch_model=solved_dispatch_model, 
+                                      attribute=emission)
 
     return emissions_total
 
