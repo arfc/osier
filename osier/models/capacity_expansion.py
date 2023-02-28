@@ -13,9 +13,10 @@ from pymoo.core.problem import ElementwiseProblem
 
 LARGE_NUMBER = 1e40
 
+
 class CapacityExpansion(ElementwiseProblem):
     """
-    The :class:`CapacityExpansion` class inherits from the 
+    The :class:`CapacityExpansion` class inherits from the
     :class:`pymoo.core.problem.ElementwiseProblem` class. This problem
     determines the technology mix that _minimizes_ the provided
     objectives.
@@ -44,11 +45,11 @@ class CapacityExpansion(ElementwiseProblem):
         See :attr:`capacity_requirement`. Default is 0.0.
     solar : Optional, :class:`numpy.ndarray`
         The curve that defines the solar power provided at each time
-        step. Automatically normalized with the infinity norm 
+        step. Automatically normalized with the infinity norm
         (i.e. divided by the maximum value).
     wind : Optional, :class:`numpy.ndarray`
         The curve that defines the wind power provided at each time
-        step. Automatically normalized with the infinity norm 
+        step. Automatically normalized with the infinity norm
         (i.e. divided by the maximum value).
     power_units : str, :class:`unyt.unit_object`
         Specifies the units for the power demand. The default is :attr:`MW`.
@@ -62,8 +63,8 @@ class CapacityExpansion(ElementwiseProblem):
     allow_blackout : boolean
         If True, a "reliability" technology is added to the dispatch model that will
         fulfill the mismatch in supply and demand. This reliability technology
-        has a variable cost of 1e4 $/MWh. The value must be higher than the 
-        variable cost of any other technology to prevent a pathological 
+        has a variable cost of 1e4 $/MWh. The value must be higher than the
+        variable cost of any other technology to prevent a pathological
         preference for blackouts. Default is True.
 
 
@@ -71,30 +72,30 @@ class CapacityExpansion(ElementwiseProblem):
     -----
     **Constraints**:
 
-    `Pymoo` constraints are not strict in the sense that `Pymoo` prefers 
-    feasibility over respecting constraints. However, all `Pymoo` algorithms 
+    `Pymoo` constraints are not strict in the sense that `Pymoo` prefers
+    feasibility over respecting constraints. However, all `Pymoo` algorithms
     will minimize the "constraint violation (CV)."
     """
 
-    def __init__(self, 
-                technology_list, 
-                demand,
-                objectives,
-                constraints={},
-                solar=None, 
-                wind=None, 
-                prm=0.0,
-                penalty=LARGE_NUMBER,
-                power_units=u.MW, 
-                curtailment=True,
-                allow_blackout=False,
-                **kwargs):
+    def __init__(self,
+                 technology_list,
+                 demand,
+                 objectives,
+                 constraints={},
+                 solar=None,
+                 wind=None,
+                 prm=0.0,
+                 penalty=LARGE_NUMBER,
+                 power_units=u.MW,
+                 curtailment=True,
+                 allow_blackout=False,
+                 **kwargs):
         self.technology_list = deepcopy(technology_list)
         self.demand = demand
         self.prm = prm
-        self.max_demand = float(demand.max())*power_units
+        self.max_demand = float(demand.max()) * power_units
         self.avg_lifetime = 25
-        self.capacity_requirement = self.max_demand * (1+self.prm)
+        self.capacity_requirement = self.max_demand * (1 + self.prm)
 
         self.objectives = objectives
         self.constraints = constraints
@@ -116,11 +117,11 @@ class CapacityExpansion(ElementwiseProblem):
         else:
             self.wind_ts = np.zeros(len(self.demand))
 
-        super().__init__(n_var=len(self.technology_list), 
-                         n_obj=len(self.objectives), 
-                         n_constr=len(self.constraints), 
-                         xl=0.0, 
-                         xu=1.0,  
+        super().__init__(n_var=len(self.technology_list),
+                         n_obj=len(self.objectives),
+                         n_constr=len(self.constraints),
+                         xl=0.0,
+                         xu=1.0,
                          **kwargs)
 
     @property
@@ -131,7 +132,7 @@ class CapacityExpansion(ElementwiseProblem):
     def dispatchable_techs(self):
         return [t for t in self.technology_list if t.dispatchable]
 
-    def _evaluate(self, x, out, *args, **kwargs): 
+    def _evaluate(self, x, out, *args, **kwargs):
         capacities = self.capacity_requirement * x
 
         solar_capacity = 0
@@ -147,16 +148,16 @@ class CapacityExpansion(ElementwiseProblem):
             elif ((tech.dispatchable) and (tech.technology_name != 'Battery')):
                 firm_capacity += capacity
 
-        solar_gen = self.solar_ts*solar_capacity
-        wind_gen = self.wind_ts*wind_capacity
+        solar_gen = self.solar_ts * solar_capacity
+        wind_gen = self.wind_ts * wind_capacity
 
-        renewable_df = pd.DataFrame({'SolarPanel':solar_gen,
-                                     'WindTurbine':wind_gen})
+        renewable_df = pd.DataFrame({'SolarPanel': solar_gen,
+                                     'WindTurbine': wind_gen})
 
         net_demand = self.demand \
-                    - wind_gen \
-                    - solar_gen
-        
+            - wind_gen \
+            - solar_gen
+
         model = DispatchModel(technology_list=self.dispatchable_techs,
                               net_demand=net_demand,
                               power_units=self.power_units,
@@ -170,22 +171,23 @@ class CapacityExpansion(ElementwiseProblem):
 
             out_obj = []
             for obj_func in self.objectives:
-                out_obj.append(obj_func(technology_list=self.technology_list, 
+                out_obj.append(obj_func(technology_list=self.technology_list,
                                         solved_dispatch_model=model))
-            
+
             if self.n_constr > 0:
                 out_constr = []
                 for constr_func, val in self.constraints.items():
-                    out_constr.append(constr_func(technology_list=self.technology_list, 
-                                                  solved_dispatch_model=model) - val)
+                    out_constr.append(
+                        constr_func(
+                            technology_list=self.technology_list,
+                            solved_dispatch_model=model) - val)
 
         else:
             out_obj = np.ones(self.n_obj) * self.penalty
             if self.n_constr > 0:
                 out_constr = np.ones(self.n_constr) * self.penalty
-        
+
         out["F"] = out_obj
 
         if self.n_constr > 0:
             out["G"] = out_constr
-            

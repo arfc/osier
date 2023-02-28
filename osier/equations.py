@@ -2,10 +2,11 @@ from abc import ABC, abstractmethod
 from pyentrp.entropy import weighted_permutation_entropy
 import numpy as np
 
+
 class OsierEquation(ABC):
 
     def __init__(self) -> None:
-        pass        
+        pass
 
     @abstractmethod
     def _do(self, technology_list, X):
@@ -18,7 +19,7 @@ def get_tech_names(technology_list):
     ----------
     technology_list : list of :class:`osier.Technology` objects
         The list of technologies.
-    
+
     Returns
     -------
     tech_names : list of str
@@ -63,7 +64,7 @@ def get_nondispatchable_techs(technology_list):
 
     non_dispatchable_techs = [t for t in technology_list if not t.dispatchable]
 
-    return non_dispatchable_techs    
+    return non_dispatchable_techs
 
 
 def get_dispatchable_names(technology_list):
@@ -79,17 +80,18 @@ def get_dispatchable_names(technology_list):
         The list of dispatchable technology names.
     """
 
-    dispatchable_names = [t.technology_name for t in technology_list if t.dispatchable]
+    dispatchable_names = [
+        t.technology_name for t in technology_list if t.dispatchable]
 
     return dispatchable_names
 
 
-def per_unit_capacity(technology_list, 
+def per_unit_capacity(technology_list,
                       attribute,
                       solved_dispatch_model=None):
     """
-    This function calculates a general objective for a given 
-    set of technologies and their corresponding dispatch on a 
+    This function calculates a general objective for a given
+    set of technologies and their corresponding dispatch on a
     per-unit-capacity basis.
 
     .. warning::
@@ -131,8 +133,8 @@ def per_unit_capacity(technology_list,
 
 def per_unit_energy(technology_list, attribute, solved_dispatch_model):
     """
-    This function calculates a general objective for a given 
-    set of technologies and their corresponding dispatch on a 
+    This function calculates a general objective for a given
+    set of technologies and their corresponding dispatch on a
     per-unit-energy basis.
 
     .. warning::
@@ -165,24 +167,26 @@ def per_unit_energy(technology_list, attribute, solved_dispatch_model):
     ...                    functools.partial(per_unit_energy, attribute='death_rate')]
 
     """
-    
+
     dispatch_techs = get_dispatchable_techs(technology_list)
     non_dispatch_techs = get_nondispatchable_techs(technology_list)
     column_names = get_tech_names(technology_list)
     dispatch_results = solved_dispatch_model.results
 
-    attributes = np.array([getattr(t, attribute) 
-                         for t in dispatch_techs+non_dispatch_techs 
-                         if hasattr(t,attribute)])
+    attributes = np.array([getattr(t, attribute)
+                           for t in dispatch_techs + non_dispatch_techs
+                           if hasattr(t, attribute)])
 
-    objective_value = np.dot(attributes, dispatch_results[column_names].values.T).sum()
+    objective_value = np.dot(
+        attributes,
+        dispatch_results[column_names].values.T).sum()
 
     return objective_value
 
 
 def annualized_capital_cost(technology_list, solved_dispatch_model=None):
     """
-    This function calculates the annual capital cost for a given 
+    This function calculates the annual capital cost for a given
     set of technologies and their corresponding dispatch.
 
     Parameters
@@ -198,7 +202,7 @@ def annualized_capital_cost(technology_list, solved_dispatch_model=None):
     capital_cost : float
         The annual capital cost of the technology set.
     """
-    capital_cost = np.array([t.total_capital_cost / t.lifetime 
+    capital_cost = np.array([t.total_capital_cost / t.lifetime
                             for t in technology_list]).sum()
 
     return capital_cost
@@ -206,7 +210,7 @@ def annualized_capital_cost(technology_list, solved_dispatch_model=None):
 
 def annualized_fixed_cost(technology_list, solved_dispatch_model=None):
     """
-    This function calculates the annual fixed cost for a given 
+    This function calculates the annual fixed cost for a given
     set of technologies.
 
     Parameters
@@ -223,14 +227,17 @@ def annualized_fixed_cost(technology_list, solved_dispatch_model=None):
         The annual fixed cost of the technology set.
     """
     fixed_cost = np.array([t.annual_fixed_cost
-                            for t in technology_list]).sum()
+                           for t in technology_list]).sum()
 
     return fixed_cost
 
 
-def annual_emission(technology_list, solved_dispatch_model, emission='co2_rate'):
+def annual_emission(
+        technology_list,
+        solved_dispatch_model,
+        emission='co2_rate'):
     """
-    This function calculates the total system co2 emissions for a given 
+    This function calculates the total system co2 emissions for a given
     set of technologies and their corresponding dispatch.
 
     Parameters
@@ -240,32 +247,34 @@ def annual_emission(technology_list, solved_dispatch_model, emission='co2_rate')
     solved_dispatch_model : :class:`osier.DispatchModel`
         A _solved_ dispatch model (i.e. with model results and objective
         attributes).
-    
+
     Returns
     -------
     emissions_total : float
         The total emissions of the technology set.
     """
-    
+
     dispatch_techs = get_dispatchable_techs(technology_list)
     non_dispatch_techs = get_nondispatchable_techs(technology_list)
     column_names = get_tech_names(technology_list)
     dispatch_results = solved_dispatch_model.results
 
-    emissions = np.array([getattr(t, emission) 
-                         for t in dispatch_techs+non_dispatch_techs 
-                         if hasattr(t,emission)])
+    emissions = np.array([getattr(t, emission)
+                         for t in dispatch_techs + non_dispatch_techs
+                         if hasattr(t, emission)])
 
-    emissions_total = np.dot(emissions, dispatch_results[column_names].values.T).sum()
+    emissions_total = np.dot(
+        emissions,
+        dispatch_results[column_names].values.T).sum()
 
     return emissions_total
 
 
 def total_cost(technology_list, solved_dispatch_model):
     """
-    This function calculates the total system cost for a given 
+    This function calculates the total system cost for a given
     set of technologies and their corresponding dispatch.
-    
+
     Parameters
     ----------
     technology_list : list of :class:`osier.Technology` objects
@@ -288,10 +297,10 @@ def total_cost(technology_list, solved_dispatch_model):
     return total_cost
 
 
-def volatility(technology_list, 
-               solved_dispatch_model, 
-               m=3, 
-               tau=60, 
+def volatility(technology_list,
+               solved_dispatch_model,
+               m=3,
+               tau=60,
                normalize=True):
     """
     This function calculates the volatility the electricity cost for
@@ -306,8 +315,8 @@ def volatility(technology_list,
         attributes).
     m : int
         The embedding dimension for the cost time series. Typically
-        determined using a false nearest neighbors algorithm. 
-        The default value is 3. 
+        determined using a false nearest neighbors algorithm.
+        The default value is 3.
     tau : int
         The time delay for the cost time series. Typically determined
         by selecting the index of the first or second minimum of the
@@ -328,10 +337,9 @@ def volatility(technology_list,
     """
 
     cost_ts = solved_dispatch_model.results.Cost.values
-    wpe = weighted_permutation_entropy(cost_ts, 
-                                       order=m, 
-                                       delay=tau, 
+    wpe = weighted_permutation_entropy(cost_ts,
+                                       order=m,
+                                       delay=tau,
                                        normalize=normalize)
 
     return wpe
-
