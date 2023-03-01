@@ -201,9 +201,13 @@ class Technology(object):
         Default is 1.0, i.e. all of the technology's capacity contributes
         to capacity requirements.
     co2_rate : float or :class:`unyt.array.unyt_quantity`
-        Specifies the rate at carbon is emitted. May be either lifecycle
-        emissions or from direct use. However, consistency between
-        technologies is incumbent on the user.
+        Specifies the rate carbon dioxide is emitted during operation.
+        Generally only applicable for fossil fueled plants.
+    lifecycle_co2_rate : float or :class:`unyt.array.unyt_quantity`
+        Specifies the rate of CO2eq emissions over a typical lifetime. 
+        Unless you are reading this in a future where the economy is fully
+        decarbonized, all technologies should have a non-zero value for this 
+        attribute.
     land_intensity : float or :class:`unyt.array.unyt_quantity`
         The amount of land required per unit capacity. May be either lifecycle
         land use or from direct use. However, consistency between
@@ -265,6 +269,7 @@ class Technology(object):
                  capacity_factor=1.0,
                  capacity_credit=1.0,
                  co2_rate=0.0,
+                 lifecycle_co2_rate=0.0,
                  land_intensity=0.0,
                  efficiency=1.0,
                  lifetime=25.0,
@@ -292,6 +297,7 @@ class Technology(object):
 
         self.capacity = capacity
         self.capacity_factor = capacity_factor
+        self.capacity_credit = capacity_credit
         self.efficiency = efficiency
         self.capital_cost = capital_cost
         self.om_cost_fixed = om_cost_fixed

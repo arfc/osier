@@ -240,6 +240,11 @@ class DispatchModel():
             sync_list,
             unit_power=self.power_units,
             unit_time=self.time_delta.units)
+        
+        # print("DISPATCH TECHNOLOGIES\n")
+        # print("====================\n")
+        # for t in self.technology_list:
+        #     print(t)
 
         if not verbose:
             logging.getLogger('pyomo.core').setLevel(logging.CRITICAL)
