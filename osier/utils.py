@@ -48,3 +48,88 @@ def synchronize_units(tech_list: Iterable[Technology],
         t.unit_time = _validate_unit(unit_time, dimension="time")
 
     return synced_list
+
+
+
+def get_tech_names(technology_list):
+    """
+    Returns the a list of :class:`osier.Technology` name strings.
+
+    Parameters
+    ----------
+    technology_list : list of :class:`osier.Technology` objects
+        The list of technologies.
+
+    Returns
+    -------
+    tech_names : list of str
+        The list of technology names.
+    """
+
+    tech_names = [t.technology_name for t in technology_list]
+
+    return tech_names
+
+
+def get_dispatchable_techs(technology_list):
+    """
+    Returns a list of :class:`osier.Technology` objects 
+    where :attr:`dispatchable` is `True`.
+
+    Parameters
+    ----------
+    technology_list : list of :class:`osier.Technology` objects
+        The list of technologies.
+
+    Returns
+    -------
+    tech_names : list of :class:`osier.Technology`
+        The list of dispatchable technologies.
+    """
+
+    dispatchable_techs = [t for t in technology_list if t.dispatchable]
+
+    return dispatchable_techs
+
+
+def get_nondispatchable_techs(technology_list):
+    """
+    Returns a list of :class:`osier.Technology` objects 
+    where :attr:`dispatchable` is `False`.
+
+    Parameters
+    ----------
+    technology_list : list of :class:`osier.Technology` objects
+        The list of technologies.
+
+    Returns
+    -------
+    non_dispatchable_techs : list of :class:`osier.Technology`
+        The list of non dispatchable technologies.
+    """
+
+    non_dispatchable_techs = [t for t in technology_list if not t.dispatchable]
+
+    return non_dispatchable_techs
+
+
+def get_dispatchable_names(technology_list):
+    """
+    Returns a list of :class:`osier.Technology` name strings
+    where :attr:`dispatchable` is `True`.
+
+    Parameters
+    ----------
+    technology_list : list of :class:`osier.Technology` objects
+        The list of technologies.
+
+    Returns
+    -------
+    dispatchable_names : list of str
+        The list of dispatchable technology names.
+    """
+
+    dispatchable_names = [
+        t.technology_name for t in technology_list if t.dispatchable]
+
+    return dispatchable_names
