@@ -5,9 +5,9 @@ from pyentrp.entropy import weighted_permutation_entropy
 import numpy as np
 
 
-def per_unit_capacity(technology_list,
-                      attribute,
-                      solved_dispatch_model=None):
+def objective_from_capacity(technology_list,
+                            attribute,
+                            solved_dispatch_model=None):
     """
     This function calculates a general objective for a given
     set of technologies and their corresponding dispatch on a
@@ -52,8 +52,8 @@ def per_unit_capacity(technology_list,
 
     >>> import functools
     >>> from osier import per_unit_capacity
-    >>> objectives_list = [functools.partial(per_unit_capacity, attribute='land_use'),
-    ...                    functools.partial(per_unit_capacity, attribute='employment')]
+    >>> objectives_list = [functools.partial(objective_from_capacity, attribute='land_use'),
+    ...                    functools.partial(objective_from_capacity, attribute='employment')]
 
     """
     objective_value = np.array([getattr(t, attribute) * t.capacity
@@ -63,7 +63,7 @@ def per_unit_capacity(technology_list,
     return objective_value
 
 
-def per_unit_energy(technology_list, attribute, solved_dispatch_model):
+def objective_from_energy(technology_list, attribute, solved_dispatch_model):
     """
     This function calculates a general objective for a given
     set of technologies and their corresponding dispatch on a
@@ -109,8 +109,8 @@ def per_unit_energy(technology_list, attribute, solved_dispatch_model):
 
     >>> import functools
     >>> from osier import per_unit_capacity
-    >>> objectives_list = [functools.partial(per_unit_energy, attribute='water_use'),
-    ...                    functools.partial(per_unit_energy, attribute='death_rate')]
+    >>> objectives_list = [functools.partial(objective_from_energy, attribute='water_use'),
+    ...                    functools.partial(objective_from_energy, attribute='death_rate')]
 
     """
 
@@ -200,9 +200,9 @@ def annual_emission(
         The total emissions of the technology set.
     """
 
-    emissions_total = per_unit_energy(technology_list=technology_list, 
-                                      solved_dispatch_model=solved_dispatch_model, 
-                                      attribute=emission)
+    emissions_total = objective_from_energy(technology_list=technology_list, 
+                                            solved_dispatch_model=solved_dispatch_model, 
+                                            attribute=emission)
 
     return emissions_total
 
