@@ -94,7 +94,7 @@ class CapacityExpansion(ElementwiseProblem):
         self.technology_list = deepcopy(technology_list)
         self.demand = demand
         self.prm = prm
-        self.avg_lifetime = 25
+        self.verbosity = verbosity
 
         self.objectives = objectives
         self.constraints = constraints
@@ -212,3 +212,12 @@ class CapacityExpansion(ElementwiseProblem):
 
         if self.n_constr > 0:
             out["G"] = out_constr
+
+
+        if (self.verbosity is not None) and (self.verbosity =='debug'):
+            self.pprint()
+
+            print(f"Model solved? {model.results != None}\n")
+
+            print("Objective Values:\n")
+            print(out["F"])
