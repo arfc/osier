@@ -543,6 +543,9 @@ class Technology(object):
         for key, value in self.__dict__.items():
             if key in tech_data:
                 continue
+            elif value is None:
+                col = key.strip('_')
+                tech_data[col] = [str(value)] 
             else:
                 if isinstance(value, unyt.unit_object.Unit):
                     continue

@@ -3,6 +3,7 @@ from osier.technology import _validate_unit
 from unyt import unit_object
 import copy
 from typing import Iterable
+import pandas as pd
 
 from osier.technology import Technology
 
@@ -133,3 +134,31 @@ def get_dispatchable_names(technology_list):
         t.technology_name for t in technology_list if t.dispatchable]
 
     return dispatchable_names
+
+
+def technology_dataframe(technology_list, cast_to_string=True):
+    """
+    Returns a :class:`pandas.DataFrame` with a complete set
+    of data for a given technology list.
+
+    Parameters
+    ----------
+    technology_list : list of :class:`osier.Technology` objects
+        The list of technologies.
+
+    Returns
+    -------
+    technology_dataframe : :class:`pandas.DataFrame`
+        A dataframe of all technology data.
+    """
+
+    frames = []
+
+    for t in technology_list:
+        frames.append(t.to_dataframe(cast_to_string=cast_to_string))
+
+    technology_dataframe = pd.concat(frames, axis=0)
+
+    return technology_dataframe
+    
+
