@@ -1,5 +1,5 @@
 from osier.equations import (annualized_capital_cost, annualized_fixed_cost, total_cost, 
-                             annual_emission, per_unit_capacity, per_unit_energy)
+                             annual_emission, objective_from_energy, objective_from_capacity)
 from osier import Technology, DispatchModel
 import numpy as np
 import pytest
@@ -122,9 +122,9 @@ def test_annual_co2(technology_set_1, net_demand):
     assert expected == pytest.approx(actual)
 
 
-def test_per_unit_capacity(technology_set_1, net_demand):
+def test_objective_from_capacity(technology_set_1, net_demand):
     """
-    Tests that :func:`per_unit_capacity` produces expected results.
+    Tests that :func:`objective_from_capacity` produces expected results.
     """
     model = DispatchModel(technology_set_1,
                           net_demand=net_demand,
@@ -133,7 +133,7 @@ def test_per_unit_capacity(technology_set_1, net_demand):
                           allow_blackout=False)
     model.solve()
 
-    func = functools.partial(per_unit_capacity, attribute='om_cost_fixed')
+    func = functools.partial(objective_from_capacity, attribute='om_cost_fixed')
     expected = annualized_fixed_cost(technology_set_1, model)
     actual = func(technology_list=technology_set_1, 
                   solved_dispatch_model=model)
@@ -141,9 +141,9 @@ def test_per_unit_capacity(technology_set_1, net_demand):
     assert expected == pytest.approx(actual)
 
 
-def test_per_unit_energy(technology_set_1, net_demand):
+def test_objective_from_energy(technology_set_1, net_demand):
     """
-    Tests that :func:`per_unit_energy` produces expected results.
+    Tests that :func:`objective_from_energy` produces expected results.
     """
     model = DispatchModel(technology_set_1,
                           net_demand=net_demand,
@@ -152,7 +152,7 @@ def test_per_unit_energy(technology_set_1, net_demand):
                           allow_blackout=False)
     model.solve()
 
-    func = functools.partial(per_unit_energy, attribute='co2_rate')
+    func = functools.partial(objective_from_energy, attribute='co2_rate')
     expected = annual_emission(technology_set_1, model, emission='co2_rate')
     actual = func(technology_list=technology_set_1, 
                   solved_dispatch_model=model)
