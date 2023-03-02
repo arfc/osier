@@ -2,6 +2,7 @@ import unyt
 from unyt import MW, hr, kg, km, m
 from unyt import unyt_quantity, unyt_array
 from unyt.exceptions import UnitParseError
+from collections import OrderedDict
 
 import numpy as np
 import pandas as pd
@@ -304,6 +305,7 @@ class Technology(object):
         self.om_cost_variable = om_cost_variable
         self.fuel_cost = fuel_cost
         self.co2_rate = co2_rate
+        self.lifecycle_co2_rate = lifecycle_co2_rate
         self.land_intensity = land_intensity
 
     def __repr__(self) -> str:
@@ -523,6 +525,44 @@ class Technology(object):
                 raise AssertionError(
                     f"Variable cost data too short ({len(var_cost_ts)} < {size})")
             return var_cost_ts
+        
+    def to_dataframe(self, cast_to_string=True):
+        """
+        Writes all technology attributes to a :class:`pandas.DataFrame` for export
+        and manipulation.
+        """
+
+        tech_data = OrderedDict()
+        tech_data['technology_name'] = [self.technology_name]
+        tech_data['technology_category'] = [self.technology_category]
+        tech_data['technology_type'] = [self.technology_type]
+        tech_data['dispatchable'] = [str(self.dispatchable)]
+        tech_data['renewable'] = [str(self.renewable)]
+        tech_data['fuel_type'] = [str(self.fuel_type)]
+
+        for key, value in self.__dict__.items():
+            if key in tech_data:
+                continue
+            else:
+                if isinstance(value, unyt.unit_object.Unit):
+                    continue
+                elif isinstance(value, unyt_quantity):
+                    col = f"{key.strip('_')} ({value.units})"
+                elif isinstance(value, (int, float)):
+                    col = key.strip('_')
+                else:
+                    continue
+
+                if cast_to_string:
+                    tech_data[col] = ["{:.3e}".format(value)]
+                else:
+                    tech_data[col] = [np.round(value,10)]
+
+        tech_dataframe = pd.DataFrame(tech_data).set_index('technology_name')
+
+        return tech_dataframe
+                
+            
 
 
 class RampingTechnology(Technology):
