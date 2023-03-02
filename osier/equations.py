@@ -254,7 +254,7 @@ def volatility(technology_list,
         attributes).
     attribute : str
         Indicates whether to calculate the volatility of electricity demand
-        or electricity price.
+        or electricity price. Default is 'demand'.
     m : int
         The embedding dimension for the cost time series. Typically
         determined using a false nearest neighbors algorithm.
