@@ -125,7 +125,7 @@ class DispatchModel():
         fulfill the mismatch in supply and demand. This reliability technology
         has a variable cost of 1e4 $/MWh. The value must be higher than the
         variable cost of any other technology to prevent a pathological
-        preference for blackouts. Default is True.
+        preference for blackouts. Default is False.
 
     Attributes
     ----------

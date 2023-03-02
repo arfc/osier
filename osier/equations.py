@@ -1,98 +1,30 @@
-from abc import ABC, abstractmethod
+from osier.utils import (get_tech_names, 
+                         get_dispatchable_techs, 
+                         get_nondispatchable_techs, get_dispatchable_names)
 from pyentrp.entropy import weighted_permutation_entropy
 import numpy as np
 
 
-class OsierEquation(ABC):
-
-    def __init__(self) -> None:
-        pass
-
-    @abstractmethod
-    def _do(self, technology_list, X):
-        pass
-
-
-def get_tech_names(technology_list):
-    """
-    Parameters
-    ----------
-    technology_list : list of :class:`osier.Technology` objects
-        The list of technologies.
-
-    Returns
-    -------
-    tech_names : list of str
-        The list of technology names.
-    """
-
-    tech_names = [t.technology_name for t in technology_list]
-
-    return tech_names
-
-
-def get_dispatchable_techs(technology_list):
-    """
-    Parameters
-    ----------
-    technology_list : list of :class:`osier.Technology` objects
-        The list of technologies.
-
-    Returns
-    -------
-    tech_names : list of :class:`osier.Technology`
-        The list of dispatchable technologies.
-    """
-
-    dispatchable_techs = [t for t in technology_list if t.dispatchable]
-
-    return dispatchable_techs
-
-
-def get_nondispatchable_techs(technology_list):
-    """
-    Parameters
-    ----------
-    technology_list : list of :class:`osier.Technology` objects
-        The list of technologies.
-
-    Returns
-    -------
-    non_dispatchable_techs : list of :class:`osier.Technology`
-        The list of non dispatchable technologies.
-    """
-
-    non_dispatchable_techs = [t for t in technology_list if not t.dispatchable]
-
-    return non_dispatchable_techs
-
-
-def get_dispatchable_names(technology_list):
-    """
-    Parameters
-    ----------
-    technology_list : list of :class:`osier.Technology` objects
-        The list of technologies.
-
-    Returns
-    -------
-    dispatchable_names : list of str
-        The list of dispatchable technology names.
-    """
-
-    dispatchable_names = [
-        t.technology_name for t in technology_list if t.dispatchable]
-
-    return dispatchable_names
-
-
-def per_unit_capacity(technology_list,
-                      attribute,
-                      solved_dispatch_model=None):
+def objective_from_capacity(technology_list,
+                            attribute,
+                            solved_dispatch_model=None):
     """
     This function calculates a general objective for a given
     set of technologies and their corresponding dispatch on a
     per-unit-capacity basis.
+
+    The general objective function is
+
+    .. math::
+        \\mathcal{K} = \\sum_g^G \\textbf{CAP}_g \\kappa_g,
+
+    .. math::
+        \\textbf{CAP}_g = \\text{the capacity of the g-th technology}
+        \\quad \\left[MW\\right].
+        
+    .. math::
+        \\kappa_g = \\text{the power density of the g-th technology} 
+        \\quad \\left[\\frac{-}{MW}\\right].
 
     .. warning::
         User-defined attributes are not validated by :class:`osier`.
@@ -120,8 +52,8 @@ def per_unit_capacity(technology_list,
 
     >>> import functools
     >>> from osier import per_unit_capacity
-    >>> objectives_list = [functools.partial(per_unit_capacity, attribute='land_use'),
-    ...                    functools.partial(per_unit_capacity, attribute='employment')]
+    >>> objectives_list = [functools.partial(objective_from_capacity, attribute='land_use'),
+    ...                    functools.partial(objective_from_capacity, attribute='employment')]
 
     """
     objective_value = np.array([getattr(t, attribute) * t.capacity
@@ -131,12 +63,26 @@ def per_unit_capacity(technology_list,
     return objective_value
 
 
-def per_unit_energy(technology_list, attribute, solved_dispatch_model):
+def objective_from_energy(technology_list, attribute, solved_dispatch_model):
     """
     This function calculates a general objective for a given
     set of technologies and their corresponding dispatch on a
     per-unit-energy basis.
 
+    The general objective function is 
+     
+    .. math::
+        \\mathcal{X} = \\sum_g^G \\xi_g \\sum_t^T x_{g,t},
+    
+    .. math::
+        x_{g,t} = \\text{the energy produced by the g-th technology
+         at time t}\\quad \\left[MWh\\right]
+
+    .. math::
+        \\xi_g = \\text{the energy density of the g-th technology}\\quad
+        \\left[\\frac{-}{MWh}\\right].
+
+        
     .. warning::
         User-defined attributes are not validated by :class:`osier`.
         Verify the units are accurate and uniform across all
@@ -163,8 +109,8 @@ def per_unit_energy(technology_list, attribute, solved_dispatch_model):
 
     >>> import functools
     >>> from osier import per_unit_capacity
-    >>> objectives_list = [functools.partial(per_unit_energy, attribute='water_use'),
-    ...                    functools.partial(per_unit_energy, attribute='death_rate')]
+    >>> objectives_list = [functools.partial(objective_from_energy, attribute='water_use'),
+    ...                    functools.partial(objective_from_energy, attribute='death_rate')]
 
     """
 
@@ -254,9 +200,9 @@ def annual_emission(
         The total emissions of the technology set.
     """
 
-    emissions_total = per_unit_energy(technology_list=technology_list, 
-                                      solved_dispatch_model=solved_dispatch_model, 
-                                      attribute=emission)
+    emissions_total = objective_from_energy(technology_list=technology_list, 
+                                            solved_dispatch_model=solved_dispatch_model, 
+                                            attribute=emission)
 
     return emissions_total
 
