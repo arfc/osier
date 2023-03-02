@@ -236,12 +236,14 @@ def total_cost(technology_list, solved_dispatch_model):
 
 def volatility(technology_list,
                solved_dispatch_model,
+               attribute='demand',
                m=3,
                tau=60,
                normalize=True):
     """
-    This function calculates the volatility the electricity cost for
-    a dispatch model with weighted permutation entropy.
+    This function calculates the volatility of the electricity prices
+    or the electricity demand  for a dispatch model with weighted 
+    permutation entropy.
 
     Parameters
     ----------
@@ -250,6 +252,9 @@ def volatility(technology_list,
     solved_dispatch_model : :class:`osier.DispatchModel`
         A _solved_ dispatch model (i.e. with model results and objective
         attributes).
+    attribute : str
+        Indicates whether to calculate the volatility of electricity demand
+        or electricity price.
     m : int
         The embedding dimension for the cost time series. Typically
         determined using a false nearest neighbors algorithm.
@@ -273,8 +278,9 @@ def volatility(technology_list,
     >>> objectives_list = [functools.partial(volatility, m=4, tau=100)]
     """
 
-    cost_ts = solved_dispatch_model.results.Cost.values
-    wpe = weighted_permutation_entropy(cost_ts,
+    timeseries = {'price':solved_dispatch_model.results.Cost.values,
+                  'demand':np.array(solved_dispatch_model.net_demand)}
+    wpe = weighted_permutation_entropy(timeseries[attribute],
                                        order=m,
                                        delay=tau,
                                        normalize=normalize)
