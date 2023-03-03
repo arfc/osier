@@ -1,4 +1,3 @@
-import osier
 import sys
 import inspect
 import pandas as pd
@@ -8,13 +7,6 @@ from unyt import GW, MW, kW, hour, day, year, kg
 import unyt as u
 
 to_MDOLLARS = 1e-6
-
-try:
-    u.define_unit("megatonnes", 1e9*kg)
-except RuntimeError as e:
-    print(e)
-    u.unit_registry.default_unit_registry.remove("megatonnes")
-    u.define_unit("megatonnes", 1e9*kg)
 
 co2_eq_units = (u.megatonnes*(GW*hour)**-1)
 
