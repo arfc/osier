@@ -121,19 +121,34 @@ solar = Technology(technology_name='SolarPanel',
                   capacity_credit=0.19)
 
 
+def _get_names_technologies():
+    """
+    Returns a list of names and technologies in
+    the :mod:`osier.tech_library`.
+    """
+
+    current_module = sys.modules[__name__]
+    technology_list = []
+    name_list = []
+
+    for name, obj in inspect.getmembers(current_module):
+        if isinstance(obj, osier.Technology):
+            technology_list.append(obj)
+            name_list.append(name)
+    
+    return name_list, technology_list
+
+
 def renewables_plus_storage():
     """
     Returns a list of technology objects including only
     renewable technologies and storage options.
     """
 
-    current_module = sys.modules[__name__]
-    technology_list = []
-    for name, obj in inspect.getmembers(current_module):
-        if isinstance(obj, osier.Technology):
-            if (obj.renewable) or (hasattr(obj, "storage_duration")):
-                technology_list.append(obj)
-
+    names_list, technology_list = _get_names_technologies()
+    technology_list = [tech
+                       for tech in technology_list 
+                       if ((tech.renewable) or (hasattr(tech, "storage_duration")))]
 
     return technology_list
 
@@ -144,12 +159,7 @@ def all_technologies():
     renewable technologies and storage options.
     """
 
-    current_module = sys.modules[__name__]
-    technology_list = []
-    for name, obj in inspect.getmembers(current_module):
-        if isinstance(obj, osier.Technology):
-            technology_list.append(obj)
-
+    names_list, technology_list = _get_names_technologies()
 
     return technology_list
 
@@ -160,16 +170,8 @@ def catalog():
     and their :class`osier` aliases.
     """
 
-    current_module = sys.modules[__name__]
-    technology_list = []
-    name_list = []
-    for name, obj in inspect.getmembers(current_module):
-        if isinstance(obj, osier.Technology):
-            technology_list.append(obj)
-            name_list.append(name)
-            print(obj)
-
-    catalog_df = pd.DataFrame({"Import Name":name_list,
+    names_list, technology_list = _get_names_technologies()
+    catalog_df = pd.DataFrame({"Import Name":names_list,
                                "Technology Name":[t.technology_name 
                                                   for t in technology_list]})
 
@@ -178,5 +180,5 @@ def catalog():
 
 if __name__ == "__main__":
     print(catalog())
-    print(dir(nuclear))
+    print(renewables_plus_storage())
 
