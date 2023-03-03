@@ -124,7 +124,7 @@ def _get_names_technologies():
     name_list = []
 
     for name, obj in inspect.getmembers(current_module):
-        if isinstance(obj, osier.Technology):
+        if isinstance(obj, Technology):
             technology_list.append(obj)
             name_list.append(name)
     
