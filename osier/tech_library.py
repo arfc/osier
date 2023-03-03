@@ -1,9 +1,20 @@
+import osier
+import sys
+import inspect
+import pandas as pd
 from osier.technology import *
 from osier.technology import _dim_opts
 from unyt import GW, MW, kW, hour, day, year, kg
 import unyt as u
 
 to_MDOLLARS = 1e-6
+
+try:
+    u.define_unit("megatonnes", 1e9*kg)
+except RuntimeError as e:
+    print(e)
+    u.unit_registry.default_unit_registry.remove("megatonnes")
+    u.define_unit("megatonnes", 1e9*kg)
 
 co2_eq_units = (u.megatonnes*(GW*hour)**-1)
 
@@ -108,4 +119,64 @@ solar = Technology(technology_name='SolarPanel',
                   om_cost_fixed=8.05*(1/kW)*to_MDOLLARS,
                   lifecycle_co2_rate=3.7e-5*co2_eq_units,
                   capacity_credit=0.19)
+
+
+def renewables_plus_storage():
+    """
+    Returns a list of technology objects including only
+    renewable technologies and storage options.
+    """
+
+    current_module = sys.modules[__name__]
+    technology_list = []
+    for name, obj in inspect.getmembers(current_module):
+        if isinstance(obj, osier.Technology):
+            if (obj.renewable) or (hasattr(obj, "storage_duration")):
+                technology_list.append(obj)
+
+
+    return technology_list
+
+
+def full_tech():
+    """
+    Returns a list of technology objects including only
+    renewable technologies and storage options.
+    """
+
+    current_module = sys.modules[__name__]
+    technology_list = []
+    for name, obj in inspect.getmembers(current_module):
+        if isinstance(obj, osier.Technology):
+            technology_list.append(obj)
+
+
+    return technology_list
+
+
+def catalog():
+    """
+    Returns a :class:`pandas.DataFrame` of technology names
+    and their :class`osier` aliases.
+    """
+
+    current_module = sys.modules[__name__]
+    technology_list = []
+    name_list = []
+    for name, obj in inspect.getmembers(current_module):
+        if isinstance(obj, osier.Technology):
+            technology_list.append(obj)
+            name_list.append(name)
+            print(obj)
+
+    catalog_df = pd.DataFrame({"Import Name":name_list,
+                               "Technology Name":[t.technology_name 
+                                                  for t in technology_list]})
+
+    return catalog_df
+
+
+if __name__ == "__main__":
+    print(catalog())
+    print(dir(nuclear))
 
