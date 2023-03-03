@@ -138,7 +138,7 @@ def renewables_plus_storage():
     return technology_list
 
 
-def full_tech():
+def all_technologies():
     """
     Returns a list of technology objects including only
     renewable technologies and storage options.
