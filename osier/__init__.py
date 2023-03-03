@@ -3,6 +3,7 @@ from .models.dispatch import *
 from .models.capacity_expansion import *
 from .utils import *
 from .equations import *
+from .tech_library import *
 
 import unyt as u
 from unyt import kg
