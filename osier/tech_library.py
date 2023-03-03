@@ -176,9 +176,3 @@ def catalog():
                                                   for t in technology_list]})
 
     return catalog_df
-
-
-if __name__ == "__main__":
-    print(catalog())
-    print(renewables_plus_storage())
-
