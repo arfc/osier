@@ -1,5 +1,5 @@
 import unyt
-from unyt import MW, hr, kg, km, m
+from unyt import MW, hr, kg, km, m, megatonnes
 from unyt import unyt_quantity, unyt_array
 from unyt.exceptions import UnitParseError
 from collections import OrderedDict
@@ -19,7 +19,7 @@ _dim_opts = {'time': hr,
              'specific_mass': kg**-1,
              'specific_power': MW**-1,
              'specific_energy': (MW * hr)**-1,
-             'mass_per_energy': kg * (MW * hr)**-1,
+             'mass_per_energy': megatonnes * (MW * hr)**-1,
              'area_per_power': km * MW**-2}
 
 _constant_types = (int, float, unyt_quantity)
@@ -279,7 +279,7 @@ class Technology(object):
                  default_energy_units=None,
                  default_length_units=km,
                  default_volume_units=m**3,
-                 default_mass_units=kg) -> None:
+                 default_mass_units=megatonnes) -> None:
 
         self.technology_name = technology_name
         self.technology_type = technology_type
