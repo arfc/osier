@@ -437,11 +437,8 @@ def test_multiple_power_output():
     output = unyt_array(np.zeros(len(demand)))*demand.units
     expected = unyt_array([demand[0], demand[1], capacity])
     for i,d in enumerate(demand):
-        print('demand', d)
         out = natural_gas.power_output(d)
-        print('output', out)
         output[i] = out
-        print(output[i])
     assert np.all(output == expected)
     assert len(natural_gas.power_history) == 3
 
@@ -460,12 +457,7 @@ def test_thermal_power_output():
     output = unyt_array(np.zeros(len(demand)))*demand.units
     expected = unyt_array([13.5,17,18])*GW
     for i,d in enumerate(demand):
-        print('demand', d)
         out = nuclear_adv.power_output(d)
-        print('output', out)
         output[i] = out
-        print(output[i])
-    print(output)
-    print(expected)
     assert np.all(output == expected)
-    assert len(nuclear_adv.power_history) == 3
+    assert np.all(unyt_array(nuclear_adv.power_history) == expected)

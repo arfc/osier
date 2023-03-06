@@ -817,7 +817,6 @@ class StorageTechnology(Technology):
         self.storage_duration = storage_duration
         self.initial_storage = initial_storage
         self.storage_level = self.initial_storage
-        self.power_level = 0.0
         self.storage_history = []
         self.charging = False
         self.discharging = False
@@ -863,7 +862,7 @@ class StorageTechnology(Technology):
         Resets the technology's power history for a new simulation.
         """
         self.storage_history = []
-        self.storage_level = self.initial_storage
+        self.storage_level = self._initial_storage
         self.power_history = []
         self.power_level = self.capacity
 
@@ -885,13 +884,16 @@ class StorageTechnology(Technology):
     def charge(self, surplus, time_delta=1*hr):
 
         # check that the battery has enough power to consume surplus.
-        power_in = min(surplus, self.capacity)
+        power_in = min(np.abs(surplus), self.capacity)
 
         # check that the battery has enough space to store surplus.
-        energy_in = max((self.storage_capacity - power_in*time_delta), 0.0*self.unit_energy)
+        energy_in = min((self.storage_capacity - self.storage_level), 
+                        power_in*time_delta)
 
         self.storage_level += energy_in
         self.storage_history.append(self.storage_level)
         self.power_level = -energy_in / time_delta
         self.power_history.append(self.power_level)
+
+        return self.power_level.to(surplus.units)
 
