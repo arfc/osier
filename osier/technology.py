@@ -818,8 +818,6 @@ class StorageTechnology(Technology):
         self.initial_storage = initial_storage
         self.storage_level = self.initial_storage
         self.storage_history = []
-        self.charging = False
-        self.discharging = False
  
     @property
     def storage_duration(self):
@@ -847,23 +845,19 @@ class StorageTechnology(Technology):
             raise AssertionError("Initial storage exceeds storage capacity.")
 
         self._initial_storage = valid_quantity
+        self.storage_level = valid_quantity
 
     @property
     def max_rate(self):
         return self.capacity*self.unit_time
-    
-
-    def reset_mode(self):
-        self.charging = False
-        self.discharging = False
 
     def reset_history(self):
         """
         Resets the technology's power history for a new simulation.
         """
-        self.storage_history = []
+        self.storage_history = {}
         self.storage_level = self._initial_storage
-        self.power_history = []
+        self.power_history = {}
         self.power_level = self.capacity
 
     def power_output(self, demand: unyt_quantity, time_delta=1*hr):
@@ -874,8 +868,9 @@ class StorageTechnology(Technology):
         # check that the battery has enough energy to meet demand.
         energy_out = min(power_out*time_delta, self.storage_level)
 
-        self.storage_level -= energy_out
-        self.storage_history.append(self.storage_level)
+        out = self.storage_level - energy_out
+        self.storage_level = out
+        self.storage_history.append(out)
         self.power_level = energy_out / time_delta
         self.power_history.append(self.power_level)
 
@@ -890,8 +885,9 @@ class StorageTechnology(Technology):
         energy_in = min((self.storage_capacity - self.storage_level), 
                         power_in*time_delta)
 
-        self.storage_level += energy_in
-        self.storage_history.append(self.storage_level)
+        out = self.storage_level + energy_in
+        self.storage_level = out
+        self.storage_history.append(out)
         self.power_level = -energy_in / time_delta
         self.power_history.append(self.power_level)
 
