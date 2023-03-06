@@ -1,8 +1,10 @@
-from osier.equations import annualized_capital_cost, annualized_fixed_cost, total_cost, annual_co2
+from osier.equations import (annualized_capital_cost, annualized_fixed_cost, total_cost, 
+                             annual_emission, objective_from_energy, objective_from_capacity)
 from osier import Technology, DispatchModel
 import numpy as np
 import pytest
 import sys
+import functools
 
 if "win32" in sys.platform:
     solver = 'cplex'
@@ -40,8 +42,8 @@ def technology_set_1():
                              fuel_cost=20
                              )
 
-    nuclear.co2 = 1.2e-5
-    natural_gas.co2 = 4.9e-4
+    nuclear.co2_rate = 1.2e-5
+    natural_gas.co2_rate = 4.9e-4
 
     return [nuclear, natural_gas]
 
@@ -113,8 +115,46 @@ def test_annual_co2(technology_set_1, net_demand):
                           allow_blackout=False)
     model.solve()
 
-    expected = (model.results["Nuclear"].sum() * nuclear.co2) \
-                + (model.results["NaturalGas"].sum() * natural_gas.co2)
-    actual = annual_co2(technology_set_1, model)
+    expected = (model.results["Nuclear"].sum() * nuclear.co2_rate) \
+                + (model.results["NaturalGas"].sum() * natural_gas.co2_rate)
+    actual = annual_emission(technology_set_1, model, emission='co2_rate')
+
+    assert expected == pytest.approx(actual)
+
+
+def test_objective_from_capacity(technology_set_1, net_demand):
+    """
+    Tests that :func:`objective_from_capacity` produces expected results.
+    """
+    model = DispatchModel(technology_set_1,
+                          net_demand=net_demand,
+                          solver=solver,
+                          curtailment=False,
+                          allow_blackout=False)
+    model.solve()
+
+    func = functools.partial(objective_from_capacity, attribute='om_cost_fixed')
+    expected = annualized_fixed_cost(technology_set_1, model)
+    actual = func(technology_list=technology_set_1, 
+                  solved_dispatch_model=model)
+
+    assert expected == pytest.approx(actual)
+
+
+def test_objective_from_energy(technology_set_1, net_demand):
+    """
+    Tests that :func:`objective_from_energy` produces expected results.
+    """
+    model = DispatchModel(technology_set_1,
+                          net_demand=net_demand,
+                          solver=solver,
+                          curtailment=False,
+                          allow_blackout=False)
+    model.solve()
+
+    func = functools.partial(objective_from_energy, attribute='co2_rate')
+    expected = annual_emission(technology_set_1, model, emission='co2_rate')
+    actual = func(technology_list=technology_set_1, 
+                  solved_dispatch_model=model)
 
     assert expected == pytest.approx(actual)

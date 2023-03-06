@@ -1,6 +1,20 @@
 # API Reference
 
+## Model Classes
 ```{eval-rst}
+
+.. autosummary::
+   :toctree: generated
+   :nosignatures:
+   :template: my_class.rst
+
+    osier.DispatchModel
+    osier.CapacityExpansion
+```
+
+## Technology Classes
+```{eval-rst}
+
 .. autosummary::
    :toctree: generated
    :nosignatures:
@@ -10,7 +24,28 @@
     osier.RampingTechnology
     osier.ThermalTechnology
     osier.StorageTechnology
-    osier.DispatchModel
-    osier.CapacityExpansion
-    osier.utils.synchronize_units
+
+```
+
+## Objective Functions
+```{eval-rst}
+.. autosummary::
+   :toctree: generated
+   :nosignatures:
+   :template: custom_module_template.rst
+
+    osier.equations
+
+```
+
+
+## General Functions
+```{eval-rst}
+.. autosummary::
+   :toctree: generated
+   :nosignatures:
+   :template: custom_module_template.rst
+
+    osier.utils
+
 ```

@@ -3,7 +3,7 @@ import numpy as np
 import pyomo.environ as pe
 import pyomo.opt as po
 from pyomo.environ import ConcreteModel
-from unyt import unyt_array, hr, MW, kW
+from unyt import unyt_array, hr, MW, kW, GW
 import itertools as it
 from osier import Technology
 from osier.technology import _validate_quantity, _validate_unit
@@ -17,18 +17,18 @@ _freq_opts = {'D': 'day',
               'T': 'minute'}
 LARGE_NUMBER = 1e40
 MEDIUM_NUMBER = 1e10
-BLACKOUT_COST = 10*(1/(kW*hr))*1e-6  # M$/kWh
+BLACKOUT_COST = 10 * (1 / (kW * hr))  # M$/kWh
 
 
 curtailment_tech = Technology(technology_name='Curtailment',
-                         technology_type='removal',
-                         dispatchable=True,
-                         capacity=MEDIUM_NUMBER)
+                              technology_type='removal',
+                              dispatchable=True,
+                              capacity=MEDIUM_NUMBER)
 reliability_tech = Technology(technology_name='LoadLoss',
-                         technology_type='matching',
-                         dispatchable=True,
-                         fuel_cost=BLACKOUT_COST,
-                         capacity=MEDIUM_NUMBER)                         
+                              technology_type='matching',
+                              dispatchable=True,
+                              fuel_cost=BLACKOUT_COST,
+                              capacity=MEDIUM_NUMBER)
 
 
 class DispatchModel():
@@ -123,9 +123,9 @@ class DispatchModel():
     allow_blackout : boolean
         If True, a "reliability" technology is added to the model that will
         fulfill the mismatch in supply and demand. This reliability technology
-        has a variable cost of 1e4 $/MWh. The value must be higher than the 
-        variable cost of any other technology to prevent a pathological 
-        preference for blackouts. Default is True.
+        has a variable cost of 1e4 $/MWh. The value must be higher than the
+        variable cost of any other technology to prevent a pathological
+        preference for blackouts. Default is False.
 
     Attributes
     ----------
@@ -197,15 +197,16 @@ class DispatchModel():
                  technology_list,
                  net_demand,
                  time_delta=None,
-                 power_units=MW,
                  solver='cplex',
                  lower_bound=0.0,
                  oversupply=0.0,
                  undersupply=0.0,
-                 penalty=1e-4,
                  verbose=False,
+                 penalty=1e-4,
+                 power_units=MW,
                  curtailment=True,
-                 allow_blackout=True):
+                 allow_blackout=False,
+                 **kwargs):
         self.net_demand = net_demand
         self.time_delta = time_delta
         self.lower_bound = lower_bound
@@ -235,13 +236,13 @@ class DispatchModel():
         else:
             sync_list = technology_list
 
-        self.technology_list = synchronize_units(sync_list,
+        self.technology_list = synchronize_units(
+            sync_list,
             unit_power=self.power_units,
             unit_time=self.time_delta.units)
-        
+
         if not verbose:
             logging.getLogger('pyomo.core').setLevel(logging.CRITICAL)
-
 
     @property
     def time_delta(self):
@@ -441,7 +442,7 @@ class DispatchModel():
                    for g in self.model.Generators for t in self.model.Time)
         if len(self.storage_techs) > 0:
             expr += sum(self.model.x[s, t] + self.model.charge[s, t]
-                        for s in self.model.StorageTech 
+                        for s in self.model.StorageTech
                         for t in self.model.Time) * self.penalty
         self.model.objective = pe.Objective(sense=pe.minimize, expr=expr)
 
@@ -449,13 +450,13 @@ class DispatchModel():
         self.model.oversupply = pe.ConstraintList()
         self.model.undersupply = pe.ConstraintList()
         for t in self.model.Time:
-            generation = sum(self.model.x[g, t] for g in self.model.Generators 
-                            if g != 'Curtailment')
+            generation = sum(self.model.x[g, t] for g in self.model.Generators
+                             if g != 'Curtailment')
             if self.curtailment:
-                generation -= self.model.x['Curtailment',t]
+                generation -= self.model.x['Curtailment', t]
             if len(self.storage_techs) > 0:
                 generation -= sum(self.model.charge[s, t]
-                                for s in self.model.StorageTech)
+                                  for s in self.model.StorageTech)
             over_demand = self.model.Demand[t] * (1 + self.oversupply)
             under_demand = self.model.Demand[t] * (1 - self.undersupply)
             self.model.oversupply.add(generation <= over_demand)
@@ -464,7 +465,9 @@ class DispatchModel():
     def _generation_constraint(self):
         self.model.gen_limit = pe.ConstraintList()
         for g in self.model.Generators:
-            unit_capacity = (self.capacity_dict[g] * self.time_delta).to_value()
+            unit_capacity = (
+                self.capacity_dict[g] *
+                self.time_delta).to_value()
 
             for t in self.model.Time:
                 unit_generation = self.model.x[g, t]
@@ -496,7 +499,9 @@ class DispatchModel():
         for s in self.model.StorageTech:
             efficiency = self.efficiency_dict[s]
             storage_cap = self.model.storage_capacity[s]
-            unit_capacity = (self.capacity_dict[s] * self.time_delta).to_value()
+            unit_capacity = (
+                self.capacity_dict[s] *
+                self.time_delta).to_value()
             initial_storage = self.model.initial_storage[s]
             for t in self.model.Time:
                 self.model.charge_rate_limit.add(
@@ -550,8 +555,8 @@ class DispatchModel():
         df = pd.DataFrame(index=self.model.Time)
         for g in self.model.Generators:
             if g == 'Curtailment':
-                df[g] = [-1*self.model.x[g, t].value for t in self.model.Time]
-            else:   
+                df[g] = [-1 * self.model.x[g, t].value for t in self.model.Time]
+            else:
                 df[g] = [self.model.x[g, t].value for t in self.model.Time]
 
         if len(self.storage_techs) > 0:
@@ -560,6 +565,10 @@ class DispatchModel():
                                      for t in self.model.Time]
                 df[f"{s}_level"] = [self.model.storage_level[s, t].value
                                     for t in self.model.Time]
+
+        df["Cost"] = np.array(sum(self.model.VariableCost[g, t] * self.model.x[g, t].value
+                                  for g in self.model.Generators) for t in self.model.Time)
+
         return df
 
     def solve(self, solver=None):
