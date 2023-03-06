@@ -304,13 +304,10 @@ class Technology(object):
         self.om_cost_fixed = om_cost_fixed
         self.om_cost_variable = om_cost_variable
         self.fuel_cost = fuel_cost
-<<<<<<< HEAD
         self.power_level = self.capacity
-=======
         self.co2_rate = co2_rate
         self.lifecycle_co2_rate = lifecycle_co2_rate
         self.land_intensity = land_intensity
->>>>>>> e7cf65a0e770506cfa37540fafe75a859feab1bc
 
     def __repr__(self) -> str:
         return (f"{self.technology_name}: {self.capacity}")
@@ -784,7 +781,6 @@ class StorageTechnology(Technology):
             raise AssertionError("Initial storage exceeds storage capacity.")
 
         self._initial_storage = valid_quantity
-<<<<<<< HEAD
 
     @property
     def max_rate(self):
@@ -856,5 +852,3 @@ class StorageTechnology(Technology):
         else:
             return 0.0
 
-=======
->>>>>>> e7cf65a0e770506cfa37540fafe75a859feab1bc
