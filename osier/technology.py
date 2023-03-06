@@ -1,7 +1,8 @@
 import unyt
-from unyt import MW, hr, kg, km, m
+from unyt import MW, hr, kg, km, m, megatonnes
 from unyt import unyt_quantity, unyt_array
 from unyt.exceptions import UnitParseError
+from collections import OrderedDict
 
 import numpy as np
 import pandas as pd
@@ -18,7 +19,7 @@ _dim_opts = {'time': hr,
              'specific_mass': kg**-1,
              'specific_power': MW**-1,
              'specific_energy': (MW * hr)**-1,
-             'mass_per_energy': kg * (MW * hr)**-1,
+             'mass_per_energy': megatonnes * (MW * hr)**-1,
              'area_per_power': km * MW**-2}
 
 _constant_types = (int, float, unyt_quantity)
@@ -201,9 +202,13 @@ class Technology(object):
         Default is 1.0, i.e. all of the technology's capacity contributes
         to capacity requirements.
     co2_rate : float or :class:`unyt.array.unyt_quantity`
-        Specifies the rate at carbon is emitted. May be either lifecycle
-        emissions or from direct use. However, consistency between
-        technologies is incumbent on the user.
+        Specifies the rate carbon dioxide is emitted during operation.
+        Generally only applicable for fossil fueled plants.
+    lifecycle_co2_rate : float or :class:`unyt.array.unyt_quantity`
+        Specifies the rate of CO2eq emissions over a typical lifetime. 
+        Unless you are reading this in a future where the economy is fully
+        decarbonized, all technologies should have a non-zero value for this 
+        attribute.
     land_intensity : float or :class:`unyt.array.unyt_quantity`
         The amount of land required per unit capacity. May be either lifecycle
         land use or from direct use. However, consistency between
@@ -265,6 +270,7 @@ class Technology(object):
                  capacity_factor=1.0,
                  capacity_credit=1.0,
                  co2_rate=0.0,
+                 lifecycle_co2_rate=0.0,
                  land_intensity=0.0,
                  efficiency=1.0,
                  lifetime=25.0,
@@ -273,7 +279,7 @@ class Technology(object):
                  default_energy_units=None,
                  default_length_units=km,
                  default_volume_units=m**3,
-                 default_mass_units=kg) -> None:
+                 default_mass_units=megatonnes) -> None:
 
         self.technology_name = technology_name
         self.technology_type = technology_type
@@ -292,6 +298,7 @@ class Technology(object):
 
         self.capacity = capacity
         self.capacity_factor = capacity_factor
+        self.capacity_credit = capacity_credit
         self.efficiency = efficiency
         self.capital_cost = capital_cost
         self.om_cost_fixed = om_cost_fixed
@@ -301,6 +308,7 @@ class Technology(object):
         self.power_level = self.capacity
 =======
         self.co2_rate = co2_rate
+        self.lifecycle_co2_rate = lifecycle_co2_rate
         self.land_intensity = land_intensity
 >>>>>>> e7cf65a0e770506cfa37540fafe75a859feab1bc
 
@@ -542,6 +550,50 @@ class Technology(object):
                 raise AssertionError(
                     f"Variable cost data too short ({len(var_cost_ts)} < {size})")
             return var_cost_ts
+        
+    def to_dataframe(self, cast_to_string=True):
+        """
+        Writes all technology attributes to a :class:`pandas.DataFrame` for export
+        and manipulation.
+        """
+
+        tech_data = OrderedDict()
+        tech_data['technology_name'] = [self.technology_name]
+        tech_data['technology_category'] = [self.technology_category]
+        tech_data['technology_type'] = [self.technology_type]
+        tech_data['dispatchable'] = [str(self.dispatchable)]
+        tech_data['renewable'] = [str(self.renewable)]
+        tech_data['fuel_type'] = [str(self.fuel_type)]
+
+        for key, value in self.__dict__.items():
+            if key in tech_data:
+                continue
+            elif value is None:
+                col = key.strip('_')
+                tech_data[col] = [str(value)] 
+            else:
+                if isinstance(value, unyt.unit_object.Unit):
+                    continue
+                elif isinstance(value, unyt_quantity):
+                    col = f"{key.strip('_')} ({value.units})"
+                    if cast_to_string:
+                        tech_data[col] = ["{:.3e}".format(value.to_value())]
+                    else:
+                        tech_data[col] = [np.round(value.to_value(),10)]
+                elif isinstance(value, (int, float)):
+                    col = key.strip('_')
+                    if cast_to_string:
+                        tech_data[col] = ["{:.3e}".format(value)]
+                    else:
+                        tech_data[col] = [np.round(value,10)]
+                else:
+                    continue
+
+        tech_dataframe = pd.DataFrame(tech_data).set_index('technology_name')
+
+        return tech_dataframe
+                
+            
 
 
     def power_output(self, demand):

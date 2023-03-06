@@ -89,13 +89,12 @@ class CapacityExpansion(ElementwiseProblem):
                  power_units=u.MW,
                  curtailment=True,
                  allow_blackout=False,
+                 verbosity=None,
                  **kwargs):
         self.technology_list = deepcopy(technology_list)
         self.demand = demand
         self.prm = prm
-        self.max_demand = float(demand.max()) * power_units
-        self.avg_lifetime = 25
-        self.capacity_requirement = self.max_demand * (1 + self.prm)
+        self.verbosity = verbosity
 
         self.objectives = objectives
         self.constraints = constraints
@@ -107,6 +106,9 @@ class CapacityExpansion(ElementwiseProblem):
             self.power_units = demand.units
         else:
             self.power_units = power_units
+
+        self.max_demand = float(demand.max()) * self.power_units
+        self.capacity_requirement = self.max_demand * (1 + self.prm)
 
         if solar is not None:
             self.solar_ts = solar / solar.max()
@@ -123,6 +125,25 @@ class CapacityExpansion(ElementwiseProblem):
                          xl=0.0,
                          xu=1.0,
                          **kwargs)
+        
+    def pprint(self):
+        """
+        Prints the problem formulation.
+        """
+
+        print("CapacityExpansion Problem")
+        print("===========================")
+        print("Technologies:\n")
+        print("Technology Name | Capacity \n")
+        for t in self.technology_list:
+            print(t)
+
+        print("Total")
+        print("\n")
+        print("Electricity Demand:\n")
+        print(self.demand)
+
+        return
 
     @property
     def capacity_credit(self):
@@ -191,3 +212,12 @@ class CapacityExpansion(ElementwiseProblem):
 
         if self.n_constr > 0:
             out["G"] = out_constr
+
+
+        if (self.verbosity is not None) and (self.verbosity =='debug'):
+            self.pprint()
+
+            print(f"Model solved? {model.results != None}\n")
+
+            print("Objective Values:\n")
+            print(out["F"])
