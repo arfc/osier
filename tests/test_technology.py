@@ -7,6 +7,7 @@ from unyt import kW, MW, hr, BTU, Horsepower, day, kg, GW, megatonnes
 from osier import Technology
 from osier.technology import _validate_unit, _validate_quantity
 from unyt.exceptions import UnitParseError
+from osier.tech_library import *
 
 TECH_NAME = "PlanetExpress"
 energy_unyt = 10.0 * MW * hr
@@ -384,7 +385,6 @@ def test_unit_energy(advanced_tech):
 
 
 def test_comparison_operators(advanced_tech):
-
     NIMBUS = Technology(technology_name="The Nimbus",
                         om_cost_variable=1.0)
 
@@ -396,3 +396,76 @@ def test_comparison_operators(advanced_tech):
     ships.sort()
 
     assert ships == [advanced_tech, NIMBUS]
+
+
+def test_single_power_output():
+    capacity = 18*GW
+    natural_gas.capacity = capacity
+    assert natural_gas.capacity == capacity
+
+    demand = 10*GW
+    output = natural_gas.power_output(demand)
+    print(output)
+    assert output == demand
+    assert natural_gas.power_level == demand
+    assert len(natural_gas.power_history) == 1
+
+    demand = 17*GW
+    output = natural_gas.power_output(demand)
+    assert output == demand
+    assert natural_gas.power_level == demand
+    assert len(natural_gas.power_history) == 2
+
+    demand = 20*GW
+    output = natural_gas.power_output(demand)
+    assert output == capacity
+    assert natural_gas.power_level == capacity
+    assert len(natural_gas.power_history) == 3
+    
+
+def test_reset_history():
+    natural_gas.reset_history()
+    assert len(natural_gas.power_history) == 0
+
+
+def test_multiple_power_output():
+    capacity = 18*GW
+    natural_gas.capacity = capacity
+    assert natural_gas.capacity == capacity
+
+    demand = np.array([10,17,20])*GW
+    output = unyt_array(np.zeros(len(demand)))*demand.units
+    expected = unyt_array([demand[0], demand[1], capacity])
+    for i,d in enumerate(demand):
+        print('demand', d)
+        out = natural_gas.power_output(d)
+        print('output', out)
+        output[i] = out
+        print(output[i])
+    assert np.all(output == expected)
+    assert len(natural_gas.power_history) == 3
+
+
+def test_thermal_power_output():
+    capacity = 18*GW
+    ramp_rate = 0.25 * hr**-1
+    nuclear_adv.capacity = capacity
+    nuclear_adv.ramp_up_rate=ramp_rate
+    nuclear_adv.ramp_down_rate=ramp_rate
+    assert nuclear_adv.capacity == capacity
+    assert nuclear_adv.ramp_up_rate == ramp_rate
+    assert nuclear_adv.ramp_down_rate == ramp_rate
+
+    demand = np.array([5,17,20])*GW
+    output = unyt_array(np.zeros(len(demand)))*demand.units
+    expected = unyt_array([13.5,17,18])*GW
+    for i,d in enumerate(demand):
+        print('demand', d)
+        out = nuclear_adv.power_output(d)
+        print('output', out)
+        output[i] = out
+        print(output[i])
+    print(output)
+    print(expected)
+    assert np.all(output == expected)
+    assert len(nuclear_adv.power_history) == 3
