@@ -214,7 +214,7 @@ class CapacityExpansion(ElementwiseProblem):
             out["G"] = out_constr
 
 
-        if (self.verbosity is not None) and (self.verbosity =='debug'):
+        if (self.verbosity =='debug'):
             self.pprint()
 
             print(f"Model solved? {model.results != None}\n")
