@@ -464,6 +464,34 @@ def test_thermal_power_output():
 
 
 def test_storage_charge():
-    capacity = 1*MW
+    capacity = 1e3*MW
+    initial_storage = 100*MW*hour
+    storage_duration = 4*hour
     battery.capacity = capacity
+    battery.initial_storage = initial_storage
+    battery.storage_duration = storage_duration
     assert battery.capacity == capacity
+    assert battery.storage_capacity == storage_duration*capacity
+
+    # charging
+    demand = np.array([-400,-500,-1000,-3500,-1000,-5])*MW
+    for i,d in enumerate(demand):
+        battery.charge(d)
+    expected_storage = np.array([500, 1000, 2000, 3000,4000,4000])*MW*hour
+    expected_power = -np.array([400, 500, 1000, 1000, 1000, 0])*MW
+    assert np.all(battery.storage_history == expected_storage)
+    assert np.all(battery.power_history == expected_power)
+  
+
+def test_storage_power_out():
+    # discharging
+    demand = np.array([1e3, 1e3, 1e3, 500, 1e3])*MW
+    for i,d in enumerate(demand):
+        battery.power_output(d)
+    expected_storage = np.array([3000, 2000, 1000, 500, 0.0])*MW*hour
+    expected_power = np.array([1e3, 1e3, 1e3, 500, 500])*MW
+    print(battery.storage_history[6:])
+    print(battery.power_history[6:])
+    assert np.all(battery.storage_history[6:] == expected_storage)
+    assert np.all(battery.power_history[6:] == expected_power)
+
