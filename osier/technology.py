@@ -855,9 +855,9 @@ class StorageTechnology(Technology):
         """
         Resets the technology's power history for a new simulation.
         """
-        self.storage_history = {}
+        self.storage_history = []
         self.storage_level = self._initial_storage
-        self.power_history = {}
+        self.power_history = []
         self.power_level = self.capacity
 
     def power_output(self, demand: unyt_quantity, time_delta=1*hr):

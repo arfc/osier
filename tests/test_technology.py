@@ -461,3 +461,9 @@ def test_thermal_power_output():
         output[i] = out
     assert np.all(output == expected)
     assert np.all(unyt_array(nuclear_adv.power_history) == expected)
+
+
+def test_storage_charge():
+    capacity = 1*MW
+    battery.capacity = capacity
+    assert battery.capacity == capacity
