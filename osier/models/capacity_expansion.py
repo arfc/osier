@@ -66,7 +66,9 @@ class CapacityExpansion(ElementwiseProblem):
         has a variable cost of 1e4 $/MWh. The value must be higher than the
         variable cost of any other technology to prevent a pathological
         preference for blackouts. Default is False.
-
+    verbosity : Optional, str
+        Whether or not debugging statements should be printed to the terminal.
+        Default is None. Accepts `'debugging'`.
 
     Notes
     -----
@@ -126,7 +128,7 @@ class CapacityExpansion(ElementwiseProblem):
                          xu=1.0,
                          **kwargs)
         
-    def pprint(self):
+    def print_problem_formulation(self):
         """
         Prints the problem formulation.
         """
@@ -215,7 +217,7 @@ class CapacityExpansion(ElementwiseProblem):
 
 
         if (self.verbosity =='debug'):
-            self.pprint()
+            self.print_problem_formulation()
 
             print(f"Model solved? {model.results != None}\n")
 
