@@ -202,11 +202,11 @@ class Technology(object):
         Default is 1.0, i.e. all of the technology's capacity contributes
         to capacity requirements.
     co2_rate : float or :class:`unyt.array.unyt_quantity`
-        Specifies the rate carbon dioxide is emitted during operation.
+        Specifies the rate at which carbon dioxide is emitted during operation.
         Generally only applicable for fossil fueled plants.
         If float, the default units are megatonnes per MWh
     lifecycle_co2_rate : float or :class:`unyt.array.unyt_quantity`
-        Specifies the rate of CO2eq emissions over a typical lifetime. 
+        Specifies the rate at which of CO2eq emissions over a typical lifetime. 
         Unless you are reading this in a future where the economy is fully
         decarbonized, all technologies should have a non-zero value for this 
         attribute.
