@@ -60,9 +60,5 @@ class LogicDispatchModel(OsierModel):
                         continue
 
         covered_demand[i] = v
-
-        n_hours_unmet = len(covered_demand[covered_demand.iloc[:,0] > 0])
-    #     print(n_hours_unmet)
-        lolp = n_hours_unmet / 8760
         
-        return covered_demand, lolp
+        return covered_demand
