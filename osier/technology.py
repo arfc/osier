@@ -204,11 +204,13 @@ class Technology(object):
     co2_rate : float or :class:`unyt.array.unyt_quantity`
         Specifies the rate carbon dioxide is emitted during operation.
         Generally only applicable for fossil fueled plants.
+        If float, the default units are megatonnes per MWh
     lifecycle_co2_rate : float or :class:`unyt.array.unyt_quantity`
         Specifies the rate of CO2eq emissions over a typical lifetime. 
         Unless you are reading this in a future where the economy is fully
         decarbonized, all technologies should have a non-zero value for this 
         attribute.
+        If float, the default units are megatonnes per MWh
     land_intensity : float or :class:`unyt.array.unyt_quantity`
         The amount of land required per unit capacity. May be either lifecycle
         land use or from direct use. However, consistency between
@@ -440,6 +442,14 @@ class Technology(object):
     @co2_rate.setter
     def co2_rate(self, value):
         self._co2_rate = _validate_quantity(value, dimension="mass_per_energy")
+
+    @property
+    def lifecycle_co2_rate(self):
+        return self._lifecycle_co2_rate.to(self.unit_mass * self.unit_energy**-1)
+
+    @lifecycle_co2_rate.setter
+    def lifecycle_co2_rate(self, value):
+        self._lifecycle_co2_rate = _validate_quantity(value, dimension="mass_per_energy")
 
     @property
     def land_intensity(self):
