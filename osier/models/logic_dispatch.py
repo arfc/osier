@@ -17,6 +17,11 @@ class LogicDispatchModel(OsierModel):
         self.storage_techs = get_storage_techs(self.technology_list)
         self.nonstorage_techs = get_nonstorage_techs(self.technology_list)
         self.cost_history = np.zeros(len(net_demand))
+        self.covered_demand = None
+
+    def _format_results(self):
+
+        pass
 
 
     def solve(self):
