@@ -2,6 +2,7 @@ from osier.utils import (get_tech_names,
                          get_dispatchable_techs, 
                          get_nondispatchable_techs, get_dispatchable_names)
 from pyentrp.entropy import weighted_permutation_entropy
+from functools import partial
 import numpy as np
 
 
@@ -206,6 +207,7 @@ def annual_emission(
 
     return emissions_total
 
+annual_co2 = partial(annual_emission, attribute='co2')  # for backwards compatibility
 
 def total_cost(technology_list, solved_dispatch_model):
     """
