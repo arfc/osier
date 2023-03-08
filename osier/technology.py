@@ -2,6 +2,7 @@ import unyt
 from unyt import MW, hr, kg, km, m
 from unyt import unyt_quantity, unyt_array
 from unyt.exceptions import UnitParseError
+from collections import OrderedDict
 
 import numpy as np
 import pandas as pd
@@ -201,9 +202,15 @@ class Technology(object):
         Default is 1.0, i.e. all of the technology's capacity contributes
         to capacity requirements.
     co2_rate : float or :class:`unyt.array.unyt_quantity`
-        Specifies the rate at carbon is emitted. May be either lifecycle
-        emissions or from direct use. However, consistency between
-        technologies is incumbent on the user.
+        Specifies the rate at which carbon dioxide is emitted during operation.
+        Generally only applicable for fossil fueled plants.
+        If float, the default units are megatonnes per MWh
+    lifecycle_co2_rate : float or :class:`unyt.array.unyt_quantity`
+        Specifies the rate at which of CO2eq emissions over a typical lifetime. 
+        Unless you are reading this in a future where the economy is fully
+        decarbonized, all technologies should have a non-zero value for this 
+        attribute.
+        If float, the default units are megatonnes per MWh
     land_intensity : float or :class:`unyt.array.unyt_quantity`
         The amount of land required per unit capacity. May be either lifecycle
         land use or from direct use. However, consistency between
@@ -265,6 +272,7 @@ class Technology(object):
                  capacity_factor=1.0,
                  capacity_credit=1.0,
                  co2_rate=0.0,
+                 lifecycle_co2_rate=0.0,
                  land_intensity=0.0,
                  efficiency=1.0,
                  lifetime=25.0,
@@ -292,12 +300,14 @@ class Technology(object):
 
         self.capacity = capacity
         self.capacity_factor = capacity_factor
+        self.capacity_credit = capacity_credit
         self.efficiency = efficiency
         self.capital_cost = capital_cost
         self.om_cost_fixed = om_cost_fixed
         self.om_cost_variable = om_cost_variable
         self.fuel_cost = fuel_cost
         self.co2_rate = co2_rate
+        self.lifecycle_co2_rate = lifecycle_co2_rate
         self.land_intensity = land_intensity
 
     def __repr__(self) -> str:
@@ -434,6 +444,14 @@ class Technology(object):
         self._co2_rate = _validate_quantity(value, dimension="mass_per_energy")
 
     @property
+    def lifecycle_co2_rate(self):
+        return self._lifecycle_co2_rate.to(self.unit_mass * self.unit_energy**-1)
+
+    @lifecycle_co2_rate.setter
+    def lifecycle_co2_rate(self, value):
+        self._lifecycle_co2_rate = _validate_quantity(value, dimension="mass_per_energy")
+
+    @property
     def land_intensity(self):
         return self._land_intensity.to(self.unit_area * self.unit_power**-1)
 
@@ -517,6 +535,50 @@ class Technology(object):
                 raise AssertionError(
                     f"Variable cost data too short ({len(var_cost_ts)} < {size})")
             return var_cost_ts
+        
+    def to_dataframe(self, cast_to_string=True):
+        """
+        Writes all technology attributes to a :class:`pandas.DataFrame` for export
+        and manipulation.
+        """
+
+        tech_data = OrderedDict()
+        tech_data['technology_name'] = [self.technology_name]
+        tech_data['technology_category'] = [self.technology_category]
+        tech_data['technology_type'] = [self.technology_type]
+        tech_data['dispatchable'] = [str(self.dispatchable)]
+        tech_data['renewable'] = [str(self.renewable)]
+        tech_data['fuel_type'] = [str(self.fuel_type)]
+
+        for key, value in self.__dict__.items():
+            if key in tech_data:
+                continue
+            elif value is None:
+                col = key.strip('_')
+                tech_data[col] = [str(value)] 
+            else:
+                if isinstance(value, unyt.unit_object.Unit):
+                    continue
+                elif isinstance(value, unyt_quantity):
+                    col = f"{key.strip('_')} ({value.units})"
+                    if cast_to_string:
+                        tech_data[col] = ["{:.3e}".format(value.to_value())]
+                    else:
+                        tech_data[col] = [np.round(value.to_value(),10)]
+                elif isinstance(value, (int, float)):
+                    col = key.strip('_')
+                    if cast_to_string:
+                        tech_data[col] = ["{:.3e}".format(value)]
+                    else:
+                        tech_data[col] = [np.round(value,10)]
+                else:
+                    continue
+
+        tech_dataframe = pd.DataFrame(tech_data).set_index('technology_name')
+
+        return tech_dataframe
+                
+            
 
 
 class RampingTechnology(Technology):
