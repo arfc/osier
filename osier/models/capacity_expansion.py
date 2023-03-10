@@ -133,6 +133,7 @@ class CapacityExpansion(ElementwiseProblem):
         Prints the problem formulation.
         """
 
+        print("===========================")
         print("CapacityExpansion Problem")
         print("===========================")
         print("Technologies:\n")
@@ -140,8 +141,6 @@ class CapacityExpansion(ElementwiseProblem):
         for t in self.technology_list:
             print(t)
 
-        print("Total")
-        print("\n")
         print("Electricity Demand:\n")
         print(self.demand)
 
@@ -219,7 +218,7 @@ class CapacityExpansion(ElementwiseProblem):
         if (self.verbosity =='debug'):
             self.print_problem_formulation()
 
-            print(f"Model solved? {model.results != None}\n")
+            print(f"Model solved? {(model.results is not None)}\n")
 
             print("Objective Values:\n")
             print(out["F"])
