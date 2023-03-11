@@ -2,7 +2,8 @@ import pytest
 import unyt
 import numpy as np
 import pandas as pd
-from unyt import kW, MW, hr, BTU, Horsepower, day, kg, GW
+import osier
+from unyt import kW, MW, hr, BTU, Horsepower, day, kg, GW, megatonnes
 from osier import Technology
 from osier.technology import _validate_unit, _validate_quantity
 from unyt.exceptions import UnitParseError
@@ -98,7 +99,7 @@ def test_initialize(advanced_tech):
     assert advanced_tech.unit_power == MW
     assert advanced_tech.unit_time == hr
     assert advanced_tech.unit_energy == MW * hr
-    assert advanced_tech.unit_mass == kg
+    assert advanced_tech.unit_mass == megatonnes
     assert advanced_tech.annual_fixed_cost == 0.0
     assert advanced_tech.total_capital_cost == 0.0
     assert advanced_tech.efficiency == 1.0
@@ -295,7 +296,7 @@ def test_fuel_cost(advanced_tech):
 
 
 def test_co2_rate(advanced_tech):
-    expected_unit = kg*(MW*hr)**-1
+    expected_unit = megatonnes*(MW*hr)**-1
     with pytest.raises(ValueError) as e:
         advanced_tech.co2_rate = dict_type
     with pytest.raises(UnitParseError) as e:
@@ -307,7 +308,7 @@ def test_co2_rate(advanced_tech):
     assert advanced_tech.co2_rate.value == 0.0
     assert advanced_tech.co2_rate.units == expected_unit
 
-    advanced_tech.co2_rate = kg*spec_energy_unyt
+    advanced_tech.co2_rate = megatonnes*spec_energy_unyt
     assert advanced_tech.co2_rate.value == 10.0
     assert advanced_tech.co2_rate.units == expected_unit
 
@@ -319,19 +320,19 @@ def test_co2_rate(advanced_tech):
     assert advanced_tech.co2_rate.value == 10.0
     assert advanced_tech.co2_rate.units == expected_unit
 
-    advanced_tech.co2_rate = float_val * kg / other_energy_unyt
+    advanced_tech.co2_rate = float_val * megatonnes / other_energy_unyt
     assert advanced_tech.co2_rate.value == pytest.approx(
         3412141.5, 0.5)
     assert advanced_tech.co2_rate.units == expected_unit
 
     advanced_tech.unit_power = "kW"
     advanced_tech.unit_time = "day"
-    assert advanced_tech.co2_rate.units == kg*(kW * day)**-1
+    assert advanced_tech.co2_rate.units == megatonnes*(kW * day)**-1
 
     advanced_tech.unit_power = "GW"
     advanced_tech.unit_time = "hr"
     advanced_tech.unit_mass = "ton"
-    advanced_tech.co2_rate = 10.0 * kg*(kW*hr)**-1
+    advanced_tech.co2_rate = 1e-2 * megatonnes*(GW*hr)**-1
     assert advanced_tech.co2_rate == pytest.approx(11023.113, 0.1)
 
 
