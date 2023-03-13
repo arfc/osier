@@ -140,8 +140,8 @@ class CapacityExpansion(ElementwiseProblem):
         print("Technology Name | Capacity \n")
         for t in self.technology_list:
             print(t)
-
-        print("Electricity Demand:\n")
+        
+        print("\nElectricity Demand:\n")
         print(self.demand)
 
         return
@@ -217,6 +217,9 @@ class CapacityExpansion(ElementwiseProblem):
 
         if (self.verbosity =='debug'):
             self.print_problem_formulation()
+
+            print("\nNet Demand\n")
+            print(net_demand)
 
             print(f"Model solved? {(model.results is not None)}\n")
 
