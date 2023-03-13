@@ -11,6 +11,8 @@ from osier.utils import synchronize_units
 import warnings
 import logging
 
+logger = logging.getLogger(__name__)
+
 _freq_opts = {'D': 'day',
               'H': 'hour',
               'S': 'second',
@@ -116,8 +118,9 @@ class DispatchModel():
     undersupply : float
         The amount of allowed undersupply as a percentage of demand.
         Default is 0.0 (no undersupply allowed).
-    verbose : boolean
-        Indicates if the solver should display log output. Default is False.
+    verbosity : Optional, int
+        Sets the logging level for the simulation. Accepts `logging.LEVEL`
+        or integer where LEVEL is {10:DEBUG, 20:INFO, 30:WARNING, 40:ERROR, 50:CRITICAL}.
     curtailment : boolean
         Indicates if the model should enable a curtailment option.
     allow_blackout : boolean
@@ -201,7 +204,7 @@ class DispatchModel():
                  lower_bound=0.0,
                  oversupply=0.0,
                  undersupply=0.0,
-                 verbose=False,
+                 verbosity=logging.CRITICAL,
                  penalty=1e-4,
                  power_units=MW,
                  curtailment=True,
@@ -218,7 +221,11 @@ class DispatchModel():
         self.results = None
         self.objective = None
         self.model_initialized = False
-        self.verbose = verbose
+        self.verbosity = verbosity
+        if self.verbosity > 10:
+            self.verbose = False
+        else: 
+            self.verbose = True
         self.curtailment = curtailment
         self.allow_blackout = allow_blackout
 
@@ -241,8 +248,8 @@ class DispatchModel():
             unit_power=self.power_units,
             unit_time=self.time_delta.units)
 
-        if not verbose:
-            logging.getLogger('pyomo.core').setLevel(logging.CRITICAL)
+        
+        logging.getLogger('pyomo.core').setLevel(verbosity)
 
     @property
     def time_delta(self):
@@ -459,8 +466,14 @@ class DispatchModel():
                                   for s in self.model.StorageTech)
             over_demand = self.model.Demand[t] * (1 + self.oversupply)
             under_demand = self.model.Demand[t] * (1 - self.undersupply)
-            self.model.oversupply.add(generation <= over_demand)
-            self.model.undersupply.add(generation >= under_demand)
+            try:
+                self.model.oversupply.add(generation <= over_demand)
+            except ValueError:
+                logger.exception(f"Tried setting {generation} <= {over_demand}. Oversupply: {self.oversupply}")
+            try:
+                self.model.undersupply.add(generation >= under_demand)
+            except:
+                logger.exception(f"Tried setting {generation} >= {under_demand}. Undersupply: {self.undersupply}")
 
     def _generation_constraint(self):
         self.model.gen_limit = pe.ConstraintList()
@@ -595,7 +608,7 @@ class DispatchModel():
         try:
             self.objective = self.model.objective()
         except ValueError:
-            if self.verbose:
+            if self.verbosity <= 30:
                 warnings.warn(
                     f"Infeasible or no solution. Objective set to {LARGE_NUMBER}")
             self.objective = LARGE_NUMBER
