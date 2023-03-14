@@ -5,6 +5,7 @@ import dill
 import unyt as u
 from unyt import unyt_array
 import functools
+import time
 
 from osier import DispatchModel
 
@@ -15,12 +16,16 @@ import logging
 logger = logging.getLogger(__name__)
 formatter = logging.Formatter('%(asctime)s:%(levelname)s:%(name)s:%(message)s')
 
-file_handler = logging.FileHandler('osier.log')
+timestr = time.strftime("%Y%m%d-%H%M%S")
+file_handler = logging.FileHandler(f'{timestr}_osier_capex.log')
 file_handler.setFormatter(formatter)
+stream_handler = logging.StreamHandler()
+stream_handler.setFormatter(formatter)
 
 logger.addHandler(file_handler)
+logger.addHandler(stream_handler)
 
-LARGE_NUMBER = 1e40
+LARGE_NUMBER = 1e20
 
 
 class CapacityExpansion(ElementwiseProblem):
@@ -167,6 +172,9 @@ class CapacityExpansion(ElementwiseProblem):
     def _evaluate(self, x, out, *args, **kwargs):
         capacities = self.capacity_requirement * x
 
+        logger.debug(f"X values : {x}")
+        logger.debug(f"Capacity values : {capacities}")
+
         solar_capacity = 0
         wind_capacity = 0
         firm_capacity = 0
@@ -195,9 +203,8 @@ class CapacityExpansion(ElementwiseProblem):
         for t in self.technology_list:
             logger.debug(t)
         
-        logger.debug("\nElectricity Demand:\n")
-        logger.debug(self.demand)
-        logger.debug("Net Demand:\n {net_demand}")
+        logger.debug(f"\nElectricity Demand:\n {self.demand}")
+        logger.debug(f"\nNet Demand:\n {net_demand}")
 
 
         model = DispatchModel(technology_list=self.dispatchable_techs,

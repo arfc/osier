@@ -10,14 +10,25 @@ from osier.technology import _validate_quantity, _validate_unit
 from osier.utils import synchronize_units
 import warnings
 import logging
+import time
 
 logger = logging.getLogger(__name__)
+formatter = logging.Formatter('%(asctime)s:%(levelname)s:%(name)s:%(message)s')
+
+timestr = time.strftime("%Y%m%d-%H%M%S")
+file_handler = logging.FileHandler(f'{timestr}_osier_dispatch.log')
+file_handler.setFormatter(formatter)
+stream_handler = logging.StreamHandler()
+stream_handler.setFormatter(formatter)
+
+logger.addHandler(file_handler)
+logger.addHandler(stream_handler)
 
 _freq_opts = {'D': 'day',
               'H': 'hour',
               'S': 'second',
               'T': 'minute'}
-LARGE_NUMBER = 1e40
+LARGE_NUMBER = 1e20
 MEDIUM_NUMBER = 1e10
 BLACKOUT_COST = 10 * (1 / (kW * hr))  # M$/kWh
 
@@ -469,11 +480,12 @@ class DispatchModel():
             try:
                 self.model.oversupply.add(generation <= over_demand)
             except ValueError:
+                breakpoint()
                 logger.exception(f"Tried setting {generation} <= {over_demand}. Oversupply: {self.oversupply}")
             try:
                 self.model.undersupply.add(generation >= under_demand)
             except:
-                logger.exception(f"Tried setting {generation} >= {under_demand}. Undersupply: {self.undersupply}")
+                logger.exception(f"Tried setting {generation} >= {under_demand}. Undersupply: {self.undersupply}\n ")
 
     def _generation_constraint(self):
         self.model.gen_limit = pe.ConstraintList()
