@@ -69,7 +69,7 @@ class OsierDEAP(object):
     def __init__(self, 
                  problem,
                  algorithm='nsga3', 
-                 lower_bound=1.0,
+                 lower_bound=0.0,
                  upper_bound=1.0,
                  repair=None,
                  hyper_params=None,
@@ -95,9 +95,9 @@ class OsierDEAP(object):
         self.upper_bound = upper_bound
 
         # Algorithm parameters
-        self.mutation_eta = hyper_params['mating.mutation.eta'] if hyper_params else 30.0
+        self.mutation_eta = hyper_params['mating.mutation.eta'] if hyper_params else 20.0
         self.mutation_prob = hyper_params['mating.mutation.prob'] if hyper_params else 1.0
-        self.crossover_eta = hyper_params['mating.crossover.eta'] if hyper_params else 20.0
+        self.crossover_eta = hyper_params['mating.crossover.eta'] if hyper_params else 30.0
         self.crossover_prob = hyper_params['mating.crossover.prob'] if hyper_params else 1.0
 
         # DEAP setup        
@@ -114,13 +114,16 @@ class OsierDEAP(object):
         self.toolbox.register("attr_float", uniform, self.lower_bound, self.upper_bound, self.n_dim)
         self.toolbox.register("individual", tools.initIterate, creator.Individual, self.toolbox.attr_float)
         self.toolbox.register("population", tools.initRepeat, list, self.toolbox.individual)
-        self.toolbox.register("evaluate", problem.evaluate, return_values_of=["F"])
+        self.toolbox.register("evaluate", self.problem.evaluate, return_values_of=["F"])
         self.toolbox.register("mate", tools.cxSimulatedBinaryBounded, 
                               low=self.lower_bound, 
-                              up=self.upper_bound, eta=self.mutation_eta)
+                              up=self.upper_bound, 
+                              eta=self.crossover_eta)
         self.toolbox.register("mutate", tools.mutPolynomialBounded, 
                               low=self.lower_bound, 
-                              up=self.upper_bound, eta=self.crossover_eta, indpb=1.0/self.n_dim)
+                              up=self.upper_bound, 
+                              eta=self.mutation_eta, 
+                              indpb=1.0/self.n_dim)
         if self.algorithm == 'nsga3':
             self.ref_dirs = get_reference_directions('energy', self.n_obj, self.pop_size, seed=1)
             self.toolbox.register("select", algorithm_options[self.algorithm], ref_points=self.ref_dirs)
@@ -129,11 +132,11 @@ class OsierDEAP(object):
             self.toolbox.register("select", algorithm_options[self.algorithm])
 
         # Initialize statistics object
-        stats = tools.Statistics(lambda ind: ind.fitness.values)
-        stats.register("avg", np.mean, axis=0)
-        stats.register("std", np.std, axis=0)
-        stats.register("min", np.min, axis=0)
-        stats.register("max", np.max, axis=0)
+        self.stats = tools.Statistics(lambda ind: ind.fitness.values)
+        self.stats.register("avg", np.mean, axis=0)
+        self.stats.register("std", np.std, axis=0)
+        self.stats.register("min", np.min, axis=0)
+        self.stats.register("max", np.max, axis=0)
 
 
     def run(self, n_gen, seed=1234, init_pop=None, start_from_last=False):
@@ -154,15 +157,21 @@ class OsierDEAP(object):
         random.seed(seed)
 
         if start_from_last:
+            print('Starting from last population\n')
             pop = self.last_population
         elif init_pop:
+            print('Starting from initialized population\n')
             pop = init_pop
         else:
+            print('Starting from random population\n')
             pop = self.toolbox.population(n=self.pop_size)
 
         invalid_ind = [ind for ind in pop if not ind.fitness.valid]
 
+        print('starting population \n', pop)
+
         if self.repair:
+            print('repairing...\n')
             invalid_ind = self.repair._do(self.problem, np.array(invalid_ind))
             pop = [creator.Individual(ind) for ind in invalid_ind]
             invalid_ind = [ind for ind in pop if not ind.fitness.valid]
@@ -192,6 +201,7 @@ class OsierDEAP(object):
 
             # Evaluate the individuals with an invalid fitness
             if self.repair:
+                print('repairing...\n')
                 invalid_ind = self.repair._do(self.problem, np.array(invalid_ind))
                 offspring = [creator.Individual(ind) for ind in invalid_ind]
                 invalid_ind = [ind for ind in offspring if not ind.fitness.valid]
