@@ -65,7 +65,7 @@ class OsierDEAP(object):
                  problem,
                  algorithm='nsga3', 
                  lower_bound=0.0,
-                 upper_bound=1.0,
+                 upper_bound=None,
                  repair=None,
                  hyper_params=None,
                  pop_size=100,
@@ -87,7 +87,11 @@ class OsierDEAP(object):
 
         self.algorithm = algorithm.lower()
         self.lower_bound = lower_bound
-        self.upper_bound = upper_bound
+
+        if upper_bound:
+            self.upper_bound = upper_bound
+        else:
+            self.upper_bound = 1/self.problem.capacity_credit.min()
 
         # Algorithm parameters
         self.mutation_eta = hyper_params['mating.mutation.eta'] if hyper_params else 20.0
