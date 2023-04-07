@@ -12,10 +12,6 @@ import functools
 
 import time
 
-import unyt as u
-from unyt import GW, MW, hour, day, kW
-from unyt import matplotlib_support
-from unyt import unyt_array
 
 from pymoo.core.problem import ElementwiseProblem, Problem
 from pymoo.util.ref_dirs import get_reference_directions
@@ -28,7 +24,6 @@ from deap import tools
 from osier import *
 from osier.tech_library import *
 
-from pygenesys.utils.tsprocess import aggregate
 
 def uniform(low, up, size=None):
     try:
@@ -168,10 +163,7 @@ class OsierDEAP(object):
 
         invalid_ind = [ind for ind in pop if not ind.fitness.valid]
 
-        print('starting population \n', pop)
-
-        if self.repair:
-            print('repairing...\n')
+        if self.repair and (len(invalid_ind) > 0):
             invalid_ind = self.repair._do(self.problem, np.array(invalid_ind))
             pop = [creator.Individual(ind) for ind in invalid_ind]
             invalid_ind = [ind for ind in pop if not ind.fitness.valid]
@@ -201,7 +193,6 @@ class OsierDEAP(object):
 
             # Evaluate the individuals with an invalid fitness
             if self.repair:
-                print('repairing...\n')
                 invalid_ind = self.repair._do(self.problem, np.array(invalid_ind))
                 offspring = [creator.Individual(ind) for ind in invalid_ind]
                 invalid_ind = [ind for ind in offspring if not ind.fitness.valid]
