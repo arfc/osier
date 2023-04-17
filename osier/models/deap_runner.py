@@ -78,7 +78,7 @@ class OsierDEAP(object):
         self.repair = repair
         self.completed_generations = 0
         self.last_population = None
-        self.save_directory = save_directory
+        self.save_directory = Path(save_directory) if save_directory else None
 
         try: 
             assert isinstance(problem, (ElementwiseProblem, Problem))
@@ -155,7 +155,7 @@ class OsierDEAP(object):
         """
         random.seed(seed)
 
-        if start_from_last:
+        if start_from_last and self.last_population:
             print('Starting from last population\n')
             pop = self.last_population
         elif init_pop:
@@ -217,3 +217,29 @@ class OsierDEAP(object):
             print(self.logbook.stream)
 
         return self.last_population, self.logbook, self.pareto_front
+    
+    def save_model(self, fpath=None):
+        """
+        Serializes the model state in a binary file.
+        """
+        
+        timestr = time.strftime("%Y%m%d-%H%M%S")
+        save_name = f"{timestr}-OsierModel.pkl"
+        if self.save_directory:
+            fpath = self.save_directory / save_name
+        else:
+            fpath = save_name
+
+        with open(fpath, "wb") as file:
+            dill.dump(self.__dict__, file)
+        
+
+    def load_model(self, fpath):
+        """
+        Loads a serialized model into the current object.
+        """
+
+        with open(fpath, "rb") as file:
+            tmp_dict = dill.load(file)
+        
+        self.__dict__.update(tmp_dict)
