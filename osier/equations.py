@@ -188,7 +188,7 @@ def annualized_fixed_cost(technology_list, solved_dispatch_model=None):
 def annual_emission(
         technology_list,
         solved_dispatch_model,
-        emission='co2_rate'):
+        emission='lifecycle_co2_rate'):
     """
     This function calculates the total system co2 emissions for a given
     set of technologies and their corresponding dispatch.

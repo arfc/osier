@@ -63,7 +63,7 @@ class OsierDEAP(object):
     """
     def __init__(self, 
                  problem,
-                 algorithm='nsga3', 
+                 algorithm=None, 
                  lower_bound=0.0,
                  upper_bound=None,
                  repair=None,
@@ -73,6 +73,12 @@ class OsierDEAP(object):
                  ) -> None:
         self.problem = problem
         self.n_obj = self.problem.n_obj
+        if algorithm:
+            self.algorithm = algorithm.lower()
+        elif self.n_obj < 3:
+            self.algorithm = 'nsga2'
+        elif self.n_obj >= 3:
+            self.algorithm = 'nsga3' 
         self.n_dim = self.problem.n_var
         self.pop_size = pop_size
         self.repair = repair
@@ -85,8 +91,6 @@ class OsierDEAP(object):
             assert isinstance(problem, (ElementwiseProblem, Problem))
         except AssertionError as e:
             raise AssertionError(f"Problem type <{type(problem)}> is not supported.")
-
-        self.algorithm = algorithm.lower()
         self.lower_bound = lower_bound
 
         if upper_bound:
