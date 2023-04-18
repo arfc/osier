@@ -205,8 +205,6 @@ def test_dispatch_model_solve_case1(technology_set_1, net_demand):
         [t.variable_cost for t in technology_set_1]).min()
     expected_result = cheapest_tech * net_demand.sum()
 
-    breakpoint()
-
     assert model.objective == pytest.approx(expected_result, rel=TOL)
     assert model.results['Nuclear'].sum(
     ) == pytest.approx(net_demand.sum(), TOL)
