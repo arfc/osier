@@ -18,6 +18,10 @@ from osier.tech_library import *
 
 
 def uniform(low, up, size=None):
+    """
+    Generates a random starting population from
+    a uniform distribution.
+    """
     try:
         return [random.uniform(a, b) for a, b in zip(low, up)]
     except TypeError:
