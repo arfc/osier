@@ -12,17 +12,6 @@ import warnings
 import logging
 import time
 
-logger = logging.getLogger(__name__)
-formatter = logging.Formatter('%(asctime)s:%(levelname)s:%(name)s:%(message)s')
-
-timestr = time.strftime("%Y%m%d-%H%M%S")
-file_handler = logging.FileHandler(f'{timestr}_osier_dispatch.log')
-file_handler.setFormatter(formatter)
-stream_handler = logging.StreamHandler()
-stream_handler.setFormatter(formatter)
-
-logger.addHandler(file_handler)
-logger.addHandler(stream_handler)
 
 _freq_opts = {'D': 'day',
               'H': 'hour',
@@ -215,7 +204,7 @@ class DispatchModel():
                  lower_bound=0.0,
                  oversupply=0.0,
                  undersupply=0.0,
-                 verbosity=logging.CRITICAL,
+                 verbosity=50,
                  penalty=1e-4,
                  power_units=MW,
                  curtailment=True,
@@ -477,15 +466,7 @@ class DispatchModel():
                                   for s in self.model.StorageTech)
             over_demand = self.model.Demand[t] * (1 + self.oversupply)
             under_demand = self.model.Demand[t] * (1 - self.undersupply)
-            try:
-                self.model.oversupply.add(generation <= over_demand)
-            except ValueError:
-                breakpoint()
-                logger.exception(f"Tried setting {generation} <= {over_demand}. Oversupply: {self.oversupply}")
-            try:
-                self.model.undersupply.add(generation >= under_demand)
-            except:
-                logger.exception(f"Tried setting {generation} >= {under_demand}. Undersupply: {self.undersupply}\n ")
+            self.model.oversupply.add(generation <= over_demand)
 
     def _generation_constraint(self):
         self.model.gen_limit = pe.ConstraintList()
