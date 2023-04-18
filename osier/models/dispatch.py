@@ -467,6 +467,7 @@ class DispatchModel():
             over_demand = self.model.Demand[t] * (1 + self.oversupply)
             under_demand = self.model.Demand[t] * (1 - self.undersupply)
             self.model.oversupply.add(generation <= over_demand)
+            self.model.undersupply.add(generation >= under_demand)
 
     def _generation_constraint(self):
         self.model.gen_limit = pe.ConstraintList()
