@@ -1,15 +1,7 @@
 import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
 from pathlib import Path
-import seaborn as sb
-from copy import deepcopy
 import dill
-from math import factorial
 import random
-
-import functools
-
 import time
 
 
@@ -63,7 +55,7 @@ class OsierDEAP(object):
     """
     def __init__(self, 
                  problem,
-                 algorithm='nsga3', 
+                 algorithm=None, 
                  lower_bound=0.0,
                  upper_bound=None,
                  repair=None,
@@ -73,19 +65,24 @@ class OsierDEAP(object):
                  ) -> None:
         self.problem = problem
         self.n_obj = self.problem.n_obj
+        if algorithm:
+            self.algorithm = algorithm.lower()
+        elif self.n_obj < 3:
+            self.algorithm = 'nsga2'
+        elif self.n_obj >= 3:
+            self.algorithm = 'nsga3' 
         self.n_dim = self.problem.n_var
         self.pop_size = pop_size
         self.repair = repair
         self.completed_generations = 0
+        self.solve_time = 0.0
         self.last_population = None
-        self.save_directory = save_directory
+        self.save_directory = Path(save_directory) if save_directory else None
 
         try: 
             assert isinstance(problem, (ElementwiseProblem, Problem))
         except AssertionError as e:
             raise AssertionError(f"Problem type <{type(problem)}> is not supported.")
-
-        self.algorithm = algorithm.lower()
         self.lower_bound = lower_bound
 
         if upper_bound:
@@ -155,7 +152,7 @@ class OsierDEAP(object):
         """
         random.seed(seed)
 
-        if start_from_last:
+        if start_from_last and self.last_population:
             print('Starting from last population\n')
             pop = self.last_population
         elif init_pop:
@@ -164,6 +161,8 @@ class OsierDEAP(object):
         else:
             print('Starting from random population\n')
             pop = self.toolbox.population(n=self.pop_size)
+
+        start = time.perf_counter()
 
         invalid_ind = [ind for ind in pop if not ind.fitness.valid]
 
@@ -216,4 +215,33 @@ class OsierDEAP(object):
             self.completed_generations += 1
             print(self.logbook.stream)
 
+        end = time.perf_counter()
+        self.solve_time += (end-start)
+
         return self.last_population, self.logbook, self.pareto_front
+    
+    def save_model(self, fpath=None):
+        """
+        Serializes the model state in a binary file.
+        """
+        
+        timestr = time.strftime("%Y%m%d-%H%M%S")
+        save_name = f"{timestr}-OsierModel.pkl"
+        if self.save_directory:
+            fpath = self.save_directory / save_name
+        else:
+            fpath = save_name
+
+        with open(fpath, "wb") as file:
+            dill.dump(self.__dict__, file)
+        
+
+    def load_model(self, fpath):
+        """
+        Loads a serialized model into the current object.
+        """
+
+        with open(fpath, "rb") as file:
+            tmp_dict = dill.load(file)
+        
+        self.__dict__.update(tmp_dict)

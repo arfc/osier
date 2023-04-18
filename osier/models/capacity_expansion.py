@@ -11,20 +11,6 @@ from osier import DispatchModel
 
 from pymoo.core.problem import ElementwiseProblem
 
-
-import logging
-logger = logging.getLogger(__name__)
-formatter = logging.Formatter('%(asctime)s:%(levelname)s:%(name)s:%(message)s')
-
-timestr = time.strftime("%Y%m%d-%H%M%S")
-file_handler = logging.FileHandler(f'{timestr}_osier_capex.log')
-file_handler.setFormatter(formatter)
-stream_handler = logging.StreamHandler()
-stream_handler.setFormatter(formatter)
-
-logger.addHandler(file_handler)
-logger.addHandler(stream_handler)
-
 LARGE_NUMBER = 1e20
 
 
@@ -105,7 +91,7 @@ class CapacityExpansion(ElementwiseProblem):
                  power_units=u.MW,
                  curtailment=True,
                  allow_blackout=False,
-                 verbosity=logging.CRITICAL,
+                 verbosity=50,
                  **kwargs):
         self.technology_list = deepcopy(technology_list)
         self.demand = demand
@@ -117,7 +103,6 @@ class CapacityExpansion(ElementwiseProblem):
         self.curtailment = curtailment
         self.allow_blackout = allow_blackout
         self.verbosity = verbosity
-        logger.setLevel(self.verbosity)
 
         if isinstance(demand, unyt_array):
             self.power_units = demand.units
@@ -171,10 +156,6 @@ class CapacityExpansion(ElementwiseProblem):
 
     def _evaluate(self, x, out, *args, **kwargs):
         capacities = self.capacity_requirement * x
-
-        logger.debug(f"X values : {x}")
-        logger.debug(f"Capacity values : {capacities}")
-
         solar_capacity = 0
         wind_capacity = 0
         firm_capacity = 0
@@ -198,23 +179,12 @@ class CapacityExpansion(ElementwiseProblem):
             - wind_gen \
             - solar_gen
 
-        logger.debug("Technologies:\n")
-        logger.debug("Technology Name | Capacity \n")
-        for t in self.technology_list:
-            logger.debug(t)
-        
-        logger.debug(f"\nElectricity Demand:\n {self.demand}")
-        logger.debug(f"\nNet Demand:\n {net_demand}")
-
-
         model = DispatchModel(technology_list=self.dispatchable_techs,
                               net_demand=net_demand,
                               power_units=self.power_units,
                               curtailment=self.curtailment,
                               allow_blackout=self.allow_blackout)
         model.solve()
-
-        logger.info(f"Dispatch Model solved? {(model.results is not None)}")
 
         if model.results is not None:
 
@@ -240,11 +210,6 @@ class CapacityExpansion(ElementwiseProblem):
 
         out["F"] = out_obj
 
-        logger.info("Objective Values:\n")
-        logger.info(f'{out["F"]}\n')
 
         if self.n_constr > 0:
             out["G"] = out_constr
-
-            logger.info("Constraint Values:\n")
-            logger.info(f'{out["G"]}\n')
