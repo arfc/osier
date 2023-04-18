@@ -77,6 +77,7 @@ class OsierDEAP(object):
         self.pop_size = pop_size
         self.repair = repair
         self.completed_generations = 0
+        self.solve_time = 0.0
         self.last_population = None
         self.save_directory = Path(save_directory) if save_directory else None
 
@@ -165,6 +166,8 @@ class OsierDEAP(object):
             print('Starting from random population\n')
             pop = self.toolbox.population(n=self.pop_size)
 
+        start = time.perf_counter()
+
         invalid_ind = [ind for ind in pop if not ind.fitness.valid]
 
         if self.repair and (len(invalid_ind) > 0):
@@ -215,6 +218,9 @@ class OsierDEAP(object):
             self.last_population = pop
             self.completed_generations += 1
             print(self.logbook.stream)
+
+        end = time.perf_counter()
+        self.solve_time += (end-start)
 
         return self.last_population, self.logbook, self.pareto_front
     
