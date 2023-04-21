@@ -5,13 +5,13 @@ import dill
 import unyt as u
 from unyt import unyt_array
 import functools
+import time
 
 from osier import DispatchModel
 
 from pymoo.core.problem import ElementwiseProblem
 
-
-LARGE_NUMBER = 1e40
+LARGE_NUMBER = 1e20
 
 
 class CapacityExpansion(ElementwiseProblem):
@@ -66,9 +66,9 @@ class CapacityExpansion(ElementwiseProblem):
         has a variable cost of 1e4 $/MWh. The value must be higher than the
         variable cost of any other technology to prevent a pathological
         preference for blackouts. Default is False.
-    verbosity : Optional, str
-        Whether or not debugging statements should be printed to the terminal.
-        Default is None. Accepts `'debugging'`.
+    verbosity : Optional, int
+        Sets the logging level for the simulation. Accepts `logging.LEVEL`
+        or integer where LEVEL is {10:DEBUG, 20:INFO, 30:WARNING, 40:ERROR, 50:CRITICAL}.
 
     Notes
     -----
@@ -91,18 +91,18 @@ class CapacityExpansion(ElementwiseProblem):
                  power_units=u.MW,
                  curtailment=True,
                  allow_blackout=False,
-                 verbosity=None,
+                 verbosity=50,
                  **kwargs):
         self.technology_list = deepcopy(technology_list)
         self.demand = demand
         self.prm = prm
-        self.verbosity = verbosity
 
         self.objectives = objectives
         self.constraints = constraints
         self.penalty = penalty
         self.curtailment = curtailment
         self.allow_blackout = allow_blackout
+        self.verbosity = verbosity
 
         if isinstance(demand, unyt_array):
             self.power_units = demand.units
@@ -133,16 +133,15 @@ class CapacityExpansion(ElementwiseProblem):
         Prints the problem formulation.
         """
 
+        print("===========================")
         print("CapacityExpansion Problem")
         print("===========================")
         print("Technologies:\n")
         print("Technology Name | Capacity \n")
         for t in self.technology_list:
             print(t)
-
-        print("Total")
-        print("\n")
-        print("Electricity Demand:\n")
+        
+        print("\nElectricity Demand:\n")
         print(self.demand)
 
         return
@@ -157,7 +156,6 @@ class CapacityExpansion(ElementwiseProblem):
 
     def _evaluate(self, x, out, *args, **kwargs):
         capacities = self.capacity_requirement * x
-
         solar_capacity = 0
         wind_capacity = 0
         firm_capacity = 0
@@ -212,14 +210,6 @@ class CapacityExpansion(ElementwiseProblem):
 
         out["F"] = out_obj
 
+
         if self.n_constr > 0:
             out["G"] = out_constr
-
-
-        if (self.verbosity =='debug'):
-            self.print_problem_formulation()
-
-            print(f"Model solved? {model.results != None}\n")
-
-            print("Objective Values:\n")
-            print(out["F"])

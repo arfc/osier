@@ -116,24 +116,25 @@ def objective_from_energy(technology_list, attribute, solved_dispatch_model):
 
     """
 
-    dispatch_techs = get_dispatchable_techs(technology_list)
-    non_dispatch_techs = get_nondispatchable_techs(technology_list)
-    column_names = get_tech_names(technology_list)
+    valid_techs = [t for t in technology_list if hasattr(t, attribute)]
+    column_names = get_tech_names(valid_techs)
     dispatch_results = solved_dispatch_model.results
     power_units = solved_dispatch_model.power_units
     time_delta = solved_dispatch_model.time_delta
     dispatch_values = dispatch_results[column_names].values.T*power_units*time_delta
-
-
+    
+    mass_u = valid_techs[0].unit_mass
     attributes = unyt_array([getattr(t, attribute)
-                           for t in dispatch_techs + non_dispatch_techs
-                           if hasattr(t, attribute)])
+                           for t in valid_techs])
+    
+    attributes = attributes.to(mass_u*(power_units*time_delta.units)**-1)*time_delta.to_value()
 
     objective_value = np.dot(
         attributes,
         dispatch_values).sum()
+    
 
-    return objective_value
+    return objective_value.to_value()
 
 
 def annualized_capital_cost(technology_list, solved_dispatch_model=None):
@@ -187,7 +188,7 @@ def annualized_fixed_cost(technology_list, solved_dispatch_model=None):
 def annual_emission(
         technology_list,
         solved_dispatch_model,
-        emission='co2_rate'):
+        emission='lifecycle_co2_rate'):
     """
     This function calculates the total system co2 emissions for a given
     set of technologies and their corresponding dispatch.
