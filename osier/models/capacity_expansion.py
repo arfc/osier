@@ -87,6 +87,8 @@ class CapacityExpansion(ElementwiseProblem):
                  solar=None,
                  wind=None,
                  prm=0.0,
+                 lower_bound=0.0,
+                 upper_bound=1.0,
                  penalty=LARGE_NUMBER,
                  power_units=u.MW,
                  curtailment=True,
@@ -124,8 +126,8 @@ class CapacityExpansion(ElementwiseProblem):
         super().__init__(n_var=len(self.technology_list),
                          n_obj=len(self.objectives),
                          n_constr=len(self.constraints),
-                         xl=0.0,
-                         xu=1.0,
+                         xl=lower_bound,
+                         xu=upper_bound,
                          **kwargs)
         
     def print_problem_formulation(self):
