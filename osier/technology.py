@@ -562,13 +562,13 @@ class Technology(object):
                 elif isinstance(value, unyt_quantity):
                     col = f"{key.strip('_')} ({value.units})"
                     if cast_to_string:
-                        tech_data[col] = ["{:.3e}".format(value.to_value())]
+                        tech_data[col] = ["{:.3g}".format(value.to_value())]
                     else:
                         tech_data[col] = [np.round(value.to_value(),10)]
                 elif isinstance(value, (int, float)):
                     col = key.strip('_')
                     if cast_to_string:
-                        tech_data[col] = ["{:.3e}".format(value)]
+                        tech_data[col] = ["{:.3g}".format(value)]
                     else:
                         tech_data[col] = [np.round(value,10)]
                 else:
