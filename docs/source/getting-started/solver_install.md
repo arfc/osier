@@ -1,23 +1,32 @@
+# Installing LP Solvers
 ```{eval-rst}
 :class:`osier` is intended to be extremely user friendly and most problems
 should be solvable without an external solver. However, the current implementation
 of the :class:`osier.DispatchModel` as a linear program requires an external solver
-such as CPLEX, CBC, GLPK, or Gurobi (since these are all supported by :class:`pyomo`). A dispatch model that does not depend on an external solver is currently in the works.
+such as CPLEX, CBC, GLPK, or Gurobi (since these are all supported by :class:`pyomo`).
 
 CPLEX and Gurobi are commercial solvers, however it is quite simple to obtain a free
 academic license (instructions forthcoming). GLPK will work on Windows, but requires
 installing external binaries. CBC is a good open-source solver for a unix operating
 system such as Mac or Linux.
  ```
+
+## Table of Contents
+
+1. [COIN-CBC](#installing-coin-cbc)
+2. [CPLEX](#installing-cplex)
+    1. [Install on Debian/Ubuntu](#debianubuntu)
+    2. [Install on Windows](#windows)
+
+
+## Installing COIN-CBC
 In order to use CBC on the latter two operating systems you must have a version
 of [Anaconda/conda](https://www.anaconda.com/products/distribution) installed.
-Then you can install it using 
+Then you can install it using
 
 ```bash
 $ conda install -c conda-forge coincbc
 ```
-
-
 
 ## Installing CPLEX
 
@@ -79,6 +88,6 @@ $ export PATH=$PATH:$CPLEX_STUDIO_BINARIES
 ```
 In order to make this change permanent, add these lines to the bottom of your `.bashrc` file and the run `$ source ~/.bashrc` to enact the changes.
 
-## Windows
+### Windows
 
 The easiest way to install CPLEX on Windows is with the GUI that is automatically shipped with the Windows binaries. Just follow the instructions in the GUI and you should be good to go!
