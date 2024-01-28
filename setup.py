@@ -70,7 +70,8 @@ EXTRAS_REQUIRE = {
         "sphinx_design",
         "sphinx-autodoc-typehints",
         'numpydoc',
-        'pydata_sphinx_theme'
+        'pydata_sphinx_theme',
+        'nbsphinx',
         ]}
 PYTHON_REQUIRES = ">= 3.6"
 
