@@ -9,5 +9,4 @@ the installation and usage of ``osier``.
 :maxdepth: 1
 
 solver_install
-../notebooks/tech_tutorial
 ```
