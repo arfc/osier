@@ -15,4 +15,22 @@ affiliations:
       index: 1
     - name: Nuclear, Plasma, and Radiological Engineering, University of Illinois Urbana-Champaign, USA
       index: 2
+date: 20 February 2024
+bibliography: paper.bib
+
+
+# Summary
+
+
+# Statement of Need
+
+
+# State of the Field
+
+
+# Documentation
+
+
+# References
+
 
