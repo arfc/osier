@@ -72,6 +72,7 @@ EXTRAS_REQUIRE = {
         'numpydoc',
         'pydata_sphinx_theme',
         'nbsphinx',
+        'pandoc'
         ]}
 PYTHON_REQUIRES = ">= 3.6"
 
