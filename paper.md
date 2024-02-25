@@ -17,16 +17,21 @@ affiliations:
       index: 2
 date: 20 February 2024
 bibliography: paper.bib
-
+---
 
 # Summary
+
+
 
 
 # Statement of Need
 
 
 # State of the Field
-
+There are myriad open- and closed-source energy system optimization models
+(ESOMs) available `@pfenninger_openmod_nodate`. ESOMs can be used for a variety
+of tasks but are most frequently used for prescriptive analyses
+meant to guide decision-makers in planning processes. However, despite the many available models, all of these tools share two important characteristics: Single objective optimization and an economic objective (either cost minimization or social welfare maximization). Simultaneously, there is growing awareness of energy justice and calls for its inclusion in energy models.
 
 # Documentation
 
