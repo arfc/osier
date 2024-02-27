@@ -280,7 +280,9 @@ def nmga(results_obj, n_points=10, slack=0.1, sense='minimize', how='random'):
     
     
     pf = results_obj.F
-
+    pf_slack = apply_slack(pareto_front=pf, 
+                           slack=slack,
+                           sense=sense)
         
     
     checked_points = set()
