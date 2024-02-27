@@ -4,6 +4,7 @@ from unyt import unit_object
 import copy
 from typing import Iterable
 import pandas as pd
+import numpy as np
 import functools
 import types
 
@@ -14,19 +15,18 @@ def synchronize_units(tech_list: Iterable[Technology],
                       unit_power: unit_object,
                       unit_time: unit_object) -> Iterable[Technology]:
     """
-    This function ensures that all objects in the technology list
-    have units consistent with the model's units. An
-    :class:`osier.Technology` object (or sub-classes) have three
-    unit settings.
+    This function ensures that all objects in the technology list have units
+    consistent with the model's units. An :class:`osier.Technology` object (or
+    sub-classes) have three unit settings.
 
         * :attr:`unit_power`
         * :attr:`unit_time`
         * :attr:`unit_energy`
 
-    Only the :attr:`unit_power` and :attr:`unit_time` attributes can
-    be specified with this function to prevent inconsistent units.
-    E.g. Setting the :attr:`unit_energy` to ``MWh`` even though time
-    is in minutes and power is in ``kW``.
+    Only the :attr:`unit_power` and :attr:`unit_time` attributes can be
+    specified with this function to prevent inconsistent units. E.g. Setting the
+    :attr:`unit_energy` to ``MWh`` even though time is in minutes and power is
+    in ``kW``.
 
     .. note::
         The objects in the original list are copied by default. This
@@ -35,8 +35,7 @@ def synchronize_units(tech_list: Iterable[Technology],
     Parameters
     ----------
     tech_list : list of :class:`osier.Technology` objects
-        The list of technology objects whose units need to be
-        synchronized.
+        The list of technology objects whose units need to be synchronized.
 
     Returns
     -------
@@ -76,8 +75,8 @@ def get_tech_names(technology_list):
 
 def get_dispatchable_techs(technology_list):
     """
-    Returns a list of :class:`osier.Technology` objects 
-    where :attr:`dispatchable` is `True`.
+    Returns a list of :class:`osier.Technology` objects where
+    :attr:`dispatchable` is `True`.
 
     Parameters
     ----------
@@ -97,8 +96,8 @@ def get_dispatchable_techs(technology_list):
 
 def get_nondispatchable_techs(technology_list):
     """
-    Returns a list of :class:`osier.Technology` objects 
-    where :attr:`dispatchable` is `False`.
+    Returns a list of :class:`osier.Technology` objects where
+    :attr:`dispatchable` is `False`.
 
     Parameters
     ----------
@@ -118,8 +117,8 @@ def get_nondispatchable_techs(technology_list):
 
 def get_dispatchable_names(technology_list):
     """
-    Returns a list of :class:`osier.Technology` name strings
-    where :attr:`dispatchable` is `True`.
+    Returns a list of :class:`osier.Technology` name strings where
+    :attr:`dispatchable` is `True`.
 
     Parameters
     ----------
@@ -140,9 +139,9 @@ def get_dispatchable_names(technology_list):
 
 def get_objective_names(res_obj):
     """
-    This function returns a list of named objectives based on the
-    names of the functions passed to Osier. In the case of partial
-    functions, the first keyword value is used.
+    This function returns a list of named objectives based on the names of the
+    functions passed to Osier. In the case of partial functions, the first
+    keyword value is used.
     
     Parameters
     ----------
@@ -165,8 +164,8 @@ def get_objective_names(res_obj):
 
 def technology_dataframe(technology_list, cast_to_string=True):
     """
-    Returns a :class:`pandas.DataFrame` with a complete set
-    of data for a given technology list.
+    Returns a :class:`pandas.DataFrame` with a complete set of data for a given
+    technology list.
 
     Parameters
     ----------
@@ -189,11 +188,10 @@ def technology_dataframe(technology_list, cast_to_string=True):
     return technology_dataframe
 
 
-def apply_slack(pareto_front, slack):
+def apply_slack(pareto_front, slack, sense='minimize'):
     """
-    This function applies a specified slack value to a given 
-    Pareto front. Returns a :class:`numpy.ndarray` with the same
-    shape as the Pareto front.
+    This function applies a specified slack value to a given Pareto front.
+    Returns a :class:`numpy.ndarray` with the same shape as the Pareto front.
 
     Parameters
     ----------
@@ -201,20 +199,49 @@ def apply_slack(pareto_front, slack):
         A :class:`numpy.ndarray` with shape (population, N_objectives).
 
     slack : float or list of float
-        The slack value for the sub-optimal front, expressed as a 
-        decimal percentage. If `float` is passed, the same slack will
-        be applied to all objectives. A `list` of slack values should
-        have the same length as the list of objectives. The slack will
-        be applied to objective with the same index (defined when users
-        initialized the :class:`osier.CapacityExpansion` problem).
+        The slack value for the sub-optimal front, expressed as a decimal
+        percentage. If `float` is passed, the same slack will be applied to all
+        objectives. A `list` of slack values should have the same length as the
+        list of objectives. The slack will be applied to objective with the same
+        index (defined when users initialized the :class:`osier.CapacityExpansion` problem).
+        Each slack value should be less than unity. If users that find a 
+        slack greater than unity desirable should consider rerunning the model with fewer
+        or different objectives.
 
     Returns
     -------
     near_optimal_front : :class:`numpy.ndarray`
+        The near-optimal front.
     """
     
-    pass
+    try:
+        n_objectives = pareto_front.shape[1]
+    except IndexError as e:
+        n_objectives = len(pareto_front)
     
+    if isinstance(slack, (list, np.ndarray)):
+        try:
+            assert len(slack) == n_objectives
+        except AssertionError:
+            print("Number of slack values must equal number of objectives.")
+            raise ValueError
+
+        near_optimal_front = (np.ones(n_objectives)+np.array(slack))*np.array(pareto_front)
+        if sense.lower() == 'minimize':
+            near_optimal_front = np.array(pareto_front)*(np.ones(n_objectives)+np.array(slack))
+            return near_optimal_front
+        elif sense.lower() == 'maximize':
+            near_optimal_front = np.array(pareto_front)*(np.ones(n_objectives)-np.array(slack))
+            return near_optimal_front
+        
+        return near_optimal_front
+    elif isinstance(slack, float):
+        if sense.lower() == 'minimize':
+            near_optimal_front = np.array(pareto_front)*(1+slack)
+            return near_optimal_front
+        elif sense.lower() == 'maximize':
+            near_optimal_front = np.array(pareto_front)*(1-slack)
+            return near_optimal_front
 
     return
 
@@ -223,11 +250,11 @@ def apply_slack(pareto_front, slack):
 
 def nmga(results_obj, n_points=10, slack=0.1, sense='minimize', how='random'):
     """
-    N-dimensional modeling-to-generate-alternatives (n-mga)
-    allows users to efficiently search decision space by relaxing the objective
-    function(s) by a specified amount of slack. This implementation will identify
-    all points inside of an N-polytope (a polygon in N-dimensions). Then a
-    reduced subset of points will be selected. 
+    N-dimensional modeling-to-generate-alternatives (n-mga) allows users to
+    efficiently search decision space by relaxing the objective function(s) by a
+    specified amount of slack. This implementation will identify all points
+    inside of an N-polytope (a polygon in N-dimensions). Then a reduced subset
+    of points will be selected. 
 
     
     Parameters
@@ -235,29 +262,25 @@ def nmga(results_obj, n_points=10, slack=0.1, sense='minimize', how='random'):
     results_obj : :class:pymoo.Result
         The simulation results object containing all data and metadata.
     n_points : int
-        The number of points to select from the near-optimal region.
-        Default is 10.
+        The number of points to select from the near-optimal region. Default is
+        10.
     slack : float or list of float
-        The slack value for the sub-optimal front, expressed as a 
-        decimal percentage. If `float` is passed, the same slack will
-        be applied to all objectives. A `list` of slack values should
-        have the same length as the list of objectives. The slack will
-        be applied to objective with the same index (defined when users
-        initialized the :class:`osier.CapacityExpansion` problem).
+        The slack value for the sub-optimal front, expressed as a decimal
+        percentage. If `float` is passed, the same slack will be applied to all
+        objectives. A `list` of slack values should have the same length as the
+        list of objectives. The slack will be applied to objective with the same
+        index (defined when users initialized the
+        :class:`osier.CapacityExpansion` problem).
     sense : str
-        Indicates whether the optimization was a minimization 
-        or maximization. If min, the sub-optimal front is greater
-        than the Pareto front. If max, the sub-optimal front is 
-        below the Pareto front. Default is "minimize." 
+        Indicates whether the optimization was a minimization or maximization.
+        If min, the sub-optimal front is greater than the Pareto front. If max,
+        the sub-optimal front is below the Pareto front. Default is "minimize." 
     """
     n_objs = results_obj.problem.n_obj
     
     
     pf = results_obj.F
-    if sense.lower() == 'minimize':
-        pf_slack = pf*(1+slack)
-    elif sense.lower() == 'maximize':
-        pf_slack = pf*(1-slack)
+
         
     
     checked_points = set()
@@ -267,8 +290,8 @@ def nmga(results_obj, n_points=10, slack=0.1, sense='minimize', how='random'):
     
     # get list of all points
     for h in results_obj.history:
-        # the history of each population, individual, 
-        # and their corresponding design spaces.
+        # the history of each population, individual, and their corresponding
+        # design spaces.
         F_hist = h.pop.get("F")  # objective space
         X_hist = h.pop.get("X")  # design space
     
@@ -277,7 +300,8 @@ def nmga(results_obj, n_points=10, slack=0.1, sense='minimize', how='random'):
                 continue
             else:
                 checked_points.add(p)
-                # check that all coordinates of a point are within the boundaries.
+                # check that all coordinates of a point are within the
+                # boundaries.
                 cond1 = np.any((p < pf_slack).sum(axis=1)==n_objs)
                 cond2 = np.any((p > pf).sum(axis=1)==n_objs)
                 if cond1 and cond2:
