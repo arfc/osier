@@ -62,11 +62,12 @@ REQUIRES = [
     'pyomo',
     'pymoo',
     'pyentrp',
-    'deap',]
+    'deap',
+    'shapely',]
 EXTRAS_REQUIRE = {
     'doc': [
         'sphinx>=5.1',
-        'myst-parser',
+        'myst_parser',
         "sphinx_design",
         "sphinx-autodoc-typehints",
         'numpydoc',

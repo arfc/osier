@@ -47,5 +47,6 @@
    :template: custom_module_template.rst
 
     osier.utils
+    osier.nmga
 
 ```
