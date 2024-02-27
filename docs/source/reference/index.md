@@ -38,7 +38,6 @@
 
 ```
 
-
 ## General Functions
 ```{eval-rst}
 .. autosummary::
@@ -47,6 +46,5 @@
    :template: custom_module_template.rst
 
     osier.utils
-    osier.nmga
 
 ```

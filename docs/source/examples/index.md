@@ -4,7 +4,7 @@
 This section has examples that guide users from basic usage to more advanced topics.
 
 
-## Guides
+## Tutorials
 ```{toctree}
 :maxdepth: 1
 
