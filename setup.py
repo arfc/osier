@@ -66,6 +66,7 @@ REQUIRES = [
 EXTRAS_REQUIRE = {
     'doc': [
         'sphinx>=5.1',
+        'sphinx-autobuild',
         'myst-parser',
         "sphinx_design",
         "sphinx-autodoc-typehints",
