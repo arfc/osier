@@ -58,10 +58,9 @@ def test_apply_slack():
     pf4D = np.array([pf1D for i in range(n_objectives)]).T
     
     for slack in slack_values:
-        assert pf1D*(1+slack) == apply_slack(pf1D, slack, sense='minimize')
+        assert np.all(pf1D*(1+slack) == apply_slack(pf1D, slack, sense='minimize'))
     
-    assert pf4D*(np.ones(n_objectives)+slack_values) == apply_slack(pf4D, s
-                                                                    lack_values)
+    assert np.all(pf4D*(np.ones(n_objectives)+slack_values) == apply_slack(pf4D, slack_values))
  
     with pytest.raises(ValueError) as e:
         apply_slack(pf1D, slack_values)
