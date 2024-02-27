@@ -26,7 +26,10 @@ def _apply_slack(pareto_front, slack):
     -------
     near_optimal_front : :class:`numpy.ndarray`
     """
+    
+    
 
+    return
 
     
 
@@ -77,9 +80,6 @@ def nmga(results_obj, n_points=10, slack=0.1, sense='minimize', how='random'):
         pf_slack = pf*(1-slack)
         
     
-
-
-
     checked_points = set()
 
     interior_dict = {n:[] for n in range(n_objs+1)}
@@ -110,13 +110,13 @@ def nmga(results_obj, n_points=10, slack=0.1, sense='minimize', how='random'):
     return mga_df
 
 
-    for x,y,z in zip(F_hist[:,0], F_hist[:,1], X_hist):
-        if (x,y) in checked_points:
-            continue
-        else: 
-            if poly.contains(Point(x,y)):
-                ax.scatter(x,y,color='tab:green')
-                F1_sub.append(x)
-                F2_sub.append(y)
-                X_sub.append(z)
-                checked_points.add((x,y))
+    # for x,y,z in zip(F_hist[:,0], F_hist[:,1], X_hist):
+    #     if (x,y) in checked_points:
+    #         continue
+    #     else: 
+    #         if poly.contains(Point(x,y)):
+    #             ax.scatter(x,y,color='tab:green')
+    #             F1_sub.append(x)
+    #             F2_sub.append(y)
+    #             X_sub.append(z)
+    #             checked_points.add((x,y))

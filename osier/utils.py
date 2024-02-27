@@ -4,6 +4,8 @@ from unyt import unit_object
 import copy
 from typing import Iterable
 import pandas as pd
+import functools
+import types
 
 from osier.technology import Technology
 
@@ -134,6 +136,31 @@ def get_dispatchable_names(technology_list):
         t.technology_name for t in technology_list if t.dispatchable]
 
     return dispatchable_names
+
+
+def get_objective_names(res_obj):
+    """
+    This function returns a list of named objectives based on the
+    names of the functions passed to Osier. In the case of partial
+    functions, the first keyword value is used.
+    
+    Parameters
+    ----------
+    res_obj : :class:`pymoo.Result`
+        The simulation results object containing all data and metadata.
+    
+    Returns
+    -------
+    obj_columns : list of str
+        A list of function name strings.
+    """
+    obj_columns=[]
+    for ofunc in res_obj.problem.objectives:
+        if isinstance(ofunc, types.FunctionType):
+            obj_columns.append(ofunc.__name__)
+        elif isinstance(ofunc, functools.partial):
+            obj_columns.append(list(ofunc.keywords.values())[0]) 
+    return obj_columns
 
 
 def technology_dataframe(technology_list, cast_to_string=True):
