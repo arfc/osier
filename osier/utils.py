@@ -7,6 +7,8 @@ import pandas as pd
 import numpy as np
 import functools
 import types
+from scipy.spatial.distance import pdist
+from scipy.spatial.distance import squareform
 
 from osier.technology import Technology
 
@@ -245,10 +247,91 @@ def apply_slack(pareto_front, slack, sense='minimize'):
 
     return
 
+
+def distance_matrix(X, metric='euclidean'):
+    """
+    This function calculates the distance matrix for an 
+    MxN matrix and returns the symmetrical square form of 
+    the matrix. 
+
+    Parameters
+    ----------
+    X : :class:`numpy.ndarray`
+        An MxN matrix.
+    metric : str
+        The string describing how the metric should be calculated.
+
+        See the documentation for 
+        [`scipy.spatial.distance.pdist`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.distance.pdist.html)
+        for a complete list of values. Default is 'euclidean.'
     
+    Returns
+    -------
+    D : :class:`numpy.ndarray`
+        An MxM matrix of distance values and zeros along the diagonal.
+    """
+
+    D = squareform(pdist(X, metric=metric))
+
+    return D
 
 
-def nmga(results_obj, n_points=10, slack=0.1, sense='minimize', how='random'):
+def farthest_first(X, D, n_points, start_idx=None, seed=1234):
+    """
+    This function identifies the farthest first traversal order for an MxN 
+    matrix and returns an array of indices (ordered by the distance). 
+
+    This implementation was modified from Hiroyuki Tanaka's
+    [GitHub gist](https://gist.github.com/nkt1546789/8e6c46aa4c3b55f13d32).
+
+    Parameters
+    ----------
+    X : :class:`numpy.ndarray`
+        An MxN matrix.
+    D : :class:`numpy.ndarray`
+        An MxM distance matrix for the dataset, `X`.
+    n_points : int
+        The number of points to traverse.
+    start_idx : int
+        The index of the starting point. If `None`, a starting point
+        will be chosen randomly. Default is `None`.
+    seed : int
+        Specifies the seed for a random number generator to ensure
+        repeatable results. Default is 1234. 
+    """
+
+    rows, cols = X.shape
+
+    if n_points >= rows:
+        return np.arange(rows)
+    else:
+        checked_points = []
+
+        if not start_idx:
+            rng = np.random.default_rng(seed)
+            start_idx = np.int32(rng.uniform(high=rows-1))
+        
+        checked_points.append(start_idx)
+
+        while len(checked_points) < n_points:
+            mean_distance = np.mean([D[i] for i in checked_points])
+            sorted_dist = np.argsort(mean_distance)[::-1]
+            for j in sorted_dist:
+                if j not in checked_points:
+                    checked_points.append(j)
+                    break
+    
+    return np.array(checked_points)
+
+
+def n_mga(results_obj, 
+          n_points=10, 
+          slack=0.1, 
+          sense='minimize', 
+          how='farthest', 
+          seed=1234, 
+          metric='euclidean',
+          start_idx=None):
     """
     N-dimensional modeling-to-generate-alternatives (n-mga) allows users to
     efficiently search decision space by relaxing the objective function(s) by a
@@ -256,14 +339,28 @@ def nmga(results_obj, n_points=10, slack=0.1, sense='minimize', how='random'):
     inside of an N-polytope (a polygon in N-dimensions). Then a reduced subset
     of points will be selected. 
 
+    The algorithm:
     
+    1. Generate a near-optimal front based on the given slack values.
+    
+    2. Loop through each point in the model's history.
+
+    3. Add each point to a set of checked points to prevent repeated calculations.
+
+    4. Check if a point is inside the N-polytope bounded by the Pareto and near-optimal
+    fronts.
+
+    5. [optional] Select a subset of points based on a random selection or with a farthest
+    first traversal. 
+
     Parameters
     ----------
     results_obj : :class:pymoo.Result
         The simulation results object containing all data and metadata.
-    n_points : int
+    n_points : int or str
         The number of points to select from the near-optimal region. Default is
-        10.
+        10. The only accepted string value is `'all'`, which will return all 
+        values in the near-optimal space.
     slack : float or list of float
         The slack value for the sub-optimal front, expressed as a decimal
         percentage. If `float` is passed, the same slack will be applied to all
@@ -275,6 +372,17 @@ def nmga(results_obj, n_points=10, slack=0.1, sense='minimize', how='random'):
         Indicates whether the optimization was a minimization or maximization.
         If min, the sub-optimal front is greater than the Pareto front. If max,
         the sub-optimal front is below the Pareto front. Default is "minimize." 
+    seed : int
+        Specifies the seed for a random number generator to ensure
+        repeatable results. Default is 1234. 
+    metric : str
+        The string describing how the metric should be calculated.
+        See the documentation for 
+        [`scipy.spatial.distance.pdist`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.distance.pdist.html)
+        for a complete list of values. Default is 'euclidean.'
+    start_idx : int
+        The index of the starting point. If `None`, a starting point
+        will be chosen randomly. Default is `None`.        
     """
     n_objs = results_obj.problem.n_obj
     
@@ -290,10 +398,7 @@ def nmga(results_obj, n_points=10, slack=0.1, sense='minimize', how='random'):
     interior_dict = {n:[] for n in range(n_objs+1)}
     cols = get_objective_names(results_obj) + ['designs']
     
-    # get list of all points
     for h in results_obj.history:
-        # the history of each population, individual, and their corresponding
-        # design spaces.
         F_hist = h.pop.get("F")  # objective space
         X_hist = h.pop.get("X")  # design space
     
@@ -302,17 +407,30 @@ def nmga(results_obj, n_points=10, slack=0.1, sense='minimize', how='random'):
                 continue
             else:
                 checked_points.add(p)
-                # check that all coordinates of a point are within the
-                # boundaries.
                 cond1 = np.any((p < pf_slack).sum(axis=1)==n_objs)
                 cond2 = np.any((p > pf).sum(axis=1)==n_objs)
                 if cond1 and cond2:
                     for i,c in enumerate(p):
                         interior_dict[i].append(c)
                     interior_dict[n_objs].append(x)
+
     mga_df = pd.DataFrame(interior_dict)
     mga_df.columns = cols
+
+    if n_points is 'all':
+        selected_idxs = np.arange(len(mga_df))
+    elif how is 'random':
+        rng = np.random.default_rng(seed)
+        selected_idxs = rng.integers(high=len(mga_df), size=n_points)
+    elif how is 'farthest':
+        designs = np.stack(mga_df['designs'].values)
+        distance = distance_matrix(designs, metric=metric)
+        selected_idxs = farthest_first(designs, 
+                                        distance, 
+                                        n_points=n_points, 
+                                        start_idx=start_idx, 
+                                        seed=seed)
     
-    return mga_df
+    return mga_df.loc[selected_idxs]
     
 
