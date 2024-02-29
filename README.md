@@ -26,7 +26,7 @@ pip install .
 pip install .[doc]
 
 # followed by 
-pip install pyomo==4.6.1
+pip install pyomo==6.4.1
 ```
 
 > [!NOTE]
