@@ -69,6 +69,9 @@ class CapacityExpansion(ElementwiseProblem):
     verbosity : Optional, int
         Sets the logging level for the simulation. Accepts `logging.LEVEL`
         or integer where LEVEL is {10:DEBUG, 20:INFO, 30:WARNING, 40:ERROR, 50:CRITICAL}.
+    solver : str
+        Indicates which solver to use. May require separate installation.
+        Accepts: ['cplex', 'cbc', 'glpk']. Other solvers will be added in the future.
 
     Notes
     -----
@@ -94,6 +97,7 @@ class CapacityExpansion(ElementwiseProblem):
                  curtailment=True,
                  allow_blackout=False,
                  verbosity=50,
+                 solver='cplex',
                  **kwargs):
         self.technology_list = deepcopy(technology_list)
         self.demand = demand
@@ -105,6 +109,7 @@ class CapacityExpansion(ElementwiseProblem):
         self.curtailment = curtailment
         self.allow_blackout = allow_blackout
         self.verbosity = verbosity
+        self.solver = solver
 
         if isinstance(demand, unyt_array):
             self.power_units = demand.units
@@ -185,7 +190,9 @@ class CapacityExpansion(ElementwiseProblem):
                               net_demand=net_demand,
                               power_units=self.power_units,
                               curtailment=self.curtailment,
-                              allow_blackout=self.allow_blackout)
+                              allow_blackout=self.allow_blackout,
+                              solver=self.solver,
+                              verbosity=self.verbosity)
         model.solve()
 
         if model.results is not None:
