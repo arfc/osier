@@ -60,7 +60,6 @@ REQUIRES = [
     'nrelpy',
     'unyt',
     'pyomo',
-    'pymoo',
     'pyentrp',
     'deap',]
 EXTRAS_REQUIRE = {
