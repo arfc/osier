@@ -134,7 +134,7 @@ class CapacityExpansion(ElementwiseProblem):
                          xl=lower_bound,
                          xu=upper_bound,
                          **kwargs)
-        
+
     def print_problem_formulation(self):
         """
         Prints the problem formulation.
@@ -147,7 +147,7 @@ class CapacityExpansion(ElementwiseProblem):
         print("Technology Name | Capacity \n")
         for t in self.technology_list:
             print(t)
-        
+
         print("\nElectricity Demand:\n")
         print(self.demand)
 
@@ -218,7 +218,6 @@ class CapacityExpansion(ElementwiseProblem):
                 out_constr = np.ones(self.n_constr) * self.penalty
 
         out["F"] = out_obj
-
 
         if self.n_constr > 0:
             out["G"] = out_constr
