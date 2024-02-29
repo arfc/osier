@@ -59,7 +59,6 @@ REQUIRES = [
     'openpyxl',
     'nrelpy',
     'unyt',
-    'pyomo',
     'pymoo',
     'pyentrp',
     'deap',

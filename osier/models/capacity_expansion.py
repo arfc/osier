@@ -18,57 +18,60 @@ class CapacityExpansion(ElementwiseProblem):
     """
     The :class:`CapacityExpansion` class inherits from the
     :class:`pymoo.core.problem.ElementwiseProblem` class. This problem
-    determines the technology mix that _minimizes_ the provided
-    objectives.
+    determines the technology mix that _minimizes_ the provided objectives.
 
     Parameters
     ----------
     technology_list : list of :class:`osier.Technology` objects
-        Defines the technologies used in the model and the number
-        of decision variables.
+        Defines the technologies used in the model and the number of decision
+        variables.
     demand : :class:`numpy.ndarray`
         The demand curve that needs to be met by the technology mix.
     objectives : list of str or functions
-        Specifies the number and type of objectives. A list of strings
-        must correspond to preset objective functions. Users may optionally
-        write their own functions and pass them to `osier` as items in the
-        list.
+        Specifies the number and type of objectives. A list of strings must
+        correspond to preset objective functions. Users may optionally write
+        their own functions and pass them to `osier` as items in the list.
     constraints : dictionary of string : float or function : float
-        Specifies the number and type of constraints. String key names
-        must correspond to preset constraints functions. Users may optionally
-        write their own functions and pass them to `osier` as keys in the
-        list. The values must be numerical and represent the value that the function
+        Specifies the number and type of constraints. String key names must
+        correspond to preset constraints functions. Users may optionally write
+        their own functions and pass them to `osier` as keys in the list. The
+        values must be numerical and represent the value that the function
         should not exceed. See notes for more information about constraints.
     prm : Optional, float
-        The "planning reserve margin" (`prm`) specifies the amount
-        of excess capacity needed to meet reliability standards.
-        See :attr:`capacity_requirement`. Default is 0.0.
+        The "planning reserve margin" (`prm`) specifies the amount of excess
+        capacity needed to meet reliability standards. See
+        :attr:`capacity_requirement`. Default is 0.0.
     solar : Optional, :class:`numpy.ndarray`
-        The curve that defines the solar power provided at each time
-        step. Automatically normalized with the infinity norm
-        (i.e. divided by the maximum value).
+        The curve that defines the solar power provided at each time step.
+        Automatically normalized with the infinity norm (i.e. divided by the
+        maximum value).
     wind : Optional, :class:`numpy.ndarray`
-        The curve that defines the wind power provided at each time
-        step. Automatically normalized with the infinity norm
-        (i.e. divided by the maximum value).
+        The curve that defines the wind power provided at each time step.
+        Automatically normalized with the infinity norm (i.e. divided by the
+        maximum value).
     power_units : str, :class:`unyt.unit_object`
-        Specifies the units for the power demand. The default is :attr:`MW`.
-        Can be overridden by specifying a unit with the value.
+        Specifies the units for the power demand. The default is :attr:`MW`. Can
+        be overridden by specifying a unit with the value.
     penalty : Optional, float
-        The penalty for infeasible solutions. If a particular set
-        produces an infeasible solution for the :class:`osier.DispatchModel`,
-        the corresponding objectives take on this value.
+        The penalty for infeasible solutions. If a particular set produces an
+        infeasible solution for the :class:`osier.DispatchModel`, the
+        corresponding objectives take on this value.
     curtailment : boolean
         Indicates if the model should enable a curtailment option.
     allow_blackout : boolean
-        If True, a "reliability" technology is added to the dispatch model that will
-        fulfill the mismatch in supply and demand. This reliability technology
-        has a variable cost of 1e4 $/MWh. The value must be higher than the
-        variable cost of any other technology to prevent a pathological
+        If True, a "reliability" technology is added to the dispatch model that
+        will fulfill the mismatch in supply and demand. This reliability
+        technology has a variable cost of 1e4 $/MWh. The value must be higher
+        than the variable cost of any other technology to prevent a pathological
         preference for blackouts. Default is False.
     verbosity : Optional, int
-        Sets the logging level for the simulation. Accepts `logging.LEVEL`
-        or integer where LEVEL is {10:DEBUG, 20:INFO, 30:WARNING, 40:ERROR, 50:CRITICAL}.
+        Sets the logging level for the simulation. Accepts `logging.LEVEL` or
+        integer where LEVEL is {10:DEBUG, 20:INFO, 30:WARNING, 40:ERROR,
+        50:CRITICAL}.
+    solver : str
+        Indicates which solver to use. May require separate installation.
+        Accepts: ['cplex', 'cbc', 'glpk']. Other solvers will be added in the
+        future.
 
     Notes
     -----
@@ -94,6 +97,7 @@ class CapacityExpansion(ElementwiseProblem):
                  curtailment=True,
                  allow_blackout=False,
                  verbosity=50,
+                 solver='cplex',
                  **kwargs):
         self.technology_list = deepcopy(technology_list)
         self.demand = demand
@@ -105,6 +109,7 @@ class CapacityExpansion(ElementwiseProblem):
         self.curtailment = curtailment
         self.allow_blackout = allow_blackout
         self.verbosity = verbosity
+        self.solver = solver
 
         if isinstance(demand, unyt_array):
             self.power_units = demand.units
@@ -129,7 +134,7 @@ class CapacityExpansion(ElementwiseProblem):
                          xl=lower_bound,
                          xu=upper_bound,
                          **kwargs)
-        
+
     def print_problem_formulation(self):
         """
         Prints the problem formulation.
@@ -142,7 +147,7 @@ class CapacityExpansion(ElementwiseProblem):
         print("Technology Name | Capacity \n")
         for t in self.technology_list:
             print(t)
-        
+
         print("\nElectricity Demand:\n")
         print(self.demand)
 
@@ -185,7 +190,9 @@ class CapacityExpansion(ElementwiseProblem):
                               net_demand=net_demand,
                               power_units=self.power_units,
                               curtailment=self.curtailment,
-                              allow_blackout=self.allow_blackout)
+                              allow_blackout=self.allow_blackout,
+                              solver=self.solver,
+                              verbosity=self.verbosity)
         model.solve()
 
         if model.results is not None:
@@ -211,7 +218,6 @@ class CapacityExpansion(ElementwiseProblem):
                 out_constr = np.ones(self.n_constr) * self.penalty
 
         out["F"] = out_obj
-
 
         if self.n_constr > 0:
             out["G"] = out_constr

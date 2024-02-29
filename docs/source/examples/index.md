@@ -6,7 +6,7 @@ This section has examples that guide users from basic usage to more advanced top
 
 ## Tutorials
 ```{toctree}
-:maxdepth: 1
+:maxdepth: 3
 
 tech_tutorial
 dispatch_tutorial
