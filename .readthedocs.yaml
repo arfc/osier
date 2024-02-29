@@ -5,7 +5,7 @@ build:
   tools:
     python: "3.9"
   jobs:
-    post_checkout:
+    post_install:
       - pip install pyomo==6.4.1
 
 sphinx: 
