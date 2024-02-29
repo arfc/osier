@@ -4,8 +4,9 @@ build:
   os: "ubuntu-20.04"
   tools:
     python: "3.9"
-  commands:
-    - pip install pyomo==6.4.1
+  jobs:
+    post_checkout:
+      - pip install pyomo==6.4.1
 
 sphinx: 
   configuration: docs/source/conf.py
