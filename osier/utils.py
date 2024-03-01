@@ -372,6 +372,17 @@ def n_mga(results_obj,
         Indicates whether the optimization was a minimization or maximization.
         If min, the sub-optimal front is greater than the Pareto front. If max,
         the sub-optimal front is below the Pareto front. Default is "minimize." 
+    how : str
+        Sets the method used to traverse the near-optimal region. Accepts
+        ['all','random','farthest'].
+        
+        * `'all'` : Returns all near-optimal points.
+        
+        * `'random'` : Returns a random selection a set of `n_points` from the 
+        near-optimal region.
+        
+        * `'farthest'` : Returns `n_points` from the near-optimal space by 
+        doing a farthest-first-traversal in the design space.
     seed : int
         Specifies the seed for a random number generator to ensure
         repeatable results. Default is 1234. 
