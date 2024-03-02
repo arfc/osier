@@ -30,15 +30,15 @@ stakeholders understand the problem and analyze tradeoffs among solutions
 [@liebman:1976]. Although, to date, no multi-objective energy modelling
 frameworks exist. Open-source multi-objective energy system framework (`osier`)
 is a Python package for designing and optimizing energy systems across an
-arbitrary number of dimensions.`osier` was designed to help localized
+arbitrary number of dimensions. `osier` was designed to help localized
 communities articulate their energy preferences in a technical manner without
 requiring extensive technical expertise. In order to facilitate more robust
 tradeoff analysis, `osier` generates a set of  technology portfolios, called a
 Pareto front, with multi-objective optimization using evolutionary algorithms.
-`osier` also implements a novel algorithm that extends the common
+`osier` also extends the common
 modelling-to-generate-alternatives (MGA) algorithm into many dimensions,
 allowing users to investigate the near-optimal for appealing alternative
-solutions. In this way, `osier` may address challenges related to procedural and
+solutions. In this way, `osier` may aid modelers in addressing procedural and
 recognition justice.
 
 # Statement of Need
@@ -55,9 +55,9 @@ multi-criteria decision analysis (MCDA) and community focus groups
 [@bertsch:2016; @mckenna:2018; @zelt:2019]. But these studies rely on tools with
 pre-defined objectives which are difficult to modify. Without the ability to add
 objectives that reflect the concerns of a community, the priorities of that
-community will continue to be secondary to those of modellers and decision
+community will remain secondary to those of modellers and decision
 makers. A flexible and extensible multi-objective framework that fulfills this
-need has not yet been developed. `osier` closes this gap.
+need has not yet been developed. The `osier` framework closes this gap.
 
 # Design and Implementation
 In order to run `osier`, users are only required to supply an energy demand time
@@ -94,17 +94,16 @@ based on any quantifiable metric. The requirements for a bespoke objective are:
 
 1. The first argument must be a list of `osier.Technology` objects.
 2. The second argument must be the results from an `osier.DispatchModel`. But
-   this may be a simple placeholder with a default value of `None` as shown
-   below.
-3. The function must return a numerical value.
-4. The final (implicit) requirement, is that all `osier.Technology` objects
+   this may be a simple placeholder with a default value of `None`.
+3. The function must return a single numerical value.
+4. The final requirement, is that all `osier.Technology` objects
    possess the attribute being optimized.
 
 These two features acknowledge that a modeler cannot know *a priori* all
 possible objectives or parameters of interest. Allowing users to define their
 own objectives and modify technology objects (or simply build their own by
 inheriting from the `osier.Technology` class) accounts for this limitation and
-expands the potential for incorporating localized preferences.Lastly, in order
+expands the potential for incorporating localized preferences. Lastly, in order
 to account for unmodeled or unmodelable objectives, `osier` extends the
 conventional MGA algorithm into N-dimensions by using a farthest-first-traversal
 in the design space.
