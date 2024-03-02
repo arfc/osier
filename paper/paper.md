@@ -25,12 +25,13 @@ However, public preferences may be ignored during decision-making processes
 related to nearby energy infrastructure due to a lack of technical rigor and
 expertise [@johnson:2021]. 
 
-The challenge is more complicated by the fact that people have and express preferences over many dimensions simultaneously.`osier` was designed to help localized communities
-articulate their energy preferences in a technical manner without requiring
-extensive technical expertise. In order to facilitate more robust tradeoff
-analysis, `osier` generates a set of  technology portfolios, called a Pareto
-front, with multi-objective optimization using evolutionary algorithms. `osier`
-also implements a novel algorithm that extends the common
+The challenge is more complicated by the fact that people have and express
+preferences over many dimensions simultaneously.`osier` was designed to help
+localized communities articulate their energy preferences in a technical manner
+without requiring extensive technical expertise. In order to facilitate more
+robust tradeoff analysis, `osier` generates a set of  technology portfolios,
+called a Pareto front, with multi-objective optimization using evolutionary
+algorithms. `osier` also implements a novel algorithm that extends the common
 modelling-to-generate-alternatives (MGA) algorithm into many dimensions,
 allowing users to investigate the near-optimal for appealing alternative
 solutions. In this way, `osier` may address challenges with procedural and
@@ -38,11 +39,18 @@ recognition justice.
 
 # Statement of Need
 There are myriad open- and closed-source energy system optimization models
-(ESOMs) available [@pfenninger:2022]. ESOMs can be used for a variety of tasks but
-are most frequently used for prescriptive analyses meant to guide
+(ESOMs) available [@pfenninger:2022]. ESOMs can be used for a variety of tasks
+but are most frequently used for prescriptive analyses meant to guide
 decision-makers in planning processes. However, despite the many available
-models, all of these tools share a fundamental characteristic: Optimization over a single economic (e.g., total cost or social welfare) objective. Simultaneously, there is growing awareness of energy
-justice and calls for its inclusion in energy models [@pfenninger:2014, @vagero:2023]. Some studies attempted to incorporate local preferences into energy system design through multi-criteria decision analysis (MCDA) and community focus groups [@bertsch:2016, @mckenna:2018, @zelt2019]. Although @prina:2020 created a bespoke multi-objective energy model, a flexible and extensible framework has not yet been developed. `osier` fills this gap.
+models, all of these tools share a fundamental characteristic: Optimization over
+a single economic (e.g., total cost or social welfare) objective.
+Simultaneously, there is growing awareness of energy justice and calls for its
+inclusion in energy models [@pfenninger:2014, @vagero:2023]. Some studies
+attempted to incorporate local preferences into energy system design through
+multi-criteria decision analysis (MCDA) and community focus groups
+[@bertsch:2016, @mckenna:2018, @zelt2019]. Although @prina:2020 created a
+bespoke multi-objective energy model, a flexible and extensible framework has
+not yet been developed. `osier` fills this gap.
 
 # Design and Implementation
 In order to run `osier`, users are only required to supply an energy demand time
@@ -60,7 +68,11 @@ library. For investment decisions and tradeoff analysis, users can pass their
 portfolio of `osier.Technology` objects, energy demand, and their desired
 objectives to the `osier.CapacityExpansion` model, the highest level model in
 `osier`. The `osier.CapacityExpansion` model is implemented with the
-multi-objective optimization framework, `pymoo`. 
+multi-objective optimization framework, `pymoo`. \autoref{fig:osier-flow}
+overviews the flow of data through `osier`.
+
+![The flow of data into and within `osier`
+\label{fig:osier-flow}](osier_flow.png)
 
 ## Key Features
 In addition to being the first and only open-source multi-objective energy
@@ -110,7 +122,8 @@ expands the potential for incorporating localized preferences.
 
 ## Documentation
 
-`osier` offers robust documentation with detailed usage examples at [osier.readthedocs.io](https://osier.readthedocs.io).
+`osier` offers robust documentation with detailed usage examples at
+[osier.readthedocs.io](https://osier.readthedocs.io).
 
 # References
 
