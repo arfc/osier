@@ -11,4 +11,5 @@ This section has examples that guide users from basic usage to more advanced top
 tech_tutorial
 dispatch_tutorial
 capacity_expansion_tutorial
+mga_tutorial
 ```
