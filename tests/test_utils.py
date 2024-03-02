@@ -2,6 +2,7 @@ from osier.utils import *
 from unyt import kW, MW, minute, hour
 import numpy as np
 import pytest
+from scipy.spatial.distance import squareform, pdist
 
 
 @pytest.fixture
@@ -64,5 +65,28 @@ def test_apply_slack():
  
     with pytest.raises(ValueError) as e:
         apply_slack(pf1D, slack_values)
+        
+
+def test_distance_matrix_2D():
+    """
+    Tests the distance matrix function.
+    """
+    
+    N_techs = 5
+    population = 10
+    measure = 'euclidean'
+    
+    rng = np.random.default_rng(seed=1234)
+    
+    data = rng.multivariate_normal(mean=np.array([0, 1]),
+                                   cov=np.diag([2,2]),
+                                   size=(population,N_techs))
+    
+    D = distance_matrix(data, metric=measure)
+    test_matrix = squareform(pdist(data, metric=measure))
+    
+    assert D == test_matrix
+    
+# farthest_first()
     
     

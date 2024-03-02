@@ -307,9 +307,10 @@ def farthest_first(X, D, n_points, start_idx=None, seed=1234):
     else:
         checked_points = []
 
+        breakpoint()
         if not start_idx:
             rng = np.random.default_rng(seed)
-            start_idx = np.int32(rng.uniform(high=rows-1))
+            start_idx = rng.integers(high=rows-1)
         
         checked_points.append(start_idx)
 
@@ -428,12 +429,12 @@ def n_mga(results_obj,
     mga_df = pd.DataFrame(interior_dict)
     mga_df.columns = cols
 
-    if n_points is 'all':
+    if n_points == 'all':
         selected_idxs = np.arange(len(mga_df))
-    elif how is 'random':
+    elif how == 'random':
         rng = np.random.default_rng(seed)
         selected_idxs = rng.integers(high=len(mga_df), size=n_points)
-    elif how is 'farthest':
+    elif how == 'farthest':
         designs = np.stack(mga_df['designs'].values)
         distance = distance_matrix(designs, metric=metric)
         selected_idxs = farthest_first(designs, 
