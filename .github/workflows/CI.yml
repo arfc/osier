@@ -56,3 +56,7 @@ jobs:
     - name: Test with pytest
       run: |
         pytest tests/
+
+    - name: Open Journals PDF Generator
+      uses: openjournals/openjournals-draft-action@v.1.0
+  

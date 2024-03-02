@@ -20,6 +20,7 @@ bibliography: paper.bib
 ---
 
 # Summary
+Transitioning to a clean energy economy will require expanded energy infrastructure a
 `osier` was designed to help localized communities articulate their energy preferences in a technical manner without requiring extensive technical expertise. In order to facilitate more robust tradeoff analysis, `osier` generates a set of  technology portfolios, called a Pareto front, with multi-objective optimization using evolutionary algorithms. `osier` also implements a novel algorithm that extends the common modelling-to-generate-alternatives (MGA) algorithm into many dimensions, allowing users to investigate the near-optimal for appealing alternative solutions. In this way, `osier` may address challenges with procedural and recognition justice.
 # Statement of Need
 There are myriad open- and closed-source energy system optimization models
