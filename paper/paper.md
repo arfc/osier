@@ -64,7 +64,7 @@ own objectives and modify technology objects (or simply build their own by
 inheriting from the `osier.Technology` class) accounts for this limitation and
 expands the potential for incorporating localized preferences.
 
-Lastly, in order to account for unmodeled or unmodelable objectives, `osier` extends the conventional MGA algorithm into N-dimensions by using a farthest-first-traversal in the design space over 
+Lastly, in order to account for unmodeled or unmodelable objectives, `osier` extends the conventional MGA algorithm into N-dimensions by using a farthest-first-traversal in the design space.
 
 ## Documentation
 
