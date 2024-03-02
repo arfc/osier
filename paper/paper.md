@@ -26,7 +26,7 @@ related to nearby energy infrastructure due to a lack of technical rigor and
 expertise [@johnson:2021]. 
 
 The challenge is more complicated by the fact that people have and express
-preferences over many dimensions simultaneously.`osier` was designed to help
+preferences over many dimensions simultaneously. `osier` was designed to help
 localized communities articulate their energy preferences in a technical manner
 without requiring extensive technical expertise. In order to facilitate more
 robust tradeoff analysis, `osier` generates a set of  technology portfolios,
@@ -43,7 +43,7 @@ There are myriad open- and closed-source energy system optimization models
 but are most frequently used for prescriptive analyses meant to guide
 decision-makers in planning processes. However, despite the many available
 models, all of these tools share a fundamental characteristic: Optimization over
-a single economic (e.g., total cost or social welfare) objective.
+a single economic objective (e.g., total cost or social welfare).
 Simultaneously, there is growing awareness of energy justice and calls for its
 inclusion in energy models [@pfenninger:2014, @vagero:2023]. Some studies
 attempted to incorporate local preferences into energy system design through
@@ -91,34 +91,13 @@ that `osier` expects. The requirements for a bespoke objective are:
    below.
 3. The function must return a numerical value.
 
-#### Example Code
-
-```py
-nuclear.readiness = 9
-fusion.readiness = 3
-
-technology_list = [nuclear, fusion]
-
-def osier_objective(technology_list, solved_dispatch_model=None): 
-    """ 
-    Calculate the capacity-weighted technology readiness 
-    score for this energy mix. 
-    """
-
-    total_capacity = np.array([t.capacity 
-                              for t in technology_list]).sum()
-    
-    objective_value = np.array([t.readiness*t.capacity 
-                                for t in technology_list]).sum()
-
-    return objective_value / total_capacity
-```
-
 These two features acknowledge that a modeler cannot know *a priori* all
 possible objectives or parameters of interest. Allowing users to define their
 own objectives and modify technology objects (or simply build their own by
 inheriting from the `osier.Technology` class) accounts for this limitation and
 expands the potential for incorporating localized preferences.
+
+Lastly, in order to account for unmodeled or unmodelable objectives, `osier` extends the conventional MGA algorithm into N-dimensions by using a farthest-first-traversal
 
 ## Documentation
 
