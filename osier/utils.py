@@ -279,7 +279,9 @@ def distance_matrix(X, metric='euclidean'):
 def farthest_first(X, D, n_points, start_idx=None, seed=1234):
     """
     This function identifies the farthest first traversal order for an MxN 
-    matrix and returns an array of indices (ordered by the distance). 
+    matrix and returns an array of indices (ordered by the distance). If 
+    `n_points` exceeds the number of points in the dataset, all points will
+    be returned.
 
     This implementation was modified from Hiroyuki Tanaka's
     [GitHub gist](https://gist.github.com/nkt1546789/8e6c46aa4c3b55f13d32).
@@ -298,6 +300,11 @@ def farthest_first(X, D, n_points, start_idx=None, seed=1234):
     seed : int
         Specifies the seed for a random number generator to ensure
         repeatable results. Default is 1234. 
+
+    Returns
+    -------
+    checked_points : :class:`numpy.ndarray`
+        An array of points checked by the algorithm.
     """
 
     rows, cols = X.shape
@@ -395,6 +402,14 @@ def n_mga(results_obj,
     start_idx : int
         The index of the starting point. If `None`, a starting point
         will be chosen randomly. Default is `None`.        
+
+    Returns
+    -------
+    mga_df : :class:`pandas.DataFrame`
+        Returns a dataframe with `n_points` rows and `N_objectives + 1` columns,
+        where the rows are data for each solution selected by the MGA algorithm
+        and the columns are the performance values for that solution, with an 
+        additional `designs` column that holds the capacity portfolio.
     """
     n_objs = results_obj.problem.n_obj
     
