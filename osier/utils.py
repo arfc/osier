@@ -305,6 +305,11 @@ def farthest_first(X, D, n_points, start_idx=None, seed=1234):
     -------
     checked_points : :class:`numpy.ndarray`
         An array of points checked by the algorithm.
+
+
+    Notes
+    -----
+    1. The algorithm will stop if the average distance is unchanging.
     """
 
     rows, cols = X.shape
@@ -320,14 +325,18 @@ def farthest_first(X, D, n_points, start_idx=None, seed=1234):
             start_idx = rng.integers(high=rows-1)
         
         checked_points.append(start_idx)
-
+        prev_mean_dist = []
         while len(checked_points) < n_points:
             mean_distance = np.mean([D[i] for i in checked_points])
-            sorted_dist = np.argsort(mean_distance)[::-1]
-            for j in sorted_dist:
-                if j not in checked_points:
-                    checked_points.append(j)
-                    break
+            if mean_distance == prev_mean_dist:
+                break
+            else:
+                sorted_dist = np.argsort(mean_distance)[::-1]
+                for j in sorted_dist:
+                    if j not in checked_points:
+                        checked_points.append(j)
+                        break
+            prev_mean_dist = mean_distance
     
     return np.array(checked_points)
 
@@ -410,6 +419,17 @@ def n_mga(results_obj,
         where the rows are data for each solution selected by the MGA algorithm
         and the columns are the performance values for that solution, with an 
         additional `designs` column that holds the capacity portfolio.
+
+    Warnings
+    --------
+    The following may result in an infinite-loop when using a `farthest-first-traversal`:
+
+    * a matrix of rank 1 (i.e., all rows are identical / non-unique / non-independent)
+
+    If the average distance is unchanging, this means the algorithm found a point, 
+    or points, that is equidistant from every other point. The algorithm will stop
+    when it reaches this point. In this case, users are recommended to use the `all`
+    or the `random` options to generate alternative points. Or inspect their results.
     """
     n_objs = results_obj.problem.n_obj
     
