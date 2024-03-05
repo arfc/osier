@@ -29,6 +29,15 @@ pip install .[doc]
 pip install pyomo==6.4.1
 ```
 
+
+```{note}
+Although `pyomo` is a dependency, the current version of `pyomo` (6.7.1, as of 2/29/24) has a bug
+that prints erroneous errors during an `osier` simulation. Therefore, users are recommended to 
+install a specific version of `pyomo` after the main installation of `osier`. There is an open issue [#50](https://github.com/arfc/osier/issues/50) 
+related to this concern.
+```
+
+
 > [!NOTE]
 > Although `pyomo` is a dependency, the current version of `pyomo` (6.7.1, as of 2/29/24) has a bug
 that prints erroneous errors during an `osier` simulation. Therefore, users are recommended to 
