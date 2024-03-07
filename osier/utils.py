@@ -319,7 +319,6 @@ def farthest_first(X, D, n_points, start_idx=None, seed=1234):
     else:
         checked_points = []
 
-        breakpoint()
         if not start_idx:
             rng = np.random.default_rng(seed)
             start_idx = rng.integers(high=rows-1)
