@@ -9,6 +9,7 @@ import functools
 import types
 from scipy.spatial.distance import pdist
 from scipy.spatial.distance import squareform
+import warnings
 
 from osier.technology import Technology
 
@@ -321,13 +322,15 @@ def farthest_first(X, D, n_points, start_idx=None, seed=1234):
 
         if not start_idx:
             rng = np.random.default_rng(seed)
-            start_idx = rng.integers(high=rows-1)
+            start_idx = rng.integers(low=0, high=rows-1)
         
         checked_points.append(start_idx)
-        prev_mean_dist = []
+        prev_mean_dist = None
         while len(checked_points) < n_points:
-            mean_distance = np.mean([D[i] for i in checked_points])
-            if mean_distance == prev_mean_dist:
+            mean_distance = np.mean([D[i] for i in checked_points], axis=0)
+            if np.all(mean_distance == prev_mean_dist):
+                msg = f"Average distance is unchanging after {len(checked_points)} points."
+                warnings.warn(msg, UserWarning)
                 break
             else:
                 sorted_dist = np.argsort(mean_distance)[::-1]
@@ -338,6 +341,44 @@ def farthest_first(X, D, n_points, start_idx=None, seed=1234):
             prev_mean_dist = mean_distance
     
     return np.array(checked_points)
+
+
+def check_if_interior(points, par_front, slack_front):
+    """
+    Checks if a point or set of points is inside the N-polytope
+    created by the Pareto front and the slack front (a.k.a the near-optimal front).
+
+    Parameters
+    ----------
+    points : :class:`numpy.ndarray`
+        A point or set of points to test.
+    par_front : :class:`numpy.ndarray`
+        The set of points on the Pareto front.
+    slack_front : :class:`numpy.ndarray`
+        The set of points on the near-optimal front.
+        Equal to `par_front*(1+slack)`.
+
+    Returns
+    -------
+    interior_idxs : :class:`numpy.ndarray`
+        The set of indices that are between the Pareto front and slack front.
+    """
+
+    n_objs = points.shape[1]
+    interior_idxs = []
+    
+    checked_points = set()
+    for i, p in enumerate(points):
+        if p in checked_points:
+            continue
+        else:
+            checked_points.add(p)
+            cond1 = np.any((p < slack_front).sum(axis=1)==n_objs)
+            cond2 = np.any((p > par_front).sum(axis=1)==n_objs)
+            if cond1 and cond2:
+                interior_idxs.append(i)
+    
+    return np.array(interior_idxs)
 
 
 def n_mga(results_obj, 
@@ -432,11 +473,18 @@ def n_mga(results_obj,
     """
     n_objs = results_obj.problem.n_obj
     
-    
     pf = results_obj.F
+    n_inds, n_objs = pf.shape
+    pop_size = results_obj.algorithm.pop_size
+    n_gen = results_obj.algorithm.n_gen
+
+
     pf_slack = apply_slack(pareto_front=pf, 
                            slack=slack,
                            sense=sense)
+    
+    X_hist = np.array([hist.pop.get("X") for hist in results_obj.history]).reshape(n_gen*pop_size,n_objs)
+    F_hist = np.array([hist.pop.get("F") for hist in results_obj.history]).reshape(n_gen*pop_size,n_objs)
         
     
     checked_points = set()
