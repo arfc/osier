@@ -489,7 +489,7 @@ def n_mga(results_obj,
         n_objs = 1
 
     pop_size = results_obj.algorithm.pop_size
-    n_gen = results_obj.algorithm.n_gen
+    n_gen = results_obj.algorithm.n_gen - 1
 
 
     pf_slack = apply_slack(pareto_front=pf, 
@@ -515,9 +515,8 @@ def n_mga(results_obj,
         rng = np.random.default_rng(seed)
         selected_idxs = rng.integers(low=0, high=len(interior_idxs), size=n_points)
     elif how == 'farthest':
-        designs = np.stack(mga_df['designs'].values)
-        distance = distance_matrix(designs, metric=metric)
-        selected_idxs = farthest_first(designs, 
+        distance = distance_matrix(X_int, metric=metric)
+        selected_idxs = farthest_first(X_int, 
                                         distance, 
                                         n_points=n_points, 
                                         start_idx=start_idx, 
