@@ -206,10 +206,10 @@ def apply_slack(pareto_front, slack, sense='minimize'):
         percentage. If `float` is passed, the same slack will be applied to all
         objectives. A `list` of slack values should have the same length as the
         list of objectives. The slack will be applied to objective with the same
-        index (defined when users initialized the :class:`osier.CapacityExpansion` problem).
-        Each slack value should be less than unity. If users that find a 
-        slack greater than unity desirable should consider rerunning the model with fewer
-        or different objectives.
+        index (defined when users initialized the
+        :class:`osier.CapacityExpansion` problem). Each slack value should be
+        less than unity. If users that find a slack greater than unity desirable
+        should consider rerunning the model with fewer or different objectives.
 
     Returns
     -------
@@ -251,9 +251,8 @@ def apply_slack(pareto_front, slack, sense='minimize'):
 
 def distance_matrix(X, metric='euclidean'):
     """
-    This function calculates the distance matrix for an 
-    MxN matrix and returns the symmetrical square form of 
-    the matrix. 
+    This function calculates the distance matrix for an MxN matrix and returns
+    the symmetrical square form of the matrix. 
 
     Parameters
     ----------
@@ -262,7 +261,7 @@ def distance_matrix(X, metric='euclidean'):
     metric : str
         The string describing how the metric should be calculated.
 
-        See the documentation for 
+        See the documentation for
         [`scipy.spatial.distance.pdist`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.distance.pdist.html)
         for a complete list of values. Default is 'euclidean.'
     
@@ -279,13 +278,13 @@ def distance_matrix(X, metric='euclidean'):
 
 def farthest_first(X, D, n_points, start_idx=None, seed=1234):
     """
-    This function identifies the farthest first traversal order for an MxN 
-    matrix and returns an array of indices (ordered by the distance). If 
-    `n_points` exceeds the number of points in the dataset, all points will
-    be returned.
+    This function identifies the farthest first traversal order for an MxN
+    matrix and returns an array of indices (ordered by the distance). If
+    `n_points` exceeds the number of points in the dataset, all points will be
+    returned.
 
-    This implementation was modified from Hiroyuki Tanaka's
-    [GitHub gist](https://gist.github.com/nkt1546789/8e6c46aa4c3b55f13d32).
+    This implementation was modified from Hiroyuki Tanaka's [GitHub
+    gist](https://gist.github.com/nkt1546789/8e6c46aa4c3b55f13d32).
 
     Parameters
     ----------
@@ -296,11 +295,11 @@ def farthest_first(X, D, n_points, start_idx=None, seed=1234):
     n_points : int
         The number of points to traverse.
     start_idx : int
-        The index of the starting point. If `None`, a starting point
-        will be chosen randomly. Default is `None`.
+        The index of the starting point. If `None`, a starting point will be
+        chosen randomly. Default is `None`.
     seed : int
-        Specifies the seed for a random number generator to ensure
-        repeatable results. Default is 1234. 
+        Specifies the seed for a random number generator to ensure repeatable
+        results. Default is 1234. 
 
     Returns
     -------
@@ -345,8 +344,8 @@ def farthest_first(X, D, n_points, start_idx=None, seed=1234):
 
 def check_if_interior(points, par_front, slack_front):
     """
-    Checks if a point or set of points is inside the N-polytope
-    created by the Pareto front and the slack front (a.k.a the near-optimal front).
+    Checks if a point or set of points is inside the N-polytope created by the
+    Pareto front and the slack front (a.k.a the near-optimal front).
 
     Parameters
     ----------
@@ -355,8 +354,8 @@ def check_if_interior(points, par_front, slack_front):
     par_front : :class:`numpy.ndarray`
         The set of points on the Pareto front.
     slack_front : :class:`numpy.ndarray`
-        The set of points on the near-optimal front.
-        Equal to `par_front*(1+slack)`.
+        The set of points on the near-optimal front. Equal to
+        `par_front*(1+slack)`.
 
     Returns
     -------
@@ -369,10 +368,10 @@ def check_if_interior(points, par_front, slack_front):
     
     checked_points = set()
     for i, p in enumerate(points):
-        if p in checked_points:
+        if tuple(p) in checked_points:
             continue
         else:
-            checked_points.add(p)
+            checked_points.add(tuple(p))
             cond1 = np.any((p < slack_front).sum(axis=1)==n_objs)
             cond2 = np.any((p > par_front).sum(axis=1)==n_objs)
             if cond1 and cond2:
@@ -388,7 +387,8 @@ def n_mga(results_obj,
           how='farthest', 
           seed=1234, 
           metric='euclidean',
-          start_idx=None):
+          start_idx=None,
+          wide_form=False):
     """
     N-dimensional modeling-to-generate-alternatives (n-mga) allows users to
     efficiently search decision space by relaxing the objective function(s) by a
@@ -402,12 +402,15 @@ def n_mga(results_obj,
     
     2. Loop through each point in the model's history.
 
-    3. Add each point to a set of checked points to prevent repeated calculations.
+    3. Add each point to a set of checked points to prevent repeated
+       calculations.
 
-    4. Check if a point is inside the N-polytope bounded by the Pareto and near-optimal
+    4. Check if a point is inside the N-polytope bounded by the Pareto and
+       near-optimal
     fronts.
 
-    5. [optional] Select a subset of points based on a random selection or with a farthest
+    5. [optional] Select a subset of points based on a random selection or with
+       a farthest
     first traversal. 
 
     Parameters
@@ -416,7 +419,7 @@ def n_mga(results_obj,
         The simulation results object containing all data and metadata.
     n_points : int or str
         The number of points to select from the near-optimal region. Default is
-        10. The only accepted string value is `'all'`, which will return all 
+        10. The only accepted string value is `'all'`, which will return all
         values in the near-optimal space.
     slack : float or list of float
         The slack value for the sub-optimal front, expressed as a decimal
@@ -441,40 +444,50 @@ def n_mga(results_obj,
         * `'farthest'` : Returns `n_points` from the near-optimal space by 
         doing a farthest-first-traversal in the design space.
     seed : int
-        Specifies the seed for a random number generator to ensure
-        repeatable results. Default is 1234. 
+        Specifies the seed for a random number generator to ensure repeatable
+        results. Default is 1234. 
     metric : str
-        The string describing how the metric should be calculated.
-        See the documentation for 
+        The string describing how the metric should be calculated. See the
+        documentation for
         [`scipy.spatial.distance.pdist`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.distance.pdist.html)
         for a complete list of values. Default is 'euclidean.'
     start_idx : int
-        The index of the starting point. If `None`, a starting point
-        will be chosen randomly. Default is `None`.        
+        The index of the starting point. If `None`, a starting point will be
+        chosen randomly. Default is `None`.
+    wide_form : boolean
+        If `True`, the designs will be unpacked and each decision variable will
+        have its own column in the resulting dataframe. Default is `False`.
 
     Returns
     -------
     mga_df : :class:`pandas.DataFrame`
         Returns a dataframe with `n_points` rows and `N_objectives + 1` columns,
         where the rows are data for each solution selected by the MGA algorithm
-        and the columns are the performance values for that solution, with an 
+        and the columns are the performance values for that solution, with an
         additional `designs` column that holds the capacity portfolio.
 
     Warnings
     --------
-    The following may result in an infinite-loop when using a `farthest-first-traversal`:
+    The following may result in an infinite-loop when using a
+    `farthest-first-traversal`:
 
-    * a matrix of rank 1 (i.e., all rows are identical / non-unique / non-independent)
+    * a matrix of rank 1 (i.e., all rows are identical / non-unique /
+      non-independent)
 
-    If the average distance is unchanging, this means the algorithm found a point, 
-    or points, that is equidistant from every other point. The algorithm will stop
-    when it reaches this point. In this case, users are recommended to use the `all`
-    or the `random` options to generate alternative points. Or inspect their results.
+    If the average distance is unchanging, this means the algorithm found a
+    point, or points, that is equidistant from every other point. The algorithm
+    will stop when it reaches this point. In this case, users are recommended to
+    use the `all` or the `random` options to generate alternative points. Or
+    inspect their results.
     """
-    n_objs = results_obj.problem.n_obj
     
     pf = results_obj.F
-    n_inds, n_objs = pf.shape
+    try: 
+        n_inds, n_objs = pf.shape
+    except ValueError:
+        n_inds = pf.shape[0]
+        n_objs = 1
+
     pop_size = results_obj.algorithm.pop_size
     n_gen = results_obj.algorithm.n_gen
 
@@ -483,39 +496,24 @@ def n_mga(results_obj,
                            slack=slack,
                            sense=sense)
     
-    X_hist = np.array([hist.pop.get("X") for hist in results_obj.history]).reshape(n_gen*pop_size,n_objs)
-    F_hist = np.array([hist.pop.get("F") for hist in results_obj.history]).reshape(n_gen*pop_size,n_objs)
-        
+    X_hist = np.array([hist.pop.get("X") 
+                        for hist in results_obj.history]).reshape(n_gen*pop_size,n_objs)
+    F_hist = np.array([hist.pop.get("F") 
+                        for hist in results_obj.history]).reshape(n_gen*pop_size,n_objs)
+    try: 
+        cols = get_objective_names(results_obj)
+    except AttributeError:
+        cols = [f'f{i}' for i in range(n_objs)]
     
-    checked_points = set()
-
-    interior_dict = {n:[] for n in range(n_objs+1)}
-    cols = get_objective_names(results_obj) + ['designs']
+    interior_idxs = check_if_interior(F_hist, pf, pf_slack)
+    X_int = X_hist[interior_idxs]
+    F_int = F_hist[interior_idxs]
     
-    for h in results_obj.history:
-        F_hist = h.pop.get("F")  # objective space
-        X_hist = h.pop.get("X")  # design space
-    
-        for p, x in zip(F_hist, X_hist):
-            if p in checked_points:
-                continue
-            else:
-                checked_points.add(p)
-                cond1 = np.any((p < pf_slack).sum(axis=1)==n_objs)
-                cond2 = np.any((p > pf).sum(axis=1)==n_objs)
-                if cond1 and cond2:
-                    for i,c in enumerate(p):
-                        interior_dict[i].append(c)
-                    interior_dict[n_objs].append(x)
-
-    mga_df = pd.DataFrame(interior_dict)
-    mga_df.columns = cols
-
     if n_points == 'all':
-        selected_idxs = np.arange(len(mga_df))
+        selected_idxs = np.arange(len(interior_idxs))
     elif how == 'random':
         rng = np.random.default_rng(seed)
-        selected_idxs = rng.integers(high=len(mga_df), size=n_points)
+        selected_idxs = rng.integers(low=0, high=len(interior_idxs), size=n_points)
     elif how == 'farthest':
         designs = np.stack(mga_df['designs'].values)
         distance = distance_matrix(designs, metric=metric)
@@ -524,7 +522,26 @@ def n_mga(results_obj,
                                         n_points=n_points, 
                                         start_idx=start_idx, 
                                         seed=seed)
+    X_select = X_int[selected_idxs]
+    F_select = F_int[selected_idxs]
+
+    mga_df = pd.DataFrame(dict(zip(cols, F_select.T)))
     
-    return mga_df.loc[selected_idxs]
+    if wide_form:
+        try:
+            x_cols = get_tech_names(results_obj.problem.technology_list)
+        except AttributeError:
+            try:
+                n_xs = results_obj.X.shape[1]
+            except ValueError:
+                n_xs = 1
+            x_cols = [f'x{i}' for i in range(n_xs)]
+        x_df = pd.DataFrame(dict(zip(x_cols, X_select.T)))
+        mga_df = pd.concat([mga_df, x_df], axis=1)
+    else:
+        mga_df['designs'] = [design for design in X_select]
+
+    
+    return mga_df
     
 
