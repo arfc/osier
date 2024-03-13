@@ -1,14 +1,45 @@
 from osier.utils import *
 from unyt import kW, MW, minute, hour
 import numpy as np
+import pandas as pd
 import pytest
-from scipy.spatial.distance import squareform, pdist
+from scipy.spatial.distance import pdist
+from scipy.spatial.distance import squareform
+import itertools as it
+
+# pymoo imports
+from pymoo.problems import get_problem
+from pymoo.algorithms.moo.nsga2 import NSGA2
+from pymoo.optimize import minimize
+
+
+@pytest.fixture
+def pymoo_problem():
+    """
+    This fixture uses an example problem from `pymoo` as a test
+    set.
+    """
+    problem = get_problem("bnh")
+
+    pop_size = 100
+    n_gen = 200
+    algorithm = NSGA2(pop_size=pop_size)
+
+    res = minimize(problem,
+                algorithm,
+                ('n_gen', n_gen),
+                seed=1,
+                verbose=False,
+                save_history=True
+                )
+    
+    return problem, res
 
 
 @pytest.fixture
 def technology_set_1():
     """
-    This fixture uses creates technologies directly from the :class:`Technology`
+    This fixture creates technologies directly from the :class:`Technology`
     class.
     """
     nuclear = Technology(technology_name='Nuclear',
@@ -87,6 +118,37 @@ def test_distance_matrix_2D():
     
     assert D == test_matrix
     
-# farthest_first()
     
+def test_check_if_interior_1():
+    """
+    Tests the `check_if_interior` function with a simple
+    grid of points and specific test points.
+    """
+    x = np.arange(3)
+    grid = np.array(list(it.product(x,x)))
+
+    pf = np.array([[0,0]])
+    sf = np.array([[2,0], [1,1], [0,2]])
+    test_points = np.array([[0.5,0.5], [1.5,1.5]])
+
+    int_idx = check_if_interior(test_points, pf, sf)
+
+    assert np.all(int_idx==[0])
+
+
+def test_check_if_interior_2():
+    """
+    Tests the `check_if_interior` function with a 
+    simple grid of points and some random test points.
+    """
+    x = np.arange(3)
+    grid = np.array(list(it.product(x,x)))
+
+    pf = np.array([[0,0]])
+    sf = np.array([[2,0], [1,1], [0,2]])
+
+    rng = np.random.default_rng(seed=1234)
+    test_points = rng.uniform(low=0, high=2, size=(10,2))
+    int_idx = check_if_interior(test_points, pf, sf)
     
+    assert len(int_idx) == 2

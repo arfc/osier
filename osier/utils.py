@@ -361,6 +361,27 @@ def check_if_interior(points, par_front, slack_front):
     -------
     interior_idxs : :class:`numpy.ndarray`
         The set of indices that are between the Pareto front and slack front.
+
+    Examples
+    --------
+    >>> import itertools as it
+    >>> x = np.arange(3)
+    >>> grid = np.array(list(it.product(x,x)))
+
+    >>> pf = np.array([[0,0]])
+    >>> sf = np.array([[2,0], [1,1], [0,2]])
+
+    >>> rng = np.random.default_rng(seed=1234)
+    >>> test_points = rng.uniform(low=0, high=2, size=(10,2))
+    >>> int_idx = check_if_interior(test_points, pf, sf)
+    >>> int_points = test_points[int_idx]
+
+    >>> import matplotlib.pyplot as plt
+
+    >>> plt.scatter(grid[:,0],grid[:,1])
+    >>> plt.scatter(test_points[:,0],test_points[:,1])
+    >>> plt.scatter(int_points[:,0],int_points[:,1])
+    >>> plt.show()
     """
 
     n_objs = points.shape[1]
@@ -402,16 +423,12 @@ def n_mga(results_obj,
     
     2. Loop through each point in the model's history.
 
-    3. Add each point to a set of checked points to prevent repeated
-       calculations.
+    3. Add each point to a set of checked points to prevent repeated calculations.
 
-    4. Check if a point is inside the N-polytope bounded by the Pareto and
-       near-optimal
-    fronts.
+    4. Check if a point is inside the N-polytope bounded by the Pareto and 
+        near-optimal fronts.
 
-    5. [optional] Select a subset of points based on a random selection or with
-       a farthest
-    first traversal. 
+    5. Select a subset of points based on a random selection or with a farthest first traversal. 
 
     Parameters
     ----------
@@ -438,11 +455,9 @@ def n_mga(results_obj,
         
         * `'all'` : Returns all near-optimal points.
         
-        * `'random'` : Returns a random selection a set of `n_points` from the 
-        near-optimal region.
+        * `'random'` : Returns a random selection a set of `n_points` from the near-optimal region.
         
-        * `'farthest'` : Returns `n_points` from the near-optimal space by 
-        doing a farthest-first-traversal in the design space.
+        * `'farthest'` : Returns `n_points` from the near-optimal space by doing a farthest-first-traversal in the design space.
     seed : int
         Specifies the seed for a random number generator to ensure repeatable
         results. Default is 1234. 
