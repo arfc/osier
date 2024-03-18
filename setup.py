@@ -59,18 +59,20 @@ REQUIRES = [
     'openpyxl',
     'nrelpy',
     'unyt',
-    'pyomo',
     'pymoo',
     'pyentrp',
     'deap',]
 EXTRAS_REQUIRE = {
     'doc': [
         'sphinx>=5.1',
+        'sphinx-autobuild',
         'myst-parser',
         "sphinx_design",
         "sphinx-autodoc-typehints",
         'numpydoc',
-        'pydata_sphinx_theme'
+        'pydata_sphinx_theme',
+        'nbsphinx',
+        'pandoc'
         ]}
 PYTHON_REQUIRES = ">= 3.6"
 
