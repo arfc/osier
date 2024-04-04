@@ -11,7 +11,7 @@ Open source multi-objective energy system framework
 
 `osier` is available through [PyPI](https://pypi.org/project/osier/). It may be installed with 
 ```bash
-pip install osier
+python -m pip install osier pyomo==6.4.1
 ``` 
 or by cloning this repository and building from source:
 
