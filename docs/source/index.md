@@ -18,6 +18,7 @@ This package is in active development.
 contrib
 reference/index
 getting-started/index
+examples/index
 ```
 
 ## Indices and tables
