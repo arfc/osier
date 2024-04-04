@@ -123,7 +123,9 @@ simultaneously minimizes total cost and lifecylce carbon emissions.
 Each point on this Pareto front represents a different technology portfolio
 (i.e., different combination of wind, natural gas, and battery storage).
 \autoref{fig:osier-tech-res} illustrates the variation in solutions from 
-the Pareto front in \autoref{fig:osier-results}.
+the Pareto front in \autoref{fig:osier-results}. In this case, the range of 
+wind capacity is wider than the range of capacities for natural gas and battery 
+storage.
 
 ![The variance in technology options along a Pareto front.\label{fig:osier-tech-res}](images/osier-tech-results.png)
 
