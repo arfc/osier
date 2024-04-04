@@ -11,7 +11,7 @@ authors:
       affiliation: 1 
       corresponding: true
 affiliations:
-    - name: Felix T. Adler Fellow, Department of Nuclear, Plasma, and Radiological Engineering, University of Illinois Urbana-Champaign, USA
+    - name: Department of Nuclear, Plasma, and Radiological Engineering, University of Illinois Urbana-Champaign, USA
       index: 1
 date: 20 February 2024
 bibliography: paper.bib
@@ -22,7 +22,7 @@ Transitioning to a clean energy economy will require expanded energy
 infrastructure. An equitable, or just, transition further requires the
 recognition of the people and communities directly affected by this transition.
 However, public preferences may be ignored during decision-making processes
-related energy infrastructure due to a lack of technical rigor or expertise
+related to energy infrastructure due to a lack of technical rigor or expertise
 [@johnson:2021]. This challenge is further complicated by the fact that people
 have and express preferences over many dimensions simultaneously.
 Multi-objective optimization offers a method to help decision makers and
@@ -33,8 +33,8 @@ is a Python package for designing and optimizing energy systems across an
 arbitrary number of dimensions. `osier` was designed to help localized
 communities articulate their energy preferences in a technical manner without
 requiring extensive technical expertise. In order to facilitate more robust
-tradeoff analysis, `osier` generates a set of  technology portfolios, called a
-Pareto front, with multi-objective optimization using evolutionary algorithms.
+tradeoff analysis, `osier` generates a set of solutions, called a
+Pareto front, that are composed of a number of technology portfolios. The Pareto front is calculated using multi-objective optimization using evolutionary algorithms.
 `osier` also extends the common
 modelling-to-generate-alternatives (MGA) algorithm into many dimensions,
 allowing users to investigate the near-optimal for appealing alternative
@@ -115,12 +115,23 @@ in the design space.
 
 # Acknowledgements
 
-Samuel Dotson was supported by the Nuclear Regulatory Commission Fellowship
+Samuel Dotson, the corresponding and lead author of this publication is responsible 
+for the conceptualization of osier, developing the osier as a software, in preparing 
+this manuscript for publication, and for performing analysis to validate osier. 
+Madicken Munk provided resources and supervision for the work, as well as assisted 
+in the review and editing of the manuscript. Samuel Dotson was supported 
+by the Nuclear Regulatory Commission Fellowship
 program. This research was part of the Advanced Reactors and Fuel Cycles (ARFC)
 group in the Department of Nuclear, Plasma, and Radiological Engineering (NPRE)
-at the University of Illinois Urbana-Champaign. Additionally, Samuel Dotson was
-supported by the Felix T. Adler Fellowship through NPRE. The views and opinions
-expressed in this paper are those of the author alone.
+at the University of 
+Illinois Urbana-Champaign. To that end, the authors would like to acknowledge ARFC 
+members Oleksander Yardas, Luke Seifert, Nathan Ryan, Amanda Bachmann, 
+and Sun Myung Park for their contributions in reviewing pull requests 
+supporting the creation of osier. 
+Additionally, Samuel Dotson was
+supported by the Felix T. Adler Fellowship through NPRE. 
+Finally, the authors would like to thank the JOSS reviewers for their time 
+and commentary in reviewing this manuscript. 
 
 # References
 
