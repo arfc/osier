@@ -347,6 +347,9 @@ def check_if_interior(points, par_front, slack_front):
     Checks if a point or set of points is inside the N-polytope created by the
     Pareto front and the slack front (a.k.a the near-optimal front).
 
+    .. warning::
+        If the Pareto front has only a few points there may false negatives.
+
     Parameters
     ----------
     points : :class:`numpy.ndarray`
