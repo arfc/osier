@@ -6,8 +6,8 @@ from setuptools import setup, find_packages
 
 # Format expected by setup.py and doc/source/conf.py: string of form "X.Y.Z"
 _version_major = 0
-_version_minor = 2
-_version_micro = 1  # use '' for first of series, number for 1 and above
+_version_minor = 3
+_version_micro = 0  # use '' for first of series, number for 1 and above
 # _version_extra = 'dev'
 _version_extra = ''  # Uncomment this for full releases
 
@@ -59,18 +59,20 @@ REQUIRES = [
     'openpyxl',
     'nrelpy',
     'unyt',
-    'pyomo',
     'pymoo',
     'pyentrp',
     'deap',]
 EXTRAS_REQUIRE = {
     'doc': [
         'sphinx>=5.1',
+        'sphinx-autobuild',
         'myst-parser',
         "sphinx_design",
         "sphinx-autodoc-typehints",
         'numpydoc',
-        'pydata_sphinx_theme'
+        'pydata_sphinx_theme',
+        'nbsphinx',
+        'pandoc'
         ]}
 PYTHON_REQUIRES = ">= 3.6"
 
