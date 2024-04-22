@@ -2,6 +2,7 @@
 /ˈōZHər/ <br>
 Open source multi-objective energy system framework
 
+[![status](https://joss.theoj.org/papers/183a04edba2d4952fa1e30c419a844b3/status.svg)](https://joss.theoj.org/papers/183a04edba2d4952fa1e30c419a844b3)
 [![Build Status](https://github.com/arfc/osier/actions/workflows/CI.yml/badge.svg)](https://github.com/arfc/osier/actions/workflows/CI.yml)
 [![Documentation Status](https://readthedocs.org/projects/osier/badge/?version=latest)](https://osier.readthedocs.io/en/latest/?badge=latest)
 
