@@ -145,10 +145,11 @@ def test_check_if_interior_2():
     grid = np.array(list(it.product(x,x)))
 
     pf = np.array([[0,0]])
-    sf = np.array([[2,0], [1,1], [0,2]])
+    sf = np.c_[np.linspace(2,0,N), np.linspace(0,2,N)]
 
     rng = np.random.default_rng(seed=1234)
     test_points = rng.uniform(low=0, high=2, size=(10,2))
     int_idx = check_if_interior(test_points, pf, sf)
     
-    assert len(int_idx) == 2
+    assert len(int_idx) == 3
+    assert np.all(int_idx==[2,3,8])
