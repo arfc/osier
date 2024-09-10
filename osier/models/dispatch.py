@@ -200,7 +200,7 @@ class DispatchModel():
                  technology_list,
                  net_demand,
                  time_delta=None,
-                 solver='cplex',
+                 solver='cbc',
                  lower_bound=0.0,
                  oversupply=0.0,
                  undersupply=0.0,
