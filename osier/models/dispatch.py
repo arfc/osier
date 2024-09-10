@@ -248,8 +248,8 @@ class DispatchModel():
             unit_power=self.power_units,
             unit_time=self.time_delta.units)
 
-        
-        logging.getLogger('pyomo.core').setLevel(verbosity)
+        logging.basicConfig(level=verbosity, format='%(message)s')
+
 
     @property
     def time_delta(self):
