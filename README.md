@@ -44,6 +44,11 @@ python -m http.server
 `osier`'s tests can be run by executing `pytest` in the top-level directory 
 of `osier`.
 
+```{note}
+The test package assumes the user has `coin-or-cbc` installed as the default solver. For Windows machines,
+this may require some additional steps to install the solver. [Here](https://stackoverflow.com/questions/58868054/how-to-install-coincbc-using-conda-in-windows) is a helpful place to start.
+```
+
 
 ## Contributing
 
