@@ -31,7 +31,7 @@ have and express preferences over many dimensions simultaneously.
 Multi-objective optimization offers a method to help decision makers and
 stakeholders understand the problem and analyze tradeoffs among solutions
 [@liebman:1976]. Although, to date, no open-source multi-objective energy
-modelling frameworks exist. Open-source multi-objective energy system framework
+modeling frameworks exist. Open-source multi-objective energy system framework
 (`osier`) is a Python package for designing and optimizing energy systems across
 an arbitrary number of dimensions. `osier` was designed to help localized
 communities articulate their energy preferences in a technical manner without
@@ -39,9 +39,9 @@ requiring extensive technical expertise. In order to facilitate more robust
 tradeoff analysis, `osier` generates a set of solutions, called a Pareto front,
 that are composed of a number of technology portfolios. The Pareto front is
 calculated using multi-objective optimization using evolutionary algorithms.
-`osier` also extends the common modelling-to-generate-alternatives (MGA)
+`osier` also extends the common modeling-to-generate-alternatives (MGA)
 algorithm into N-dimensional objective space, as opposed to the conventional
-single-objective MGA. This allows users to investigate the near-optimal
+single-objective MGA. This allows users to investigate the near-optimal space
 for appealing alternative solutions. In this way, `osier` may aid modelers in
 addressing procedural and recognition justice.
 
@@ -49,28 +49,31 @@ addressing procedural and recognition justice.
 There are myriad open- and closed-source energy system optimization models
 (ESOMs) available [@pfenninger:2022]. ESOMs can be used for a variety of tasks
 but are most frequently used for prescriptive analyses meant to guide
-decision-makers in planning processes. However, virtually all of these tools 
-share a fundamental characteristic: Optimization over
-a single economic objective (e.g., total cost or social welfare).
-Simultaneously, there is growing awareness of energy justice and calls for its
-inclusion in energy models [@pfenninger:2014; @vagero:2023]. Some studies
-incorporate local preferences into energy system design through
-multi-criteria decision analysis (MCDA) and community focus groups
-[@bertsch:2016; @mckenna:2018; @zelt:2019]. But these studies rely on tools with
-pre-defined objectives which are difficult to modify. Without the ability to add
-objectives that reflect the concerns of a community, the priorities of that
-community will remain secondary to those of modellers and decision makers. A
-flexible and extensible multi-objective framework that fulfills this need has
-not yet been developed. The `osier` framework closes this gap.
+decision-makers in planning processes. However, virtually all of these tools
+share a fundamental characteristic: Optimization over a single economic
+objective (e.g., total cost or social welfare). Simultaneously, there is growing
+awareness of energy justice and calls for its inclusion in energy models
+[@pfenninger:2014; @vagero:2023]. Two well known open-source ESOMs, Calliope
+[@pfenninger:2018] and Python for Power Systems Analysis (PyPSA) [@brown:2018],
+partially address equity issues by implementing MGA, but this does not resolve
+the limitation of mono-objective optimization. Some studies incorporate local
+preferences into energy system design through multi-criteria decision analysis
+(MCDA) and community focus groups [@bertsch:2016; @mckenna:2018; @zelt:2019].
+But these studies rely on tools with pre-defined objectives which are difficult
+to modify. Without the ability to add objectives that reflect the concerns of a
+community, the priorities of that community will remain secondary to those of
+modelers and decision makers. A flexible and extensible multi-objective
+framework that fulfills this need has not yet been developed. The `osier`
+framework closes this gap.
 
 # Design and Implementation
-The fundamental object in `osier` is an `osier.Technology` object, which 
-contains all of the necessary cost and performance data for different technology 
-classes. `osier` comes pre-loaded with a variety of technologies described in 
-the National Renewable Energy Laboratory's (NREL) Annual Technology Baseline (ATB)
-dataset[@nationalrenewableenergylaboratory:2023] but users are also able to
-define their own. In order to run `osier`, users are required to supply an 
-energy demand time series and a list of `osier.Technology` objects. Users can 
+The fundamental object in `osier` is an `osier.Technology` object, which
+contains all of the necessary cost and performance data for different technology
+classes. `osier` comes pre-loaded with a variety of technologies described in
+the National Renewable Energy Laboratory's (NREL) Annual Technology Baseline
+(ATB) dataset[@nationalrenewableenergylaboratory:2023] but users are also able
+to define their own. In order to run `osier`, users are required to supply an
+energy demand time series and a list of `osier.Technology` objects. Users can
 optionally provide weather data to incorporate solar or wind energy. 
 
 A set of `osier.Technology` objects, along with user-supplied demand data, can
@@ -83,12 +86,13 @@ model in `osier`. The `osier.CapacityExpansion` model is implemented with the
 multi-objective optimization framework, `pymoo` [@blank:2020].
 \autoref{fig:osier-flow} overviews the flow of data through `osier`.
 
-![The flow of data into and within `osier`.\label{fig:osier-flow}](osier_flow.png)
+![The flow of data into and within
+`osier`.\label{fig:osier-flow}](osier_flow.png)
 
 ## Key Features
 In addition to being the first and only open-source multi-objective energy
-modelling framework, `osier` has a few key features that further distinguishes
-it from other modelling frameworks. First, since `osier.Technology` objects are
+modeling framework, `osier` has a few key features that further distinguishes it
+from other modeling frameworks. First, since `osier.Technology` objects are
 Python objects, users can modify values and assumptions, or assign new
 attributes to the tested technologies. Second, contrary to conventional energy
 system models, `osier` has no required objectives. While users may choose from a
@@ -118,16 +122,18 @@ solutions rather than a global optimum, called a Pareto front.
 \autoref{fig:osier-results} shows a Pareto front from a problem that
 simultaneously minimizes total cost and lifecylce carbon emissions.
 
-![A Pareto front generated by`osier`.\label{fig:osier-results}](images/osier-results.png)
+![A Pareto front generated
+by`osier`.\label{fig:osier-results}](images/osier-results.png)
 
 Each point on this Pareto front represents a different technology portfolio
 (i.e., different combination of wind, natural gas, and battery storage).
-\autoref{fig:osier-tech-res} illustrates the variation in solutions from 
-the Pareto front in \autoref{fig:osier-results}. In this case, the range of 
-wind capacity is wider than the range of capacities for natural gas and battery 
+\autoref{fig:osier-tech-res} illustrates the variation in solutions from the
+Pareto front in \autoref{fig:osier-results}. In this case, the range of wind
+capacity is wider than the range of capacities for natural gas and battery
 storage.
 
-![The variance in technology options along a Pareto front.\label{fig:osier-tech-res}](images/osier-tech-results.png)
+![The variance in technology options along a Pareto
+front.\label{fig:osier-tech-res}](images/osier-tech-results.png)
 
 ## Documentation
 
