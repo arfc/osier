@@ -19,7 +19,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ${{ fromJSON(needs.build.outputs.python-versions) }}
+        python-version: 
+        - 3.9
+        - 3.10
+        - 3.11
+        - 3.12
         os:
         - ubuntu-latest
         - macos-latest
@@ -46,17 +50,30 @@ jobs:
         python -m pip install --upgrade pip
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
     - name: Install CBC
+      if: matrix.os != 'windows-latest'
       run: |
         mamba install coin-or-cbc coincbc
-    - name: Lint with flake8
+    - name: install CBC (Windows)
+      if: matrix.os == 'windows-latest'
+      run: |
+        curl -L https://github.com/coin-or/Cbc/releases/download/releases%2F2.10.10/Cbc-releases.2.10.10-w64-msvc17-md.zip -o cbc.zip
+        unzip cbc.zip -d ${HOME}/cbc
+        echo "${HOME}/cbc/bin" >> $GITHUB_PATH
+    - name: Lint with flake8  
       run: |
         # stop the build if there are Python syntax errors or undefined names
         flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-    - name: Install osier package
+    - name: Install osier package (macos)
+      if: matrix.os == 'macos-latest'
       run: |
-        pip install .
+        pip install -e .'[doc]'
+    - name: Install osier package (macos)
+      if: matrix.os != 'macos-latest'
+      run: |
+        pip install -e .[doc]
+
     - name: Test with pytest
       run: |
         pytest tests/
