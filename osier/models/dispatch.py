@@ -200,7 +200,7 @@ class DispatchModel():
                  technology_list,
                  net_demand,
                  time_delta=None,
-                 solver='cplex',
+                 solver='cbc',
                  lower_bound=0.0,
                  oversupply=0.0,
                  undersupply=0.0,
@@ -248,8 +248,8 @@ class DispatchModel():
             unit_power=self.power_units,
             unit_time=self.time_delta.units)
 
-        
-        logging.getLogger('pyomo.core').setLevel(verbosity)
+        logging.basicConfig(level=verbosity, format='%(message)s')
+
 
     @property
     def time_delta(self):
