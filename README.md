@@ -2,6 +2,7 @@
 /ˈōZHər/ <br>
 Open source multi-objective energy system framework
 
+[![status](https://joss.theoj.org/papers/183a04edba2d4952fa1e30c419a844b3/status.svg)](https://joss.theoj.org/papers/183a04edba2d4952fa1e30c419a844b3)
 [![Build Status](https://github.com/arfc/osier/actions/workflows/CI.yml/badge.svg)](https://github.com/arfc/osier/actions/workflows/CI.yml)
 [![Documentation Status](https://readthedocs.org/projects/osier/badge/?version=latest)](https://osier.readthedocs.io/en/latest/?badge=latest)
 
@@ -11,7 +12,7 @@ Open source multi-objective energy system framework
 
 `osier` is available through [PyPI](https://pypi.org/project/osier/). It may be installed with 
 ```bash
-pip install osier
+python -m pip install osier
 ``` 
 or by cloning this repository and building from source:
 
@@ -24,16 +25,8 @@ cd osier
 pip install .
 # to also install the documentation dependencies
 pip install .[doc]
-
-# followed by 
-pip install pyomo==6.4.1
 ```
 
-> [!NOTE]
-> Although `pyomo` is a dependency, the current version of `pyomo` (6.7.1, as of 2/29/24) has a bug
-that prints erroneous errors during an `osier` simulation. Therefore, users are recommended to 
-install a specific version of `pyomo` after the main installation of `osier`. There is an open issue [#50](https://github.com/arfc/osier/issues/50) 
-related to this concern.
 
 ## Documentation
 The documentation for `osier` can be viewed [here](https://osier.readthedocs.io/en/latest/). 
@@ -50,6 +43,11 @@ python -m http.server
 ## Tests
 `osier`'s tests can be run by executing `pytest` in the top-level directory 
 of `osier`.
+
+```{note}
+The test package assumes the user has `coin-or-cbc` installed as the default solver. For Windows machines,
+this may require some additional steps to install the solver. [Here](https://stackoverflow.com/questions/58868054/how-to-install-coincbc-using-conda-in-windows) is a helpful place to start.
+```
 
 
 ## Contributing
