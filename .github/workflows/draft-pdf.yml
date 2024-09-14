@@ -1,4 +1,5 @@
-on: [push]
+name: Draft PDF
+on: [push, pull_request]
 
 jobs:
   paper:
