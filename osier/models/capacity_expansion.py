@@ -97,7 +97,7 @@ class CapacityExpansion(ElementwiseProblem):
                  curtailment=True,
                  allow_blackout=False,
                  verbosity=50,
-                 solver='cplex',
+                 solver='cbc',
                  **kwargs):
         self.technology_list = deepcopy(technology_list)
         self.demand = demand
