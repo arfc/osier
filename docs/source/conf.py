@@ -18,11 +18,11 @@ sys.path.insert(0, os.path.abspath('../..'))
 # -- Project information -----------------------------------------------------
 
 project = 'osier'
-copyright = '2022, Samuel Dotson'
+copyright = '2022-2024, Samuel Dotson'
 author = 'Samuel Dotson'
 
 # The full version, including alpha/beta/rc tags
-release = '0.2.1'
+release = '0.3.0'
 
 
 # -- General configuration ---------------------------------------------------
@@ -44,6 +44,7 @@ extensions = [
     "sphinx.ext.mathjax", 
     "sphinx.ext.coverage",
     "nbsphinx",
+    "nbsphinx_link"
 ]
 
 # Add any paths that contain templates here, relative to this directory.

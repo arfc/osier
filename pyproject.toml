@@ -62,7 +62,8 @@ doc = [
         'numpydoc',
         'pydata_sphinx_theme',
         'nbsphinx',
-        'pandoc'
+        'pandoc',
+        'nbsphinx-link',
 ]
 
 [tool.setuptools.packages.find]
