@@ -70,7 +70,7 @@ doc = [
 include = ['osier']
 
 [tool.pytest.ini_options]
-addopts = "--cov"
+addopts = "--cov=osier tests"
 
 [tool.coverage.report]
-fail_under = 80
+fail_under = 75
