@@ -18,6 +18,7 @@ dependencies = [
     'pandas',
     'matplotlib',
     'pytest',
+    'pytest-cov',
     'dill',
     'openpyxl',
     'nrelpy',
@@ -68,3 +69,9 @@ doc = [
 
 [tool.setuptools.packages.find]
 include = ['osier']
+
+[tool.pytest.ini_options]
+addopts = "--cov=osier tests"
+
+[tool.coverage.report]
+fail_under = 75
