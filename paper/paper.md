@@ -56,15 +56,15 @@ awareness of energy justice and calls for its inclusion in energy models
 [@pfenninger:2014; @vagero:2023]. Two well known open-source ESOMs, Calliope
 [@pfenninger:2018] and Python for Power Systems Analysis (PyPSA) [@brown:2018],
 partially address equity issues by implementing MGA, but this does not resolve
-the limitation of mono-objective optimization. Some studies incorporate local
+the limitations of mono-objective optimization. Some studies incorporate local
 preferences into energy system design through multi-criteria decision analysis
 (MCDA) and community focus groups [@bertsch:2016; @mckenna:2018; @zelt:2019].
 But these studies rely on tools with pre-defined objectives which are difficult
 to modify. Without the ability to add objectives that reflect the concerns of a
 community, the priorities of that community will remain secondary to those of
 modelers and decision makers. A flexible and extensible multi-objective
-framework that fulfills this need has not yet been developed. The `osier`
-framework closes this gap.
+framework that fulfills this need has not yet been developed. `osier`
+closes this gap.
 
 # Design and Implementation
 The fundamental object in `osier` is an `osier.Technology` object, which
