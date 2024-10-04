@@ -55,6 +55,14 @@ cd build/html
 python -m http.server
 ```
 
+## Examples
+
+The examples can be found in the `docs/source/examples/` directory. Alternatively, 
+users can run the notebooks and experiment with `osier` through the Binder app.
+
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/samgdotson/osier/env-instructions?labpath=docs%2Fsource%2Fexamples)
+
+
 ## Tests
 `osier`'s tests can be run by executing `pytest` in the top-level directory 
 of `osier`.
