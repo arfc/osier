@@ -24,4 +24,4 @@ dependencies:
     - deap
     - dill
     - openpyxl
-    - git+https://github.com/arfc/osier.git
+    - osier
