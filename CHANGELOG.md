@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.1] - 2024-10-03
+### Fixed
+- Migrates the `setup.py` to a `pyproject.toml` configuration file.
+- Updates tests to automatically use the `coincbc` solver.
+
+
 ## [0.3.0] - 2024-04-04
 ### Added
 - Adds tests and examples
