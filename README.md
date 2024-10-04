@@ -5,10 +5,12 @@ Open source multi-objective energy system framework
 [![status](https://joss.theoj.org/papers/183a04edba2d4952fa1e30c419a844b3/status.svg)](https://joss.theoj.org/papers/183a04edba2d4952fa1e30c419a844b3)
 [![Build Status](https://github.com/arfc/osier/actions/workflows/CI.yml/badge.svg)](https://github.com/arfc/osier/actions/workflows/CI.yml)
 [![Documentation Status](https://readthedocs.org/projects/osier/badge/?version=latest)](https://osier.readthedocs.io/en/latest/?badge=latest)
-
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/samgdotson/osier/env-instructions?labpath=docs%2Fsource%2Fexamples)
 
 
 ## Installation
+
+### Method 1: PyPI
 
 `osier` is available through [PyPI](https://pypi.org/project/osier/). It may be installed with 
 ```bash
@@ -23,8 +25,21 @@ git clone https://github.com/arfc/osier.git
 cd osier
 # for a basic installation
 pip install .
-# to also install the documentation dependencies
+# (Windows/Linux) to also install the documentation dependencies
 pip install .[doc]
+# (MacOS)
+pip install .'[doc]'
+```
+
+### Method 2: Conda/Mamba Environment
+
+Although `osier` is not yet available on `conda-forge`, you may have a more consistent experience by installing
+`osier` via a `conda` environment.
+
+```bash
+git clone git@github.com:arfc/osier.git  # requires ssh-keys
+mamba env create  # mamba and conda are interchangeable, here
+mamba activate osier-env
 ```
 
 
