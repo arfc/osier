@@ -12,8 +12,6 @@ dependencies:
   - scipy
   - glpk
   - coincbc
-  - unyt
-  - matplotlib
   - yaml
   - numpy
   - matplotlib
