@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name="osier"
-version = "0.3.0"
+version = "0.3.1"
 description = "osier: A justice oriented energy system optimization tool"
 readme = "README.md"
 keywords = ["energy systems", "optimization", "multi-objective", "justice", "multi-criteria decision"]
