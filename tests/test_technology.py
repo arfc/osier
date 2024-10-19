@@ -7,6 +7,7 @@ from unyt import kW, MW, hr, BTU, Horsepower, day, kg, GW, megatonnes
 from osier import Technology
 from osier.technology import _validate_unit, _validate_quantity
 from unyt.exceptions import UnitParseError
+from osier.tech_library import *
 
 TECH_NAME = "PlanetExpress"
 energy_unyt = 10.0 * MW * hr
@@ -381,3 +382,116 @@ def test_unit_energy(advanced_tech):
     assert advanced_tech.unit_energy == MW * hr
     advanced_tech.unit_energy = "Horsepower*day"
     assert advanced_tech.unit_energy == MW * hr
+
+
+def test_comparison_operators(advanced_tech):
+    NIMBUS = Technology(technology_name="The Nimbus",
+                        om_cost_variable=1.0)
+
+    assert advanced_tech < NIMBUS
+    assert advanced_tech <= NIMBUS
+    assert NIMBUS >= advanced_tech
+
+    ships = [NIMBUS, advanced_tech]
+    ships.sort()
+
+    assert ships == [advanced_tech, NIMBUS]
+
+
+def test_single_power_output():
+    capacity = 18*GW
+    natural_gas.capacity = capacity
+    assert natural_gas.capacity == capacity
+
+    demand = 10*GW
+    output = natural_gas.power_output(demand)
+    print(output)
+    assert output == demand
+    assert natural_gas.power_level == demand
+    assert len(natural_gas.power_history) == 1
+
+    demand = 17*GW
+    output = natural_gas.power_output(demand)
+    assert output == demand
+    assert natural_gas.power_level == demand
+    assert len(natural_gas.power_history) == 2
+
+    demand = 20*GW
+    output = natural_gas.power_output(demand)
+    assert output == capacity
+    assert natural_gas.power_level == capacity
+    assert len(natural_gas.power_history) == 3
+    
+
+def test_reset_history():
+    natural_gas.reset_history()
+    assert len(natural_gas.power_history) == 0
+
+
+def test_multiple_power_output():
+    capacity = 18*GW
+    natural_gas.capacity = capacity
+    assert natural_gas.capacity == capacity
+
+    demand = np.array([10,17,20])*GW
+    output = unyt_array(np.zeros(len(demand)))*demand.units
+    expected = unyt_array([demand[0], demand[1], capacity])
+    for i,d in enumerate(demand):
+        out = natural_gas.power_output(d)
+        output[i] = out
+    assert np.all(output == expected)
+    assert len(natural_gas.power_history) == 3
+
+
+def test_thermal_power_output():
+    capacity = 18*GW
+    ramp_rate = 0.25 * hr**-1
+    nuclear_adv.capacity = capacity
+    nuclear_adv.ramp_up_rate=ramp_rate
+    nuclear_adv.ramp_down_rate=ramp_rate
+    assert nuclear_adv.capacity == capacity
+    assert nuclear_adv.ramp_up_rate == ramp_rate
+    assert nuclear_adv.ramp_down_rate == ramp_rate
+
+    demand = np.array([5,17,20])*GW
+    output = unyt_array(np.zeros(len(demand)))*demand.units
+    expected = unyt_array([13.5,17,18])*GW
+    for i,d in enumerate(demand):
+        out = nuclear_adv.power_output(d)
+        output[i] = out
+    assert np.all(output == expected)
+    assert np.all(unyt_array(nuclear_adv.power_history) == expected)
+
+
+def test_storage_charge():
+    capacity = 1e3*MW
+    initial_storage = 100*MW*hour
+    storage_duration = 4*hour
+    battery.capacity = capacity
+    battery.initial_storage = initial_storage
+    battery.storage_duration = storage_duration
+    assert battery.capacity == capacity
+    assert battery.storage_capacity == storage_duration*capacity
+
+    # charging
+    demand = np.array([-400,-500,-1000,-3500,-1000,-5])*MW
+    for i,d in enumerate(demand):
+        battery.charge(d)
+    expected_storage = np.array([500, 1000, 2000, 3000,4000,4000])*MW*hour
+    expected_power = -np.array([400, 500, 1000, 1000, 1000, 0])*MW
+    assert np.all(battery.storage_history == expected_storage)
+    assert np.all(battery.power_history == expected_power)
+  
+
+def test_storage_power_out():
+    # discharging
+    demand = np.array([1e3, 1e3, 1e3, 500, 1e3])*MW
+    for i,d in enumerate(demand):
+        battery.power_output(d)
+    expected_storage = np.array([3000, 2000, 1000, 500, 0.0])*MW*hour
+    expected_power = np.array([1e3, 1e3, 1e3, 500, 500])*MW
+    print(battery.storage_history[6:])
+    print(battery.power_history[6:])
+    assert np.all(battery.storage_history[6:] == expected_storage)
+    assert np.all(battery.power_history[6:] == expected_power)
+

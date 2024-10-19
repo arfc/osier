@@ -84,7 +84,7 @@ def get_dispatchable_techs(technology_list):
 
     Returns
     -------
-    tech_names : list of :class:`osier.Technology`
+    dispatchable_techs : list of :class:`osier.Technology`
         The list of dispatchable technologies.
     """
 
@@ -112,6 +112,49 @@ def get_nondispatchable_techs(technology_list):
     non_dispatchable_techs = [t for t in technology_list if not t.dispatchable]
 
     return non_dispatchable_techs
+
+
+def get_storage_techs(technology_list):
+    """
+    Returns a list of :class:`osier.Technology` objects 
+    that have the attribute :attr:`storage_level`.
+
+    Parameters
+    ----------
+    technology_list : list of :class:`osier.Technology` objects
+        The list of technologies.
+
+    Returns
+    -------
+    storage_techs : list of :class:`osier.Technology`
+        The list of storage technologies.
+    """
+
+    storage_techs = [t for t in technology_list 
+                          if hasattr(t, 'storage_level')]
+
+    return storage_techs
+
+def get_nonstorage_techs(technology_list):
+    """
+    Returns a list of :class:`osier.Technology` objects 
+    that do not have the attribute :attr:`storage_level`.
+
+    Parameters
+    ----------
+    technology_list : list of :class:`osier.Technology` objects
+        The list of technologies.
+
+    Returns
+    -------
+    storage_techs : list of :class:`osier.Technology`
+        The list of non-storage technologies.
+    """
+
+    nonstorage_techs = [t for t in technology_list 
+                          if not hasattr(t, 'storage_level')]
+
+    return nonstorage_techs
 
 
 def get_dispatchable_names(technology_list):

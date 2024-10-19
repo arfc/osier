@@ -306,9 +306,12 @@ class Technology(object):
         self.om_cost_fixed = om_cost_fixed
         self.om_cost_variable = om_cost_variable
         self.fuel_cost = fuel_cost
+        self.power_level = self.capacity
         self.co2_rate = co2_rate
         self.lifecycle_co2_rate = lifecycle_co2_rate
         self.land_intensity = land_intensity
+        
+        self.power_history = []
 
     def __repr__(self) -> str:
         return (f"{self.technology_name}: {self.capacity}")
@@ -316,7 +319,45 @@ class Technology(object):
     def __eq__(self, tech) -> bool:
         """Test technology equality"""
         if ((self.technology_name == tech.technology_name)
-                and (self.capacity == tech.capacity)):
+                and (self.capacity == tech.capacity)
+                and (self.variable_cost == tech.variable_cost)):
+            return True
+        else:
+            return False
+    
+    def __ge__(self, tech) -> bool:
+        """Tests greater or equal to."""
+        if (self.variable_cost == tech.variable_cost):
+            return self.efficiency >= tech.efficiency
+        elif self.variable_cost >= tech.variable_cost:
+            return True
+        else:
+            return False
+
+    def __le__(self, tech) -> bool:
+        """Tests greater or equal to."""
+        if (self.variable_cost == tech.variable_cost):
+            return self.efficiency <= tech.efficiency
+        elif self.variable_cost <= tech.variable_cost:
+            return True
+        else:
+            return False
+
+    def __lt__(self, tech) -> bool:
+        """Tests greater or equal to."""
+        if (self.variable_cost == tech.variable_cost):
+            return self.efficiency < tech.efficiency
+        elif self.variable_cost < tech.variable_cost:
+            return True
+        else:
+            return False
+        
+    def __gt__(self, tech) -> bool:
+        """Tests greater or equal to."""
+        
+        if (self.variable_cost == tech.variable_cost):
+            return self.efficiency > tech.efficiency
+        elif self.variable_cost > tech.variable_cost:
             return True
         else:
             return False
@@ -385,6 +426,7 @@ class Technology(object):
     def capacity(self, value):
         valid_quantity = _validate_quantity(value, dimension="power")
         self._capacity = valid_quantity.to(self._unit_power)
+        self.power_level = self._capacity
 
     @property
     def capital_cost(self):
@@ -577,8 +619,32 @@ class Technology(object):
         tech_dataframe = pd.DataFrame(tech_data).set_index('technology_name')
 
         return tech_dataframe
-                
-            
+
+    def reset_history(self):
+        """
+        Resets the technology's power history for a new simulation.
+        """
+        self.power_history = []
+        self.power_level = self.capacity
+    
+    def power_output(self, 
+                     demand:unyt_quantity, 
+                     **kwargs):
+        """
+        Raise or lower the power level to meet demand. Returns 
+        current power level and appends to power history.
+
+        Parameters
+        ----------
+        demand : :class:`unyt.unyt_quantity`
+            The demand at a particular timestep. Must be a :class:`unyt.unyt_quantity` 
+            to avoid ambiguity.
+        """
+        assert isinstance(demand, unyt_quantity)
+        self.power_level = (min(demand, self.capacity)).to(demand.units)
+        self.power_history.append(self.power_level)
+
+        return self.power_level
 
 
 class RampingTechnology(Technology):
@@ -645,6 +711,67 @@ class RampingTechnology(Technology):
             self.unit_time**-1
         )
 
+    def max_power(self, time_delta:unyt_quantity=1*hr):
+        """
+        Calculates the maximum achievable power for a technology
+        in the next timestep.
+
+        Parameters
+        ----------
+        time_delta : :class:`unyt.unyt_quantity`
+            The difference between two timesteps. Default is one hour.
+        """
+
+        output = self.power_level + self.ramp_up*time_delta
+        return min(self.capacity, output)
+    
+    def min_power(self, time_delta:unyt_quantity=1*hr):
+        """
+        Calculates the minimum achievable power for a technology
+        in the next timestep.
+
+        Parameters
+        ----------
+        time_delta : :class:`unyt.unyt_quantity`
+            The difference between two timesteps. Default is one hour.
+        """
+
+        output = self.power_level - self.ramp_down*time_delta
+        return max(0*self.unit_power, output)
+
+    def power_output(self, 
+                     demand: unyt_quantity, 
+                     time_delta: unyt_quantity = 1 * hr):
+        """
+        Raise or lower the power level to meet demand. Returns 
+        current power level and appends to power history.
+        Checks if the power level can be achieved given the 
+        technology's ramp rate.
+
+        Parameters
+        ----------
+        demand : :class:`unyt.unyt_quantity`
+            The demand at a particular timestep. Must be a :class:`unyt.unyt_quantity` 
+            to avoid ambiguity.
+        time_delta : :class:`unyt.unyt_quantity`
+            The difference between two timesteps. Default is one hour.
+        """
+         
+        assert isinstance(demand, unyt_quantity)
+        if self.power_level > demand: # power must be lowered
+            self.power_level = max(self.min_power(time_delta),demand).to(demand.units)
+        elif (self.power_level <= demand) and \
+             (self.capacity >= demand): # power must be raised
+            self.power_level = (min(self.max_power(time_delta),
+                                   demand)).to(demand.units)
+        elif (self.power_level <= demand) and \
+             (self.capacity <= demand):
+            self.power_level = self.max_power(time_delta).to(demand.units)
+
+        self.power_history.append(self.power_level)
+        return self.power_level
+
+
 
 class ThermalTechnology(RampingTechnology):
     """
@@ -669,6 +796,8 @@ class ThermalTechnology(RampingTechnology):
                          *args, **kwargs)
 
         self.heat_rate = heat_rate
+        self.power_level = self.capacity
+    
 
 
 class StorageTechnology(Technology):
@@ -697,7 +826,9 @@ class StorageTechnology(Technology):
 
         self.storage_duration = storage_duration
         self.initial_storage = initial_storage
-
+        self.storage_level = self.initial_storage
+        self.storage_history = []
+ 
     @property
     def storage_duration(self):
         return self._storage_duration
@@ -724,3 +855,51 @@ class StorageTechnology(Technology):
             raise AssertionError("Initial storage exceeds storage capacity.")
 
         self._initial_storage = valid_quantity
+        self.storage_level = valid_quantity
+
+    @property
+    def max_rate(self):
+        return self.capacity*self.unit_time
+
+    def reset_history(self):
+        """
+        Resets the technology's power history for a new simulation.
+        """
+        self.storage_history = []
+        self.storage_level = self._initial_storage
+        self.power_history = []
+        self.power_level = self.capacity
+
+    def power_output(self, demand: unyt_quantity, time_delta=1*hr):
+
+        # check that the battery has power to discharge fully.
+        power_out = min(demand, self.capacity)
+
+        # check that the battery has enough energy to meet demand.
+        energy_out = min(power_out*time_delta, self.storage_level)
+
+        out = self.storage_level - energy_out
+        self.storage_level = out
+        self.storage_history.append(out)
+        self.power_level = energy_out / time_delta
+        self.power_history.append(self.power_level)
+
+        return self.power_level.to(demand.units)
+
+    def charge(self, surplus, time_delta=1*hr):
+
+        # check that the battery has enough power to consume surplus.
+        power_in = min(np.abs(surplus), self.capacity)
+
+        # check that the battery has enough space to store surplus.
+        energy_in = min((self.storage_capacity - self.storage_level), 
+                        power_in*time_delta)
+
+        out = self.storage_level + energy_in
+        self.storage_level = out
+        self.storage_history.append(out)
+        self.power_level = -energy_in / time_delta
+        self.power_history.append(self.power_level)
+
+        return self.power_level.to(surplus.units)
+
