@@ -20,7 +20,7 @@ _dim_opts = {'time': hr,
              'specific_power': MW**-1,
              'specific_energy': (MW * hr)**-1,
              'mass_per_energy': megatonnes * (MW * hr)**-1,
-             'area_per_power': km * MW**-2}
+             'area_per_power': km**2 * MW**-1}
 
 _constant_types = (int, float, unyt_quantity)
 _array_types = (unyt.unyt_array, pd.core.series.Series, np.ndarray, list)

@@ -1,0 +1,27 @@
+name: osier-env
+channels:
+  - conda-forge
+
+dependencies:
+  - python>=3.9
+  - pip 
+  - ipython
+  - ipykernel
+  - jupyterlab
+  - pandas
+  - scipy
+  - glpk
+  - coincbc
+  - yaml
+  - numpy
+  - matplotlib
+  - pytest
+  - pytest-cov
+  - pyomo
+  - pip:
+    - pymoo
+    - pyentrp
+    - deap
+    - dill
+    - openpyxl
+    - osier

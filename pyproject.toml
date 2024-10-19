@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name="osier"
-version = "0.3.0"
+version = "0.3.1"
 description = "osier: A justice oriented energy system optimization tool"
 readme = "README.md"
 keywords = ["energy systems", "optimization", "multi-objective", "justice", "multi-criteria decision"]
@@ -19,6 +19,7 @@ dependencies = [
     'scipy',
     'matplotlib',
     'pytest',
+    'pytest-cov',
     'dill',
     'openpyxl',
     'nrelpy',
@@ -63,8 +64,15 @@ doc = [
         'numpydoc',
         'pydata_sphinx_theme',
         'nbsphinx',
-        'pandoc'
+        'pandoc',
+        'nbsphinx-link',
 ]
 
 [tool.setuptools.packages.find]
 include = ['osier']
+
+[tool.pytest.ini_options]
+addopts = "--cov=osier tests"
+
+[tool.coverage.report]
+fail_under = 75
