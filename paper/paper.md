@@ -71,7 +71,7 @@ The fundamental object in `osier` is an `osier.Technology` object, which
 contains all of the necessary cost and performance data for different technology
 classes. `osier` comes pre-loaded with a variety of technologies described in
 the National Renewable Energy Laboratory's (NREL) Annual Technology Baseline
-(ATB) dataset[@nationalrenewableenergylaboratory:2023] but users are also able
+(ATB) dataset [@nationalrenewableenergylaboratory:2023] but users are also able
 to define their own. In order to run `osier`, users are required to supply an
 energy demand time series and a list of `osier.Technology` objects. Users can
 optionally provide weather data to incorporate solar or wind energy. 
