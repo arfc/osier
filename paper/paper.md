@@ -1,5 +1,5 @@
 ---
-title: '`Osier`: A Python package for multi-objective energy system optimization'
+title: 'Osier: A Python package for multi-objective energy system optimization'
 tags:
     - Python
     - energy systems
