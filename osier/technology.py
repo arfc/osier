@@ -1,5 +1,5 @@
 import unyt
-from unyt import MW, hr, kg, km, m, megatonnes
+from unyt import MW, hr, kg, km, m, megatonnes, MWh
 from unyt import unyt_quantity, unyt_array
 from unyt.exceptions import UnitParseError
 from collections import OrderedDict
@@ -10,7 +10,7 @@ import pandas as pd
 
 _dim_opts = {'time': hr,
              'power': MW,
-             'energy': MW * hr,
+             'energy': MWh,
              'mass': kg,
              'length': km,
              'area': km**2,
@@ -18,8 +18,8 @@ _dim_opts = {'time': hr,
              'specific_time': hr**-1,
              'specific_mass': kg**-1,
              'specific_power': MW**-1,
-             'specific_energy': (MW * hr)**-1,
-             'mass_per_energy': megatonnes * (MW * hr)**-1,
+             'specific_energy': (MWh)**-1,
+             'mass_per_energy': megatonnes * (MWh)**-1,
              'area_per_power': km**2 * MW**-1}
 
 _constant_types = (int, float, unyt_quantity)

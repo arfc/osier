@@ -20,7 +20,7 @@ class LogicDispatchModel(OsierModel):
         self.covered_demand = None
 
     def _format_results(self):
-
+        
         pass
 
 
