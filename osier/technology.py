@@ -641,9 +641,12 @@ class Technology(object):
             to avoid ambiguity.
         """
         assert isinstance(demand, unyt_quantity)
+        power_out = max(0*demand.units,min(demand, self.capacity))
         self.power_level = (max(0*demand.units, min(demand, self.capacity)))
         self.power_history.append(self.power_level)
-
+        print("============INSIDE TECHNOLOGY===========")
+        print(f"{self.power_level}")
+        print(self.power_history)
         return self.power_level
 
 

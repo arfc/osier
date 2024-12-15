@@ -3,7 +3,7 @@ import unyt
 import numpy as np
 import pandas as pd
 import osier
-from unyt import kW, MW, hr, BTU, Horsepower, day, kg, GW, megatonnes
+from unyt import kW, MW, hr, BTU, Horsepower, day, kg, GW, megatonnes, MWh
 from osier import Technology
 from osier.technology import _validate_unit, _validate_quantity
 from unyt.exceptions import UnitParseError
@@ -477,10 +477,12 @@ def test_storage_charge():
     demand = np.array([-400,-500,-1000,-3500,-1000,-5])*MW
     for i,d in enumerate(demand):
         battery.charge(d)
-    expected_storage = np.array([500, 1000, 2000, 3000,4000,4000])*MW*hour
-    expected_power = -np.array([400, 500, 1000, 1000, 1000, 0])*MW
+    expected_storage = np.array([500, 1000, 2000, 3000,4000,4000])*MWh
+    expected_charge = -np.array([400, 500, 1000, 1000, 1000, 0])*MW
+    expected_power = np.zeros(len(demand))*MW
     assert np.all(battery.storage_history == expected_storage)
     assert np.all(battery.power_history == expected_power)
+    assert np.all(battery.charge_history == expected_charge)
   
 
 def test_storage_power_out():
@@ -488,7 +490,7 @@ def test_storage_power_out():
     demand = np.array([1e3, 1e3, 1e3, 500, 1e3])*MW
     for i,d in enumerate(demand):
         battery.power_output(d)
-    expected_storage = np.array([3000, 2000, 1000, 500, 0.0])*MW*hour
+    expected_storage = np.array([3000, 2000, 1000, 500, 0.0])*MWh
     expected_power = np.array([1e3, 1e3, 1e3, 500, 500])*MW
     print(battery.storage_history[6:])
     print(battery.power_history[6:])

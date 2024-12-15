@@ -1,4 +1,4 @@
-from osier import DispatchModel
+from osier import DispatchModel, LogicDispatchModel
 from osier import Technology, ThermalTechnology, StorageTechnology, RampingTechnology
 from unyt import unyt_array
 import unyt
@@ -302,3 +302,25 @@ def test_dispatch_model_solve_case6(technology_set_4, net_demand):
                                'Curtailment',
                                'LoadLoss']].sum().sum()
     assert (total_gen - net_demand.sum()) == pytest.approx(0, abs=TOL)
+
+
+def test_hierarchical_model_solve_case1(technology_set_1, net_demand):
+    """
+    Tests that the dispatch model produces expected results. Where all
+    the technologies are simply :class:`Technology` objects. The model
+    should always choose the cheapest technology, as long as it has
+    enough capacity to meet the demand.
+    """
+    model = LogicDispatchModel(technology_list=technology_set_1,
+                                net_demand=net_demand,
+                                curtailment=False,
+                                allow_blackout=False)
+    model.solve()
+    cheapest_tech = unyt_array(
+        [t.variable_cost for t in technology_set_1]).min()
+    expected_result = cheapest_tech * net_demand.sum()
+
+    assert model.objective == pytest.approx(expected_result, rel=TOL)
+    assert model.results['Nuclear'].sum(
+    ) == pytest.approx(net_demand.sum(), TOL)
+    assert model.results['NaturalGas'].sum() == pytest.approx(0.0, rel=TOL)
