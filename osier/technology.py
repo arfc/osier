@@ -641,7 +641,7 @@ class Technology(object):
             to avoid ambiguity.
         """
         assert isinstance(demand, unyt_quantity)
-        self.power_level = (min(demand, self.capacity)).to(demand.units)
+        self.power_level = (max(0*demand.units, min(demand, self.capacity)))
         self.power_history.append(self.power_level)
 
         return self.power_level
@@ -828,6 +828,7 @@ class StorageTechnology(Technology):
         self.initial_storage = initial_storage
         self.storage_level = self.initial_storage
         self.storage_history = []
+        self.charge_history = []
  
     @property
     def storage_duration(self):
@@ -869,11 +870,12 @@ class StorageTechnology(Technology):
         self.storage_level = self._initial_storage
         self.power_history = []
         self.power_level = self.capacity
+        self.charge_history = []
 
-    def power_output(self, demand: unyt_quantity, time_delta=1*hr):
+    def discharge(self, demand: unyt_quantity, time_delta=1*hr):
 
         # check that the battery has power to discharge fully.
-        power_out = min(demand, self.capacity)
+        power_out = max(0*demand.units,min(demand, self.capacity))
 
         # check that the battery has enough energy to meet demand.
         energy_out = min(power_out*time_delta, self.storage_level)
@@ -883,13 +885,13 @@ class StorageTechnology(Technology):
         self.storage_history.append(out)
         self.power_level = energy_out / time_delta
         self.power_history.append(self.power_level)
-
+        self.charge_history.append(0*demand.units)
         return self.power_level.to(demand.units)
 
     def charge(self, surplus, time_delta=1*hr):
 
         # check that the battery has enough power to consume surplus.
-        power_in = min(np.abs(surplus), self.capacity)
+        power_in = min(np.abs(min(0*surplus.units, surplus)), self.capacity)
 
         # check that the battery has enough space to store surplus.
         energy_in = min((self.storage_capacity - self.storage_level), 
@@ -899,7 +901,14 @@ class StorageTechnology(Technology):
         self.storage_level = out
         self.storage_history.append(out)
         self.power_level = -energy_in / time_delta
-        self.power_history.append(self.power_level)
-
+        self.charge_history.append(self.power_level)
+        self.power_history.append(0*surplus.units)
         return self.power_level.to(surplus.units)
+    
+    def power_output(self, v, time_delta=1*hr):
+        if v >= 0:
+            output = self.discharge(demand=v, time_delta=time_delta)
+        else:
+            output = self.charge(surplus=v, time_delta=time_delta)
+        return output
 
