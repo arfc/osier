@@ -19,19 +19,26 @@ class LogicDispatchModel(OsierModel):
         self.cost_history = np.zeros(len(net_demand))
         self.covered_demand = None
 
+    def _reset_all(self):
+        for t in self.nonstorage_techs+self.storage_techs:
+            t.reset_history()
+
+        return
+
     def _format_results(self):
         
-        pass
+        return
 
 
     def solve(self):
         covered_demand = self.net_demand.copy()
         self.nonstorage_techs.sort()
-
         self.storage_techs.sort()
+        self._reset_all()
 
         for i, v in enumerate(covered_demand):
 
+            # ramping technologies that must run
             # there is unmet demand
             if v > 0:
                 for t in self.nonstorage_techs:
