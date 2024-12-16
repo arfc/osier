@@ -598,10 +598,10 @@ class DispatchModel():
         else:
             optimizer = po.SolverFactory(self.solver)
 
-        results = optimizer.solve(self.model, tee=self.verbose)
         try:
+            optimizer.solve(self.model, tee=self.verbose)
             self.objective = self.model.objective()
-        except ValueError:
+        except (ValueError, RuntimeError):
             if self.verbosity <= 30:
                 warnings.warn(
                     f"Infeasible or no solution. Objective set to {LARGE_NUMBER}")

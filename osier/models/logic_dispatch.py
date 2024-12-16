@@ -1,7 +1,7 @@
 from osier import OsierModel
 from osier.utils import get_tech_names
 from copy import deepcopy
-from unyt import unyt_array
+from unyt import unyt_array, MW
 import pandas as pd
 import numpy as np
 import warnings
@@ -40,7 +40,6 @@ class LogicDispatchModel(OsierModel):
     def _format_results(self):
         data = {}
         for t in self.technology_list:
-            print(f"formatting results for {t}")
             data[f"{t.technology_name}"] = unyt_array(t.power_history).to_ndarray()
             if t.technology_type == 'storage':
                 data[f"{t.technology_name}_level"] = unyt_array(t.storage_history).to_ndarray()
@@ -63,22 +62,21 @@ class LogicDispatchModel(OsierModel):
         """
         self.covered_demand = self.net_demand.copy()
         self._reset_all()
-        print('model prepared')
         try:
-            print('executing solve')
             for i, v in enumerate(self.covered_demand):
                 for t in self.technology_list:
                     power_out = t.power_output(v, time_delta=self.time_delta)
-                    print(f"{t.technology_name} produced {power_out}")
                     v -= power_out
 
                 self.covered_demand[i] = v
                 if not self.allow_blackout and (v>0):
-                    print('solve failed -- unmet demand')
+                    if self.verbosity <= 20:
+                        print('solve failed -- unmet demand')
                     raise ValueError
 
                 if not self.curtailment and (v<0):
-                    print('solve failed -- too much overproduction (no curtailment allowed)')
+                    if self.verbosity <= 20:
+                        print('solve failed -- too much overproduction (no curtailment allowed)')
                     raise ValueError
                 
             self._format_results()

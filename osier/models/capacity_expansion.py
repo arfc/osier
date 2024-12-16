@@ -7,12 +7,16 @@ from unyt import unyt_array
 import functools
 import time
 
-from osier import DispatchModel
+from osier import DispatchModel, LogicDispatchModel
 
 from pymoo.core.problem import ElementwiseProblem
 
 LARGE_NUMBER = 1e20
 
+dispatch_models = {'lp':DispatchModel,
+                  'hierarchical':LogicDispatchModel,
+                  'logical':LogicDispatchModel,
+                  'rule_based':LogicDispatchModel}
 
 class CapacityExpansion(ElementwiseProblem):
     """
@@ -98,6 +102,7 @@ class CapacityExpansion(ElementwiseProblem):
                  allow_blackout=False,
                  verbosity=50,
                  solver='cbc',
+                 model_engine='lp',
                  **kwargs):
         self.technology_list = deepcopy(technology_list)
         self.demand = demand
@@ -109,6 +114,7 @@ class CapacityExpansion(ElementwiseProblem):
         self.curtailment = curtailment
         self.allow_blackout = allow_blackout
         self.verbosity = verbosity
+        self.model_engine = model_engine.lower()
         self.solver = solver
 
         if isinstance(demand, unyt_array):
@@ -186,7 +192,8 @@ class CapacityExpansion(ElementwiseProblem):
             - wind_gen \
             - solar_gen
 
-        model = DispatchModel(technology_list=self.dispatchable_techs,
+        dispatch_model = dispatch_models[self.model_engine]
+        model = dispatch_model(technology_list=self.dispatchable_techs,
                               net_demand=net_demand,
                               power_units=self.power_units,
                               curtailment=self.curtailment,
