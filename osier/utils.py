@@ -77,13 +77,8 @@ def get_tech_names(technology_list):
 
 def get_dispatchable_techs(technology_list):
     """
-<<<<<<< HEAD
     Returns a list of :class:`osier.Technology` objects where
     :attr:`dispatchable` is `True`.
-=======
-    Returns a list of :class:`osier.Technology` objects
-    where :attr:`dispatchable` is `True`.
->>>>>>> 095b04562a86368a0e745aa8a09df005c7ea125b
 
     Parameters
     ----------
@@ -103,13 +98,8 @@ def get_dispatchable_techs(technology_list):
 
 def get_nondispatchable_techs(technology_list):
     """
-<<<<<<< HEAD
     Returns a list of :class:`osier.Technology` objects where
     :attr:`dispatchable` is `False`.
-=======
-    Returns a list of :class:`osier.Technology` objects
-    where :attr:`dispatchable` is `False`.
->>>>>>> 095b04562a86368a0e745aa8a09df005c7ea125b
 
     Parameters
     ----------

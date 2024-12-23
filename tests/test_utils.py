@@ -109,14 +109,15 @@ def test_distance_matrix_2D():
     
     rng = np.random.default_rng(seed=1234)
     
-    data = rng.multivariate_normal(mean=np.array([0, 1]),
-                                   cov=np.diag([2,2]),
+    data = rng.multivariate_normal(mean=np.array([1]),
+                                   cov=np.diag([2]),
                                    size=(population,N_techs))
+    data = data.reshape((population, N_techs))
     
     D = distance_matrix(data, metric=measure)
     test_matrix = squareform(pdist(data, metric=measure))
     
-    assert D == test_matrix
+    assert np.allclose(D,test_matrix)
     
     
 def test_check_if_interior_1():
@@ -144,6 +145,7 @@ def test_check_if_interior_2():
     x = np.arange(3)
     grid = np.array(list(it.product(x,x)))
 
+    N = 100
     pf = np.array([[0,0]])
     sf = np.c_[np.linspace(2,0,N), np.linspace(0,2,N)]
 
