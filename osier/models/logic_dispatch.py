@@ -82,7 +82,9 @@ class LogicDispatchModel(OsierModel):
                 if not self.curtailment and (v < 0):
                     if self.verbosity <= 20:
                         print(
-                            'solve failed -- too much overproduction (no curtailment allowed)')
+                            ('solve failed -- '
+                            'too much overproduction '
+                            '(no curtailment allowed)'))
                     raise ValueError
 
             self._format_results()
@@ -90,7 +92,9 @@ class LogicDispatchModel(OsierModel):
         except ValueError:
             if self.verbosity <= 30:
                 warnings.warn(
-                    f"Infeasible or no solution. Objective set to {LARGE_NUMBER}")
+                    (f"Infeasible or no solution." 
+                     f"Objective set to {LARGE_NUMBER}")
+                    )
             self.objective = LARGE_NUMBER
 
         return
