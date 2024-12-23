@@ -13,10 +13,11 @@ from pymoo.core.problem import ElementwiseProblem
 
 LARGE_NUMBER = 1e20
 
-dispatch_models = {'lp':DispatchModel,
-                  'hierarchical':LogicDispatchModel,
-                  'logical':LogicDispatchModel,
-                  'rule_based':LogicDispatchModel}
+dispatch_models = {'lp': DispatchModel,
+                   'hierarchical': LogicDispatchModel,
+                   'logical': LogicDispatchModel,
+                   'rule_based': LogicDispatchModel}
+
 
 class CapacityExpansion(ElementwiseProblem):
     """
@@ -194,12 +195,12 @@ class CapacityExpansion(ElementwiseProblem):
 
         dispatch_model = dispatch_models[self.model_engine]
         model = dispatch_model(technology_list=self.dispatchable_techs,
-                              net_demand=net_demand,
-                              power_units=self.power_units,
-                              curtailment=self.curtailment,
-                              allow_blackout=self.allow_blackout,
-                              solver=self.solver,
-                              verbosity=self.verbosity)
+                               net_demand=net_demand,
+                               power_units=self.power_units,
+                               curtailment=self.curtailment,
+                               allow_blackout=self.allow_blackout,
+                               solver=self.solver,
+                               verbosity=self.verbosity)
         model.solve()
 
         if model.results is not None:

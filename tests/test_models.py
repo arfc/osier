@@ -271,6 +271,7 @@ def test_dispatch_model_solve_case4(technology_set_4, net_demand):
     assert (total_gen - net_demand.sum()) == pytest.approx(0, abs=TOL)
     assert binary_charging == pytest.approx(0, abs=TOL)
 
+
 def test_dispatch_model_solve_case5(technology_set_4, net_demand):
     """
     Tests that the curtailment technology behaves as expected.
@@ -312,9 +313,9 @@ def test_hierarchical_model_solve_case1(technology_set_1, net_demand):
     enough capacity to meet the demand.
     """
     model = LogicDispatchModel(technology_list=technology_set_1,
-                                net_demand=net_demand,
-                                curtailment=False,
-                                allow_blackout=False)
+                               net_demand=net_demand,
+                               curtailment=False,
+                               allow_blackout=False)
     model.solve()
     cheapest_tech = unyt_array(
         [t.variable_cost for t in technology_set_1]).min()
