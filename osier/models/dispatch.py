@@ -108,7 +108,7 @@ class DispatchModel():
         Can be overridden by specifying a unit with the value.
     solver : str
         Indicates which solver to use. May require separate installation.
-        Accepts: ['cplex', 'cbc']. Other solvers will be added in the future.
+        Accepts: ['cplex', 'cbc', 'appsi_highs']. Other solvers will be added in the future.
     lower_bound : float
         The minimum amount of energy each technology can produce per time
         period. Default is 0.0.
@@ -598,10 +598,10 @@ class DispatchModel():
         else:
             optimizer = po.SolverFactory(self.solver)
 
-        results = optimizer.solve(self.model, tee=self.verbose)
         try:
+            optimizer.solve(self.model, tee=self.verbose)
             self.objective = self.model.objective()
-        except ValueError:
+        except (ValueError, RuntimeError):
             if self.verbosity <= 30:
                 warnings.warn(
                     f"Infeasible or no solution. Objective set to {LARGE_NUMBER}")
