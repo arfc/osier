@@ -34,17 +34,17 @@ class OsierModel():
             self.power_units = net_demand.units
         elif isinstance(net_demand, (np.ndarray, list)):
             self.power_units = power_units
-            self.net_demand = np.array(self.net_demand)*self.power_units
+            self.net_demand = np.array(self.net_demand) * self.power_units
         elif isinstance(net_demand, pd.core.series.Series):
             self.power_units = power_units
-            self.net_demand = np.array(self.net_demand)*self.power_units
+            self.net_demand = np.array(self.net_demand) * self.power_units
         else:
             self.power_units = power_units
 
         self.technology_list = synchronize_units(
             technology_list,
             unit_power=self.power_units,
-            unit_time=self.time_delta.units)   
+            unit_time=self.time_delta.units)
 
     @property
     def time_delta(self):
@@ -64,16 +64,16 @@ class OsierModel():
                         value = float(freq_list[0])
                     except ValueError:
                         warnings.warn((f"Could not convert value "
-                                    f"{freq_list[0]} to float. "
-                                    "Setting to 1.0."),
-                                    UserWarning)
+                                       f"{freq_list[0]} to float. "
+                                       "Setting to 1.0."),
+                                      UserWarning)
                         value = 1.0
                     self._time_delta = _validate_quantity(
                         f"{value} {_freq_opts[freq_key]}", dimension='time')
                 except KeyError:
                     warnings.warn(
                         (f"Could not infer time delta with freq {freq_key} "
-                        "from pandas dataframe. Setting delta to 1 hour."),
+                         "from pandas dataframe. Setting delta to 1 hour."),
                         UserWarning)
                     self._time_delta = 1 * hr
             else:

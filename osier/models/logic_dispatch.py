@@ -11,14 +11,14 @@ LARGE_NUMBER = 1e20
 
 class LogicDispatchModel(OsierModel):
 
-    def __init__(self, 
-                 technology_list, 
+    def __init__(self,
+                 technology_list,
                  net_demand,
                  allow_blackout=False,
                  curtailment=True,
                  verbosity=50,
                  *args, **kwargs):
-        super().__init__(technology_list=technology_list, 
+        super().__init__(technology_list=technology_list,
                          net_demand=net_demand,
                          *args, **kwargs)
         self.technology_list = technology_list
@@ -28,7 +28,7 @@ class LogicDispatchModel(OsierModel):
         self.covered_demand = None
         self.objective = None
         self.results = None
-        self.verbosity=verbosity
+        self.verbosity = verbosity
         self.allow_blackout = allow_blackout
         self.curtailment = curtailment
 
@@ -40,19 +40,24 @@ class LogicDispatchModel(OsierModel):
     def _format_results(self):
         data = {}
         for t in self.technology_list:
-            data[f"{t.technology_name}"] = unyt_array(t.power_history).to_ndarray()
+            data[f"{t.technology_name}"] = unyt_array(
+                t.power_history).to_ndarray()
             if t.technology_type == 'storage':
-                data[f"{t.technology_name}_level"] = unyt_array(t.storage_history).to_ndarray()
-                data[f"{t.technology_name}_charge"] = unyt_array(t.charge_history).to_ndarray()
-        data["Curtailment"] = np.array([v  if v <=0 else 0 for v in self.covered_demand])
-        data["Shortfall"] = np.array([v if v > 0 else 0 for v in self.covered_demand])
+                data[f"{t.technology_name}_level"] = unyt_array(
+                    t.storage_history).to_ndarray()
+                data[f"{t.technology_name}_charge"] = unyt_array(
+                    t.charge_history).to_ndarray()
+        data["Curtailment"] = np.array(
+            [v if v <= 0 else 0 for v in self.covered_demand])
+        data["Shortfall"] = np.array(
+            [v if v > 0 else 0 for v in self.covered_demand])
         self.results = pd.DataFrame(data)
         return
 
     def _calculate_objective(self):
         self.objective = sum(np.array(t.power_history).sum()
-                                        *t.variable_cost.to_value() 
-                                        for t in self.technology_list)
+                             * t.variable_cost.to_value()
+                             for t in self.technology_list)
         return
 
     def solve(self):
@@ -69,16 +74,17 @@ class LogicDispatchModel(OsierModel):
                     v -= power_out
 
                 self.covered_demand[i] = v
-                if not self.allow_blackout and (v>0):
+                if not self.allow_blackout and (v > 0):
                     if self.verbosity <= 20:
                         print('solve failed -- unmet demand')
                     raise ValueError
 
-                if not self.curtailment and (v<0):
+                if not self.curtailment and (v < 0):
                     if self.verbosity <= 20:
-                        print('solve failed -- too much overproduction (no curtailment allowed)')
+                        print(
+                            'solve failed -- too much overproduction (no curtailment allowed)')
                     raise ValueError
-                
+
             self._format_results()
             self._calculate_objective()
         except ValueError:
