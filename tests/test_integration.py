@@ -39,5 +39,5 @@ F1 = f1 * (1+slack)
 F2 = f2 * (1+slack)
 
 def test_nmga_integration():
-
+    pass
     
