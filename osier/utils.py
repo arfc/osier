@@ -537,7 +537,7 @@ def n_mga(results_obj,
 
     If the average distance is unchanging, this means the algorithm found a
     point, or points, that is equidistant from every other point. The algorithm
-    will stop when it reaches this point. In this case, users are recommended to
+    will stop when it reaches this point. In this case, it is recommended to
     use the `all` or the `random` options to generate alternative points. Or
     inspect their results.
     """
