@@ -950,7 +950,14 @@ class StorageTechnology(Technology):
     def power_output(self, v, time_delta=1 * hr):
         """
         Calculates the power output given a demand value.
-
+        
+        Parameters
+        ----------
+        v : :class:`unyt.unyt_quantity`
+            Voltage representing a demand or a surplus of energy.
+        time_delta : :class:`unyt.unyt_quantity`
+            The real time passed between modeled timesteps.
+        
         Returns
         -------
         output : :class:`unyt.unyt_quantity`
