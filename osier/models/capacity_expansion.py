@@ -13,10 +13,10 @@ from pymoo.core.problem import ElementwiseProblem
 
 LARGE_NUMBER = 1e20
 
-dispatch_models = {'lp': DispatchModel,
-                   'hierarchical': LogicDispatchModel,
-                   'logical': LogicDispatchModel,
-                   'rule_based': LogicDispatchModel}
+dispatch_models = {
+                   'optimal':DispatchModel,
+                   'logical': LogicDispatchModel
+                   }
 
 
 class CapacityExpansion(ElementwiseProblem):
@@ -77,6 +77,11 @@ class CapacityExpansion(ElementwiseProblem):
         Indicates which solver to use. May require separate installation.
         Accepts: ['cplex', 'cbc', 'glpk']. Other solvers will be added in the
         future.
+    model_engine : str
+        Determines which dispatch algorithm to use.
+        Accepts: ['optimal', 'logical'] where 'optimal' will use a linear
+        program and 'logical' will use a myopic rule-based approach.
+        Default is 'optimal'.
 
     Notes
     -----
@@ -103,7 +108,7 @@ class CapacityExpansion(ElementwiseProblem):
                  allow_blackout=False,
                  verbosity=50,
                  solver='cbc',
-                 model_engine='lp',
+                 model_engine='optimal',
                  **kwargs):
         self.technology_list = deepcopy(technology_list)
         self.demand = demand

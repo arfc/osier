@@ -114,7 +114,6 @@ class LogicDispatchModel(OsierModel):
     def solve(self):
         """
         This function executes the model solve with a rule-based approach.
-        Net demand is copied, then the technology histories are reset.
         """
         self.covered_demand = self.net_demand.copy()
         self._reset_all()

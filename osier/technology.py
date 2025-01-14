@@ -329,38 +329,30 @@ class Technology(object):
         """Tests greater or equal to."""
         if (self.variable_cost == tech.variable_cost):
             return self.efficiency >= tech.efficiency
-        elif self.variable_cost >= tech.variable_cost:
-            return True
         else:
-            return False
+            return self.variable_cost >= tech.variable_cost
 
     def __le__(self, tech) -> bool:
-        """Tests greater or equal to."""
+        """Tests less or equal to."""
         if (self.variable_cost == tech.variable_cost):
             return self.efficiency <= tech.efficiency
-        elif self.variable_cost <= tech.variable_cost:
-            return True
         else:
-            return False
+            return self.variable_cost <= tech.variable_cost
 
     def __lt__(self, tech) -> bool:
-        """Tests greater or equal to."""
+        """Tests less than."""
         if (self.variable_cost == tech.variable_cost):
             return self.efficiency < tech.efficiency
-        elif self.variable_cost < tech.variable_cost:
-            return True
         else:
-            return False
+            return self.variable_cost < tech.variable_cost
 
     def __gt__(self, tech) -> bool:
-        """Tests greater or equal to."""
+        """Tests greater than."""
 
         if (self.variable_cost == tech.variable_cost):
             return self.efficiency > tech.efficiency
-        elif self.variable_cost > tech.variable_cost:
-            return True
         else:
-            return False
+            return self.variable_cost > tech.variable_cost
 
     @property
     def unit_power(self):
@@ -641,6 +633,11 @@ class Technology(object):
         demand : :class:`unyt.unyt_quantity`
             The demand at a particular timestep. Must be a :class:`unyt.unyt_quantity`
             to avoid ambiguity.
+        
+        Returns
+        -------
+        power_level : :class:`unyt.unyt_quantity`
+            The current power level of the technology.
         """
         assert isinstance(demand, unyt_quantity)
         self.power_level = max(0 * demand.units, min(demand, self.capacity))
@@ -721,6 +718,11 @@ class RampingTechnology(Technology):
         ----------
         time_delta : :class:`unyt.unyt_quantity`
             The difference between two timesteps. Default is one hour.
+
+        Returns
+        -------
+        max_power : :class:`unyt.unyt_quantity`
+            The maximum achievable power level.
         """
 
         output = self.power_level + self.ramp_up * time_delta
@@ -735,6 +737,11 @@ class RampingTechnology(Technology):
         ----------
         time_delta : :class:`unyt.unyt_quantity`
             The difference between two timesteps. Default is one hour.
+
+        Returns
+        -------
+        max_power : :class:`unyt.unyt_quantity`
+            The maximum achievable power level.
         """
 
         output = self.power_level - self.ramp_down * time_delta
@@ -756,6 +763,11 @@ class RampingTechnology(Technology):
             to avoid ambiguity.
         time_delta : :class:`unyt.unyt_quantity`
             The difference between two timesteps. Default is one hour.
+
+        Returns
+        -------
+        power_level : :class:`unyt.unyt_quantity`
+            The current power level of the technology.
         """
 
         assert isinstance(demand, unyt_quantity)
@@ -875,7 +887,21 @@ class StorageTechnology(Technology):
         self.charge_history = []
 
     def discharge(self, demand: unyt_quantity, time_delta=1 * hr):
+        """
+        Discharges the battery if there is a surplus of energy.
 
+        Parameters
+        ----------
+        demand : :class:`unyt.unyt_quantity`
+            Amount of surplus.
+        time_delta : :class:`unyt.unyt_quantity`
+            The real time passed between modeled timesteps.
+
+        Returns
+        -------
+        power_level : :class:`unyt.unyt_quantity`
+            The current power level of the technology.
+        """
         # check that the battery has power to discharge fully.
         power_out = max(0 * demand.units, min(demand, self.capacity))
 
@@ -891,7 +917,21 @@ class StorageTechnology(Technology):
         return self.power_level.to(demand.units)
 
     def charge(self, surplus, time_delta=1 * hr):
+        """
+        Charges the battery if there is a surplus of energy.
 
+        Parameters
+        ----------
+        surplus : :class:`unyt.unyt_quantity`
+            Amount of surplus.
+        time_delta : :class:`unyt.unyt_quantity`
+            The real time passed between modeled timesteps.
+
+        Returns
+        -------
+        power_level : :class:`unyt.unyt_quantity`
+            The current power level of the technology.
+        """
         # check that the battery has enough power to consume surplus.
         power_in = min(np.abs(min(0 * surplus.units, surplus)), self.capacity)
 
@@ -908,6 +948,14 @@ class StorageTechnology(Technology):
         return self.power_level.to(surplus.units)
 
     def power_output(self, v, time_delta=1 * hr):
+        """
+        Calculates the power output given a demand value.
+
+        Returns
+        -------
+        output : :class:`unyt.unyt_quantity`
+            The current power level of the technology.
+        """
         if v >= 0:
             output = self.discharge(demand=v, time_delta=time_delta)
         else:
