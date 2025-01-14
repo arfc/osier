@@ -13,6 +13,7 @@ class LogicDispatchModel(OsierModel):
     """
     The :class:`LogicDispatchModel` class creates and solves a basic dispatch
     model from the perspective of a "grid operator." 
+    
     Parameters
     ----------
     technology_list : list of :class:`osier.Technology`
