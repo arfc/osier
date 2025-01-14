@@ -3,7 +3,7 @@ import inspect
 import pandas as pd
 from osier.technology import *
 from osier.technology import _dim_opts
-from unyt import GW, MW, kW, hour, day, year, kg
+from unyt import GW, MW, kW, hour, day, year, kg, MWh
 import unyt as u
 
 to_MDOLLARS = 1e-6
@@ -96,7 +96,7 @@ battery = StorageTechnology(technology_name='Battery',
                             fuel_cost=0*to_MDOLLARS,
                             storage_duration=4,
                             efficiency=0.85,
-                            initial_storage=0.0*MW*hr,
+                            initial_storage=0.0*MWh,
                             capacity_credit=0.5,
                             lifecycle_co2_rate=3.3e-5*co2_eq_units,
                             land_intensity=0.0,
