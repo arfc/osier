@@ -9,6 +9,7 @@
    :template: my_class.rst
 
     osier.DispatchModel
+    osier.LogicDispatchModel
     osier.CapacityExpansion
 ```
 
