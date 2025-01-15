@@ -740,8 +740,8 @@ class RampingTechnology(Technology):
 
         Returns
         -------
-        max_power : :class:`unyt.unyt_quantity`
-            The maximum achievable power level.
+        min_power : :class:`unyt.unyt_quantity`
+            The minimum achievable power level.
         """
 
         output = self.power_level - self.ramp_down * time_delta
