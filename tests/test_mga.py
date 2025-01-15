@@ -24,18 +24,14 @@ algorithm = NSGA2(pop_size=pop_size)
 res = minimize(problem,
             algorithm,
             ('n_gen', n_gen),
-            seed=1,
+            seed=seed,
             verbose=False,
             save_history=True
             )
 F = problem.pareto_front()
-a = min(F[:,0])
-b = max(F[:,0])
 f1 = F[:,0]
 f2 = F[:,1]
-shift = 0.75
-slack = 0.2
-alpha = 0.5
+slack = 0.1
 F1 = f1 * (1+slack)
 F2 = f2 * (1+slack)
 #===============MANUAL MGA FOR COMPARISON==================
@@ -59,6 +55,15 @@ X_select = X_int[idxs]
 
 
 def test_nmga_integration():
-    n_mga(results_obj=res, seed=seed)
-    pass
-    
+    mga_results = n_mga(results_obj=res, seed=seed)
+    assert(mga_results.shape == (10,3))
+
+
+def test_nmga_wideform():
+    mga_results = n_mga(results_obj=res, seed=seed, wide_form=True)
+    assert(mga_results.shape == (10,4))
+
+
+def test_nmga_all():
+    mga_results = n_mga(results_obj=res, n_points='all', seed=seed, wide_form=True)
+    assert(mga_results.shape == (len(F_int),4))
