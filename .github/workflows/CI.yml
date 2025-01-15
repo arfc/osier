@@ -34,9 +34,9 @@ jobs:
         shell: bash -l {0}
 
     steps:
-    - uses: actions/checkout@v3
-    - name: Set up conda
-      uses: conda-incubator/setup-miniconda@v2
+    - uses: actions/checkout@v4
+    - name: Set up mamba
+      uses: conda-incubator/setup-miniconda@v3
       with:
         miniforge-variant: Mambaforge # mamba is faster than base conda
         miniforge-version: latest
