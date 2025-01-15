@@ -7,11 +7,16 @@ from unyt import unyt_array
 import functools
 import time
 
-from osier import DispatchModel
+from osier import DispatchModel, LogicDispatchModel
 
 from pymoo.core.problem import ElementwiseProblem
 
 LARGE_NUMBER = 1e20
+
+dispatch_models = {
+                   'optimal':DispatchModel,
+                   'logical': LogicDispatchModel
+                   }
 
 
 class CapacityExpansion(ElementwiseProblem):
@@ -72,6 +77,11 @@ class CapacityExpansion(ElementwiseProblem):
         Indicates which solver to use. May require separate installation.
         Accepts: ['cplex', 'cbc', 'glpk']. Other solvers will be added in the
         future.
+    model_engine : str
+        Determines which dispatch algorithm to use.
+        Accepts: ['optimal', 'logical'] where 'optimal' will use a linear
+        program and 'logical' will use a myopic rule-based approach.
+        Default is 'optimal'.
 
     Notes
     -----
@@ -98,6 +108,7 @@ class CapacityExpansion(ElementwiseProblem):
                  allow_blackout=False,
                  verbosity=50,
                  solver='cbc',
+                 model_engine='optimal',
                  **kwargs):
         self.technology_list = deepcopy(technology_list)
         self.demand = demand
@@ -109,6 +120,7 @@ class CapacityExpansion(ElementwiseProblem):
         self.curtailment = curtailment
         self.allow_blackout = allow_blackout
         self.verbosity = verbosity
+        self.model_engine = model_engine.lower()
         self.solver = solver
 
         if isinstance(demand, unyt_array):
@@ -186,13 +198,14 @@ class CapacityExpansion(ElementwiseProblem):
             - wind_gen \
             - solar_gen
 
-        model = DispatchModel(technology_list=self.dispatchable_techs,
-                              net_demand=net_demand,
-                              power_units=self.power_units,
-                              curtailment=self.curtailment,
-                              allow_blackout=self.allow_blackout,
-                              solver=self.solver,
-                              verbosity=self.verbosity)
+        dispatch_model = dispatch_models[self.model_engine]
+        model = dispatch_model(technology_list=self.dispatchable_techs,
+                               net_demand=net_demand,
+                               power_units=self.power_units,
+                               curtailment=self.curtailment,
+                               allow_blackout=self.allow_blackout,
+                               solver=self.solver,
+                               verbosity=self.verbosity)
         model.solve()
 
         if model.results is not None:

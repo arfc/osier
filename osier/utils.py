@@ -51,7 +51,6 @@ def synchronize_units(tech_list: Iterable[Technology],
     return synced_list
 
 
-
 def get_tech_names(technology_list):
     """
     Returns the a list of :class:`osier.Technology` name strings.
@@ -74,7 +73,7 @@ def get_tech_names(technology_list):
 
 def get_dispatchable_techs(technology_list):
     """
-    Returns a list of :class:`osier.Technology` objects 
+    Returns a list of :class:`osier.Technology` objects
     where :attr:`dispatchable` is `True`.
 
     Parameters
@@ -84,7 +83,7 @@ def get_dispatchable_techs(technology_list):
 
     Returns
     -------
-    tech_names : list of :class:`osier.Technology`
+    dispatchable_techs : list of :class:`osier.Technology`
         The list of dispatchable technologies.
     """
 
@@ -95,7 +94,7 @@ def get_dispatchable_techs(technology_list):
 
 def get_nondispatchable_techs(technology_list):
     """
-    Returns a list of :class:`osier.Technology` objects 
+    Returns a list of :class:`osier.Technology` objects
     where :attr:`dispatchable` is `False`.
 
     Parameters
@@ -112,6 +111,50 @@ def get_nondispatchable_techs(technology_list):
     non_dispatchable_techs = [t for t in technology_list if not t.dispatchable]
 
     return non_dispatchable_techs
+
+
+def get_storage_techs(technology_list):
+    """
+    Returns a list of :class:`osier.Technology` objects
+    that have the attribute :attr:`storage_level`.
+
+    Parameters
+    ----------
+    technology_list : list of :class:`osier.Technology` objects
+        The list of technologies.
+
+    Returns
+    -------
+    storage_techs : list of :class:`osier.Technology`
+        The list of storage technologies.
+    """
+
+    storage_techs = [t for t in technology_list
+                     if hasattr(t, 'storage_level')]
+
+    return storage_techs
+
+
+def get_nonstorage_techs(technology_list):
+    """
+    Returns a list of :class:`osier.Technology` objects
+    that do not have the attribute :attr:`storage_level`.
+
+    Parameters
+    ----------
+    technology_list : list of :class:`osier.Technology` objects
+        The list of technologies.
+
+    Returns
+    -------
+    storage_techs : list of :class:`osier.Technology`
+        The list of non-storage technologies.
+    """
+
+    nonstorage_techs = [t for t in technology_list
+                        if not hasattr(t, 'storage_level')]
+
+    return nonstorage_techs
 
 
 def get_dispatchable_names(technology_list):
@@ -160,5 +203,3 @@ def technology_dataframe(technology_list, cast_to_string=True):
     technology_dataframe = pd.concat(frames, axis=0)
 
     return technology_dataframe
-    
-
