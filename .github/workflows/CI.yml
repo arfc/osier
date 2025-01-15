@@ -38,7 +38,6 @@ jobs:
     - name: Set up mamba
       uses: conda-incubator/setup-miniconda@v3
       with:
-        miniforge-variant: Mambaforge # mamba is faster than base conda
         miniforge-version: latest
         activate-environment: osier-env
         use-mamba: true
