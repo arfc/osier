@@ -188,23 +188,23 @@ def get_objective_names(res_obj):
     This function returns a list of named objectives based on the names of the
     functions passed to Osier. In the case of partial functions, the first
     keyword value is used.
-    
+
     Parameters
     ----------
     res_obj : :class:`pymoo.Result`
         The simulation results object containing all data and metadata.
-    
+
     Returns
     -------
     obj_columns : list of str
         A list of function name strings.
     """
-    obj_columns=[]
+    obj_columns = []
     for ofunc in res_obj.problem.objectives:
         if isinstance(ofunc, types.FunctionType):
             obj_columns.append(ofunc.__name__)
         elif isinstance(ofunc, functools.partial):
-            obj_columns.append(list(ofunc.keywords.values())[0]) 
+            obj_columns.append(list(ofunc.keywords.values())[0])
     return obj_columns
 
 
@@ -259,12 +259,12 @@ def apply_slack(pareto_front, slack, sense='minimize'):
     near_optimal_front : :class:`numpy.ndarray`
         The near-optimal front.
     """
-    
+
     try:
         n_objectives = pareto_front.shape[1]
     except IndexError as e:
         n_objectives = len(pareto_front)
-    
+
     if isinstance(slack, (list, np.ndarray)):
         try:
             assert len(slack) == n_objectives
@@ -272,21 +272,24 @@ def apply_slack(pareto_front, slack, sense='minimize'):
             print("Number of slack values must equal number of objectives.")
             raise ValueError
 
-        near_optimal_front = (np.ones(n_objectives)+np.array(slack))*np.array(pareto_front)
+        near_optimal_front = (np.ones(n_objectives) +
+                              np.array(slack)) * np.array(pareto_front)
         if sense.lower() == 'minimize':
-            near_optimal_front = np.array(pareto_front)*(np.ones(n_objectives)+np.array(slack))
+            near_optimal_front = np.array(
+                pareto_front) * (np.ones(n_objectives) + np.array(slack))
             return near_optimal_front
         elif sense.lower() == 'maximize':
-            near_optimal_front = np.array(pareto_front)*(np.ones(n_objectives)-np.array(slack))
+            near_optimal_front = np.array(
+                pareto_front) * (np.ones(n_objectives) - np.array(slack))
             return near_optimal_front
-        
+
         return near_optimal_front
     elif isinstance(slack, float):
         if sense.lower() == 'minimize':
-            near_optimal_front = np.array(pareto_front)*(1+slack)
+            near_optimal_front = np.array(pareto_front) * (1 + slack)
             return near_optimal_front
         elif sense.lower() == 'maximize':
-            near_optimal_front = np.array(pareto_front)*(1-slack)
+            near_optimal_front = np.array(pareto_front) * (1 - slack)
             return near_optimal_front
 
     return
@@ -295,7 +298,7 @@ def apply_slack(pareto_front, slack, sense='minimize'):
 def distance_matrix(X, metric='euclidean'):
     """
     This function calculates the distance matrix for an MxN matrix and returns
-    the symmetrical square form of the matrix. 
+    the symmetrical square form of the matrix.
 
     Parameters
     ----------
@@ -307,7 +310,7 @@ def distance_matrix(X, metric='euclidean'):
         See the documentation for
         [`scipy.spatial.distance.pdist`](https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.distance.pdist.html)
         for a complete list of values. Default is 'euclidean.'
-    
+
     Returns
     -------
     D : :class:`numpy.ndarray`
@@ -342,7 +345,7 @@ def farthest_first(X, D, n_points, start_idx=None, seed=1234):
         chosen randomly. Default is `None`.
     seed : int
         Specifies the seed for a random number generator to ensure repeatable
-        results. Default is 1234. 
+        results. Default is 1234.
 
     Returns
     -------
@@ -364,8 +367,8 @@ def farthest_first(X, D, n_points, start_idx=None, seed=1234):
 
         if not start_idx:
             rng = np.random.default_rng(seed)
-            start_idx = rng.integers(low=0, high=rows-1)
-        
+            start_idx = rng.integers(low=0, high=rows - 1)
+
         checked_points.append(start_idx)
         prev_mean_dist = None
         while len(checked_points) < n_points:
@@ -381,7 +384,7 @@ def farthest_first(X, D, n_points, start_idx=None, seed=1234):
                         checked_points.append(j)
                         break
             prev_mean_dist = mean_distance
-    
+
     return np.array(checked_points)
 
 
@@ -432,27 +435,27 @@ def check_if_interior(points, par_front, slack_front):
 
     n_objs = points.shape[1]
     interior_idxs = []
-    
+
     checked_points = set()
     for i, p in enumerate(points):
         if tuple(p) in checked_points:
             continue
         else:
             checked_points.add(tuple(p))
-            cond1 = np.any((p < slack_front).sum(axis=1)==n_objs)
-            cond2 = np.any((p > par_front).sum(axis=1)==n_objs)
+            cond1 = np.any((p < slack_front).sum(axis=1) == n_objs)
+            cond2 = np.any((p > par_front).sum(axis=1) == n_objs)
             if cond1 and cond2:
                 interior_idxs.append(i)
-    
+
     return np.array(interior_idxs)
 
 
-def n_mga(results_obj, 
-          n_points=10, 
-          slack=0.1, 
-          sense='minimize', 
-          how='farthest', 
-          seed=1234, 
+def n_mga(results_obj,
+          n_points=10,
+          slack=0.1,
+          sense='minimize',
+          how='farthest',
+          seed=1234,
           metric='euclidean',
           start_idx=None,
           wide_form=False):
@@ -461,20 +464,20 @@ def n_mga(results_obj,
     efficiently search decision space by relaxing the objective function(s) by a
     specified amount of slack. This implementation will identify all points
     inside of an N-polytope (a polygon in N-dimensions). Then a reduced subset
-    of points will be selected. 
+    of points will be selected.
 
     The algorithm:
-    
+
     1. Generate a near-optimal front based on the given slack values.
-    
+
     2. Loop through each point in the model's history.
 
     3. Add each point to a set of checked points to prevent repeated calculations.
 
-    4. Check if a point is inside the N-polytope bounded by the Pareto and 
+    4. Check if a point is inside the N-polytope bounded by the Pareto and
         near-optimal fronts.
 
-    5. Select a subset of points based on a random selection or with a farthest first traversal. 
+    5. Select a subset of points based on a random selection or with a farthest first traversal.
 
     Parameters
     ----------
@@ -494,19 +497,19 @@ def n_mga(results_obj,
     sense : str
         Indicates whether the optimization was a minimization or maximization.
         If min, the sub-optimal front is greater than the Pareto front. If max,
-        the sub-optimal front is below the Pareto front. Default is "minimize." 
+        the sub-optimal front is below the Pareto front. Default is "minimize."
     how : str
         Sets the method used to traverse the near-optimal region. Accepts
         ['all','random','farthest'].
-        
+
         * `'all'` : Returns all near-optimal points.
-        
+
         * `'random'` : Returns a random selection a set of `n_points` from the near-optimal region.
-        
+
         * `'farthest'` : Returns `n_points` from the near-optimal space by doing a farthest-first-traversal in the design space.
     seed : int
         Specifies the seed for a random number generator to ensure repeatable
-        results. Default is 1234. 
+        results. Default is 1234.
     metric : str
         The string describing how the metric should be calculated. See the
         documentation for
@@ -541,9 +544,9 @@ def n_mga(results_obj,
     use the `all` or the `random` options to generate alternative points. Or
     inspect their results.
     """
-    
+
     pf = results_obj.F
-    try: 
+    try:
         n_inds, n_objs = pf.shape
     except ValueError:
         n_inds = pf.shape[0]
@@ -552,36 +555,36 @@ def n_mga(results_obj,
     pop_size = results_obj.algorithm.pop_size
     n_gen = results_obj.algorithm.n_gen - 1
 
-
-    pf_slack = apply_slack(pareto_front=pf, 
+    pf_slack = apply_slack(pareto_front=pf,
                            slack=slack,
                            sense=sense)
-    
-    X_hist = np.array([hist.pop.get("X") 
-                        for hist in results_obj.history]).reshape(n_gen*pop_size,n_objs)
-    F_hist = np.array([hist.pop.get("F") 
-                        for hist in results_obj.history]).reshape(n_gen*pop_size,n_objs)
-    try: 
+
+    X_hist = np.array([hist.pop.get("X") for hist in results_obj.history]).reshape(
+        n_gen * pop_size, n_objs)
+    F_hist = np.array([hist.pop.get("F") for hist in results_obj.history]).reshape(
+        n_gen * pop_size, n_objs)
+    try:
         cols = get_objective_names(results_obj)
     except AttributeError:
         cols = [f'f{i}' for i in range(n_objs)]
-    
+
     interior_idxs = check_if_interior(F_hist, pf, pf_slack)
     X_int = X_hist[interior_idxs]
     F_int = F_hist[interior_idxs]
-    
+
     if n_points == 'all':
         selected_idxs = np.arange(len(interior_idxs))
     elif how == 'random':
         rng = np.random.default_rng(seed)
-        selected_idxs = rng.integers(low=0, high=len(interior_idxs), size=n_points)
+        selected_idxs = rng.integers(
+            low=0, high=len(interior_idxs), size=n_points)
     elif how == 'farthest':
         distance = distance_matrix(X_int, metric=metric)
-        selected_idxs = farthest_first(X_int, 
-                                        distance, 
-                                        n_points=n_points, 
-                                        start_idx=start_idx, 
-                                        seed=seed)
+        selected_idxs = farthest_first(X_int,
+                                       distance,
+                                       n_points=n_points,
+                                       start_idx=start_idx,
+                                       seed=seed)
     X_select = X_int[selected_idxs]
     F_select = F_int[selected_idxs]
     mga_df = pd.DataFrame(dict(zip(cols, F_select.T)))
@@ -599,5 +602,5 @@ def n_mga(results_obj,
         mga_df = pd.concat([mga_df, x_df], axis=1)
     else:
         mga_df['designs'] = [design for design in X_select]
-    
+
     return mga_df
