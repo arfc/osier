@@ -585,7 +585,7 @@ def n_mga(results_obj,
     X_select = X_int[selected_idxs]
     F_select = F_int[selected_idxs]
     mga_df = pd.DataFrame(dict(zip(cols, F_select.T)))
-    breakpoint()
+
     if wide_form:
         try:
             x_cols = get_tech_names(results_obj.problem.technology_list)
@@ -599,8 +599,5 @@ def n_mga(results_obj,
         mga_df = pd.concat([mga_df, x_df], axis=1)
     else:
         mga_df['designs'] = [design for design in X_select]
-    breakpoint()
     
     return mga_df
-    
-
