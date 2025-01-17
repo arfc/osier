@@ -71,7 +71,7 @@ def test_nmga_wideform():
 def test_nmga_all():
     mga_results = n_mga(
         results_obj=res,
-        n_points='all',
+        how='all',
         seed=seed,
         wide_form=True)
     assert (mga_results.shape == (len(F_int), 4))

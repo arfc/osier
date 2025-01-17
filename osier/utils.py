@@ -254,11 +254,20 @@ def apply_slack(pareto_front, slack, sense='minimize'):
         less than unity. If users that find a slack greater than unity desirable
         should consider rerunning the model with fewer or different objectives.
 
+    sense : str
+        Whether the objectives are maximized or minimized. 
+        Accepts ['minimize', 'maximize']. Default is "minimize."
+
     Returns
     -------
     near_optimal_front : :class:`numpy.ndarray`
         The near-optimal front.
     """
+
+    if sense.lower() not in ['minimize','maximize']:
+        print(f"Did not understand sense '{sense}.'")
+        print(f"Accepts: ['minimize', 'maximize']")
+        raise ValueError
 
     try:
         n_objectives = pareto_front.shape[1]
@@ -272,8 +281,6 @@ def apply_slack(pareto_front, slack, sense='minimize'):
             print("Number of slack values must equal number of objectives.")
             raise ValueError
 
-        near_optimal_front = (np.ones(n_objectives) +
-                              np.array(slack)) * np.array(pareto_front)
         if sense.lower() == 'minimize':
             near_optimal_front = np.array(
                 pareto_front) * (np.ones(n_objectives) + np.array(slack))
@@ -433,7 +440,12 @@ def check_if_interior(points, par_front, slack_front):
     >>> plt.show()
     """
 
-    n_objs = points.shape[1]
+    try:
+        n_inds, n_objs = points.shape
+    except ValueError:
+        n_inds = points.shape[0]
+        n_objs = 1
+
     interior_idxs = []
 
     checked_points = set()
@@ -466,7 +478,7 @@ def n_mga(results_obj,
     inside of an N-polytope (a polygon in N-dimensions). Then a reduced subset
     of points will be selected.
 
-    The algorithm:
+    The algorithm is:
 
     1. Generate a near-optimal front based on the given slack values.
 
@@ -544,6 +556,10 @@ def n_mga(results_obj,
     use the `all` or the `random` options to generate alternative points. Or
     inspect their results.
     """
+    if how.lower() not in ['all','random', 'farthest']:
+        print(f"Did not understand how = '{how}.'")
+        print(f"Accepts: ['all','random', 'farthest']")
+        raise ValueError
 
     pf = results_obj.F
     try:
@@ -572,7 +588,7 @@ def n_mga(results_obj,
     X_int = X_hist[interior_idxs]
     F_int = F_hist[interior_idxs]
 
-    if n_points == 'all':
+    if how == 'all':
         selected_idxs = np.arange(len(interior_idxs))
     elif how == 'random':
         rng = np.random.default_rng(seed)
