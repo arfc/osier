@@ -39,7 +39,6 @@
 
 ```
 
-
 ## General Functions
 ```{eval-rst}
 .. autosummary::
