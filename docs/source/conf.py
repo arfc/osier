@@ -12,6 +12,7 @@
 #
 import os
 import sys
+import toml
 sys.path.insert(0, os.path.abspath('../..'))
 
 
@@ -22,7 +23,10 @@ copyright = '2022-2025, Samuel Dotson'
 author = 'Samuel Dotson'
 
 # The full version, including alpha/beta/rc tags
-release = '0.3.1'
+with open("../../pyproject.toml", 'r') as file:
+    pyproject = toml.load(file)
+
+release = pyproject['project']['version']
 
 
 # -- General configuration ---------------------------------------------------

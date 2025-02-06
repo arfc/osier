@@ -55,6 +55,12 @@ cd build/html
 python -m http.server
 ```
 
+```{note}
+Users attempting a local install need to make sure that they have `pandoc` installed.
+Please visit [`pandoc`'s documentation](https://pandoc.org/installing.html) for 
+instructions.
+```
+
 ## Examples
 
 The examples can be found in the `docs/source/examples/` directory. Alternatively, 

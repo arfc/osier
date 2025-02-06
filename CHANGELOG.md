@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2025-02-06
+This update introduces some big new features to `Osier`.
+
+### Added
+- `Osier` includes a new "hierarchical dispatch" model for electricity dispatch (PR #71).
+- A new `nmga` module was added to facilitate "n-dimensional modeling-to-generate alternatives." (PR #72)
+- Two new tutorials in the documentation
+    * "Constraint" tutorial - how to constrain an `Osier` model with objective functions.
+    * "MGA" tutorial - how to perform MGA with `Osier`'s `nmga` module.
+- The "dispatch" tutorial demonstrates the hierarchical dispatch algorithm.
+
+### Fixed
+- Fixes an issue with GitHub actions that tried setting up a `conda` environment via Mambaforge (now deprecated).
+- Version listed in documentation is now linked with `pyproject.toml`.
+
 ## [0.3.1] - 2024-10-03
 ### Fixed
 - Migrates the `setup.py` to a `pyproject.toml` configuration file.
