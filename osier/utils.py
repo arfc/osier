@@ -562,11 +562,17 @@ def n_mga(results_obj,
         raise ValueError
 
     pf = results_obj.F
+    xpf = results_obj.X
     try:
         n_inds, n_objs = pf.shape
     except ValueError:
         n_inds = pf.shape[0]
         n_objs = 1
+
+    try:
+        n_inds, n_vars = xpf.shape
+    except ValueError:
+        n_vars = xpf.shape[0]
 
     pop_size = results_obj.algorithm.pop_size
     n_gen = results_obj.algorithm.n_gen - 1
@@ -576,7 +582,7 @@ def n_mga(results_obj,
                            sense=sense)
 
     X_hist = np.array([hist.pop.get("X") for hist in results_obj.history]).reshape(
-        n_gen * pop_size, n_objs)
+        n_gen * pop_size, n_vars)
     F_hist = np.array([hist.pop.get("F") for hist in results_obj.history]).reshape(
         n_gen * pop_size, n_objs)
     try:
