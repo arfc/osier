@@ -41,10 +41,12 @@ class OsierModel():
         else:
             self.power_units = power_units
 
-        self.technology_list = synchronize_units(
-            technology_list,
-            unit_power=self.power_units,
-            unit_time=self.time_delta.units)
+        # self.technology_list = synchronize_units(
+        #     technology_list,
+        #     unit_power=self.power_units,
+        #     unit_time=self.time_delta.units)
+
+        self.technology_list = technology_list
 
     @property
     def time_delta(self):

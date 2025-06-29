@@ -148,7 +148,7 @@ class DispatchModel():
     penalty : float
         The penalty applied to the objective function to eliminate
         simultaneous charging and discharging. Users may need to tune
-        this parameter. Default is 1e-4.
+        this parameter. Default is 1e-10.
     model_initialized : bool
         Indicates whether :attr:`DispatchModel.model` has been populated
         with equations yet. This is set to ``True`` after
@@ -205,7 +205,7 @@ class DispatchModel():
                  oversupply=0.0,
                  undersupply=0.0,
                  verbosity=50,
-                 penalty=1e-4,
+                 penalty=1e-10,
                  power_units=MW,
                  curtailment=True,
                  allow_blackout=False,

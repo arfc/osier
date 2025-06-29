@@ -101,7 +101,7 @@ class LogicDispatchModel(OsierModel):
                     t.charge_history).to_ndarray()
         data["Curtailment"] = np.array(
             [v if v <= 0 else 0 for v in self.covered_demand])
-        data["Shortfall"] = np.array(
+        data["LoadLoss"] = np.array(
             [v if v > 0 else 0 for v in self.covered_demand])
         self.results = pd.DataFrame(data)
         return
@@ -134,7 +134,7 @@ class LogicDispatchModel(OsierModel):
                     if self.verbosity <= 20:
                         print(
                             ('solve failed -- '
-                            'too much overproduction '
+                            'too much supply '
                             '(no curtailment allowed)'))
                     raise ValueError
 
