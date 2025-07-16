@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.1] - 2025-07-16
+This update primarily fixes a bug related to the `LogicDispatchModel`.
+There is also a bug fix related to the `utils.nmga` method.
+
+### Fixed
+- Previous versions of `Osier.CapacityExpansion` ran extremely slowly 
+with the `LogicDispatchModel`. The issue was caused by repeated 
+calls to `utils.synchronize_units` which should only happen once. This
+redundancy has been removed and users can expect at least a 2x increase
+in speed with the `LogicDispatchModel` over the standard `DispatchModel`.
+- The `nmga` algorithm would not work when the number of objectives and 
+decision variables did not match. This has been corrected.
+
 ## [0.4.0] - 2025-02-06
 This update introduces some big new features to `Osier`.
 
