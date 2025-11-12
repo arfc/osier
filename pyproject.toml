@@ -70,7 +70,8 @@ doc = [
 ]
 
 [tool.setuptools.packages.find]
-include = ['osier']
+where = ["."]
+include = ['osier*']
 
 [tool.pytest.ini_options]
 addopts = "--cov=osier tests"
